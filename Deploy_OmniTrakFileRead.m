@@ -36,14 +36,6 @@ end
 drawnow;                                                                    %Allow the Editor to finish closing an necessary *.m files in the editor.
 
 [program_dir,~,~] = fileparts(start_script);                                %Grab the full path of the initialization script.
-backup_dir = fullfile(program_dir,'Previous File Versions');                %Set the expected name of the backup directory.
-if ~exist(backup_dir,'dir')                                                 %If the backup directory doesn't exist yet...
-    mkdir(backup_dir);                                                      %Create it.
-end
-ofbc_dir = fullfile(program_dir,'Collated M Files (Release)');           %Set the expected name of the release directory.
-if ~exist(ofbc_dir,'dir')                                                %If the release directory doesn't exist yet...
-    mkdir(ofbc_dir);                                                     %Create it.
-end
 
 clc;                                                                        %Clear the command line.
 fprintf(1,'Checking function dependencies...');                             %Print a line to the command line to show that dependencies are being checked.
@@ -87,16 +79,6 @@ fprintf(1,...
 fprintf(1,'3: %%Collated: %s\n',datestr(now,'mm/dd/yyyy, HH:MM:SS'));       %Print the compile time to the command line.
 ln_num = 3;                                                                 %Create a variable to count the lines across the entire collated m-file.
 for f = 1:length(depfuns)                                                   %Step through each included function.
-    if strncmpi(program_dir,depfuns{f},length(program_dir))                 %If the subfunction is in the current directory...
-        time = dir(depfuns{f});                                             %Grab the file information for the subfunction.
-        time = datestr(time.datenum,'_yyyymmdd_HHMMSS');                    %Convert the date modified to a timestamp.
-        filename = depfuns{f}(1:end-2);                                     %Grab the m-file name minus the file extension.
-        filename(1:find(filename == '\',1,'last')) = [];                    %Kick out the directory name from the file name.
-        filename = fullfile(backup_dir, [filename time '.m']);              %Add a timestamp to the filename.
-        if ~exist(filename,'file')                                          %If the backup file doesn't already exist...            
-            copyfile(depfuns{f},filename,'f');                              %Copy the subfunction to a timestamped backup.
-        end
-    end
     sub_fid = fopen(depfuns{f},'rt');                                       %Open the *.m file for reading as text.
     txt = fscanf(sub_fid,'%c');                                             %Read in all the characters of the *.m file.
     fclose(sub_fid);                                                        %Close the *.m file.
@@ -164,10 +146,6 @@ for f = 1:length(depfuns)                                                   %Ste
 end
 fclose(main_fid);                                                           %Close the new *.m file.
 
-time = datestr(now,'_yyyymmdd_HHMMSS');                                     %Convert the current time to a timestamp.
-filename = fullfile(backup_dir, [collated_filename(1:end-2) time '.m']);    %Add a timestamp to the filename.
-copyfile(fullfile(ofbc_dir,collated_filename),filename,'f');                %Copy the newly-collated version to a timestamped backup.
-
 depfun_dir = fullfile(program_dir,'Required Toolbox Functions');            %Create the function dependency subfolder.
 if ~exist(depfun_dir,'dir')                                                 %If the subfolder doesn't already exist...
     mkdir(depfun_dir);                                                      %Create it.
@@ -181,24 +159,6 @@ end
 if ~isempty(matproducts)                                                    %If there's any required MATLAB products.
     fun_file = fullfile(depfun_dir,'required_matlab_products.txt');         %Create a text filename to hold the list of MATLAB products.
     Vulintus_Write_TSV_File(matproducts',fun_file);                         %Write the required products to the list.
-end
-
-for f = 1:length(depfuns)                                                   %Step through each included function.
-    [~,fun_file,ext] = fileparts(depfuns{f});                               %Grab the filename of the *.m file. 
-    temp_filename = fullfile(tempdir, [fun_file, ext]);                     %Create a temporary *.m file with the same filename.
-    copyfile(depfuns{f},temp_filename,'f');                                 %Copy each file to the temporary folder.
-    depfuns{f} = temp_filename;                                             %Copy the temporary filename of each function back into the cell array.
-end
-
-[~, zip_filename, ~] = fileparts(collated_filename);                        %Grab the root of the collated filename.
-zip_filename = [zip_filename '_MATLAB_' datestr(now,'yyyymmdd') '.zip'];    %Construct the zip filename.
-zip_filename = fullfile(backup_dir, zip_filename);                          %Create the expected zip filename.
-if exist(zip_filename,'file')                                               %If a zip file already exists...
-    delete(zip_filename);                                                   %Delete it.
-end
-zip(zip_filename, depfuns);                                                 %Zip the all functions into one zip file.
-for f = 1:length(depfuns)                                                   %Step through each temporary function file.
-    delete(depfuns{f});                                                     %Delete each temporary file.
 end
 
 open('OmniTrakFileRead');                                                   %Open the new OmniTrakFileRead.
