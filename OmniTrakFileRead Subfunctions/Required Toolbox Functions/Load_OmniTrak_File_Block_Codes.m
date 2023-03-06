@@ -9,7 +9,7 @@ function block_codes = Load_OmniTrak_File_Block_Codes(ver)
 %	Library V1 documentation:
 %	https://docs.google.com/spreadsheets/d/e/2PACX-1vSt8EQXvF5DNkU8MrZYNL_1TcYMDagQc-U6WyK51xt2nk6oHyXr6Z0jQPUfQTLzla4QNMagKPDmxKJ0/pubhtml
 %
-%	This function was programmatically generated: 10-Mar-2022 14:28:59
+%	This function was programmatically generated: 15-Mar-2022 09:52:43
 %
 
 block_codes = [];
@@ -225,7 +225,7 @@ switch ver
 		block_codes.LIGHT_SRC_MODEL = 2711;                                 %Light source model name.
 		block_codes.LIGHT_SRC_TYPE = 2712;                                  %Light source type (i.e. LED, LASER, etc).
 
-		block_codes.ST_TACTILE_2AFC_TRIAL_OUTCOME = 2720;                   %SensiTrak tactile discrimination task trial outcome data.
+		block_codes.STTC_2AFC_TRIAL_OUTCOME = 2720;                         %SensiTrak tactile discrimination task trial outcome data.
 		block_codes.STTC_NUM_PADS = 2721;                                   %Number of pads on the SensiTrak Tactile Carousel module.
 		block_codes.MODULE_MICROSTEP = 2722;                                %Microstep setting on the specified OTMP module.
 		block_codes.MODULE_STEPS_PER_ROT = 2723;                            %Steps per rotation on the specified OTMP module.
@@ -233,6 +233,6 @@ switch ver
 		block_codes.MODULE_PITCH_CIRC = 2730;                               %Pitch circumference, in millimeters, of the driving gear on the specified OTMP module.
 		block_codes.MODULE_CENTER_OFFSET = 2731;                            %Center offset, in millimeters, for the specified OTMP module.
 
-		block_codes.ST_PROPRIOCEPTION_2AFC_TRIAL_OUTCOME = 2740;            %SensiTrak proprioception discrimination task trial outcome data.
+		block_codes.STAP_2AFC_TRIAL_OUTCOME = 2740;                         %SensiTrak proprioception discrimination task trial outcome data.
 
 end
