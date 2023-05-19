@@ -12,6 +12,7 @@
     * 1x (uint16): trial number
 
 ---
+
 2001,PELLET_FAILURE,Timestamped event for feeding/pellet dispensing in which no pellet was detected.,(1x uint32 millisecond timestamp) - (1x uint8 dispenser index)
 
 2010,HARD_PAUSE_START,"Timestamped event marker for the start of a session pause, with no events recorded during the pause.",(1x uint32 millisecond timestamp)
