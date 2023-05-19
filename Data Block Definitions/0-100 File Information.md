@@ -1,6 +1,14 @@
 Block Code (uint16),Definition Name,Description,Block Format
-43981,OMNITRAK_FILE_VERIFY,"First unsigned 16-bit integer written to every *.OmniTrak file to identify the file type, has a hex value of 0xABCD.",-
-0,,RESERVED TO INDICATE END-OF-FILE OR ERROR.,
+
+
+43981. OMNITRAK_FILE_VERIFY
+  * Description: "First unsigned 16-bit integer written to every *.OmniTrak file to identify the file type, has a hex value of 0xABCD."
+  * Block Format:
+    * No subsequent data.
+0. ERROR
+  * Description: "Reserved to indicate end-of-file or an error."
+  * Block Format:
+    * No subsequent data.
 1,FILE_VERSION,The version of the file format used.,(uint16 file version)
 2,MS_FILE_START,Value of the SoC millisecond clock at file creation.,(uint32 timestamp) - 
 3,MS_FILE_STOP,Value of the SoC millisecond clock when the file is closed.,(uint32 timestamp)
