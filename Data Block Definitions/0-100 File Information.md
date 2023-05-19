@@ -24,7 +24,7 @@
   * Description: "The version of the file format used."
   * Status: "In use in deployed programs."
   * Block Format:
-   * 1x (uint16): file version
+    * 1x (uint16): file version
 
 ---
 
