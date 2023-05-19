@@ -2,11 +2,11 @@
 ---
 
 * #### Block Code: 43981
-  * Block Definition: OMNITRAK_FILE_VERIFY
-  * Description: "First unsigned 16-bit integer written to every *.OmniTrak file to identify the file type, has a hex value of 0xABCD."
-  * Status: "In use in deployed programs."
-  * Block Format:
-   * No data
+ * Block Definition: OMNITRAK_FILE_VERIFY
+ * Description: "First unsigned 16-bit integer written to every *.OmniTrak file to identify the file type, has a hex value of 0xABCD."
+ * Status: "In use in deployed programs."
+ * Block Format:
+  * No data
 
 ---
 
@@ -15,44 +15,44 @@
  * Description: "Reserved to indicate end-of-file or an error."
  * Status: "In use in deployed programs."
  * Block Format:
-   * No data
+  * No data
 
 ---
 
 * #### Block Code: 1
-  * Block Definition: FILE_VERSION
-  * Description: "The version of the file format used."
-  * Status: "In use in deployed programs."
-  * Block Format:
-    * 1x (uint16): file version
+ * Block Definition: FILE_VERSION
+ * Description: "The version of the file format used."
+ * Status: "In use in deployed programs."
+ * Block Format:
+  * 1x (uint16): file version
 
 ---
 
 * #### Block Code: 2
-  * Block Definition: MS_FILE_START
-  * Description: "Value of the SoC millisecond clock at file creation."
-  * Status: "In use in deployed programs."
-  * Block Format:
-    * 1x (uint32): timestamp, whole number of milliseconds.
+ * Block Definition: MS_FILE_START
+ * Description: "Value of the SoC millisecond clock at file creation."
+ * Status: "In use in deployed programs."
+ * Block Format:
+  * 1x (uint32): timestamp, whole number of milliseconds.
 
 ---
 
 * #### Block Code: 3
-  * Block Definition: MS_FILE_STOP
-  * Description: "Value of the SoC millisecond clock when the file is closed."
-  * Status: "In use in deployed programs."
-  * Block Format:
-    * 1x (uint32): timestamp, whole number of milliseconds.
+ * Block Definition: MS_FILE_STOP
+ * Description: "Value of the SoC millisecond clock when the file is closed."
+ * Status: "In use in deployed programs."
+ * Block Format:
+  * 1x (uint32): timestamp, whole number of milliseconds.
 
 ---
 
 * #### Block Code: 4
-  * Block Definition: SUBJECT_DEPRECATED
-  * Description: "A single subject's name."
-  * Status: "Deprecated. Do not use in new programs."
-  * Block Format:
-    * 1x (uint16): number of characters to follow.
-    * Nx (char): characters of the subject name.
+ * Block Definition: SUBJECT_DEPRECATED
+ * Description: "A single subject's name."
+ * Status: "Deprecated. Do not use in new programs."
+ * Block Format:
+  * 1x (uint16): number of characters to follow.
+  * Nx (char): characters of the subject name.
 
 ---
 
