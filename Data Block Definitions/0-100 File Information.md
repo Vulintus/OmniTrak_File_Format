@@ -5,6 +5,7 @@ Block Code (uint16),Definition Name,Description,Block Format
   * Description: "First unsigned 16-bit integer written to every *.OmniTrak file to identify the file type, has a hex value of 0xABCD."
   * Block Format:
     * No subsequent data.
+
 0. ERROR
   * Description: "Reserved to indicate end-of-file or an error."
   * Block Format:
