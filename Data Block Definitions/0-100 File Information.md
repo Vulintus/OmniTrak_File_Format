@@ -1,34 +1,55 @@
-Block Code (uint16),Definition Name,Description,Block Format
-
 ---
 * #### Block Code: 43981
  * Block Definition: OMNITRAK_FILE_VERIFY
  * Description: "First unsigned 16-bit integer written to every *.OmniTrak file to identify the file type, has a hex value of 0xABCD."
+ * Status: "In use in deployed programs"
  * Block Format:
    * No data
+
 ---
+
 * #### Block Code: 0
  * Block Definition: ERROR
  * Description: "Reserved to indicate end-of-file or an error."
+ * Status: "In use in deployed programs"
  * Block Format:
    * No data
-   * 
----
-* #### Block Code: 1
- * Block Definition: FILE_VERSION
- * Description: The version of the file format used.
- * Block Format:
-   * 1x (uint16): file version
----
-* #### Block Code: 2
-  * Block Definition: MS_FILE_START,Value of the SoC millisecond clock at file creation.,(uint32 timestamp) - 
 
+---
+
+* #### Block Code: 1
+  * Block Definition: FILE_VERSION
+  * Description: "The version of the file format used."
+  * Status: "In use in deployed programs"
+  * Block Format:
+   * 1x (uint16): file version
+
+---
+
+* #### Block Code: 2
+  * Block Definition: MS_FILE_START
+  * Description: "Value of the SoC millisecond clock at file creation."
+  * Status: "In use in deployed programs"
+  * Block Format:
+    * 1x (uint32) timestamp
+
+---
 
 * #### Block Code: 3
-  * Block Definition: MS_FILE_STOP,Value of the SoC millisecond clock when the file is closed.,(uint32 timestamp)
+  * Block Definition: MS_FILE_STOP
+  * Description: "Value of the SoC millisecond clock when the file is closed."
+  * Status: "In use in deployed programs"
+  * Block Format:
+    * 1x (uint32) timestamp
 
+---
 
-* #### Block Code: 4,SUBJECT_DEPRECATED,A single subject's name.,(1x uint16 number of characters) - (Nx characters)
+* #### Block Code: 4
+  * Block Definition: SUBJECT_DEPRECATED
+  * Description: "A single subject's name."
+  * Status: "Deprecated. Do not use in new programs."
+  * Block Format
+  * ,(1x uint16 number of characters) - (Nx characters)
 * Block Code: 6,CLOCK_FILE_START,Computer clock serial date number at file creation (local time).,(float64 serial date number)
 * Block Code: 7,CLOCK_FILE_STOP,Computer clock serial date number when the file is closed (local time).,(float64 serial date number)
 * Block Code: 10,DEVICE_FILE_INDEX,The device's current file index.,(uint32 index)
