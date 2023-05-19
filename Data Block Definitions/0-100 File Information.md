@@ -7,15 +7,25 @@ Block Code (uint16),Definition Name,Description,Block Format
   * Block Format:
     * No subsequent data.
 
+
 * Block Code: 0
   * Block Definition: ERROR
   * Description: "Reserved to indicate end-of-file or an error."
   * Block Format:
     * No subsequent data.
 
-* Block Code: 1,FILE_VERSION,The version of the file format used.,(uint16 file version)
-* Block Code: 2,MS_FILE_START,Value of the SoC millisecond clock at file creation.,(uint32 timestamp) - 
-* Block Code: 3,MS_FILE_STOP,Value of the SoC millisecond clock when the file is closed.,(uint32 timestamp)
+* Block Code: 1
+  * Block Definition: FILE_VERSION,The version of the file format used.,(uint16 file version)
+
+
+* Block Code: 2
+  * Block Definition: MS_FILE_START,Value of the SoC millisecond clock at file creation.,(uint32 timestamp) - 
+
+
+* Block Code: 3
+  * Block Definition: MS_FILE_STOP,Value of the SoC millisecond clock when the file is closed.,(uint32 timestamp)
+
+
 * Block Code: 4,SUBJECT_DEPRECATED,A single subject's name.,(1x uint16 number of characters) - (Nx characters)
 * Block Code: 6,CLOCK_FILE_START,Computer clock serial date number at file creation (local time).,(float64 serial date number)
 * Block Code: 7,CLOCK_FILE_STOP,Computer clock serial date number when the file is closed (local time).,(float64 serial date number)
