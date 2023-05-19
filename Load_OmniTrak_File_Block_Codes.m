@@ -63,6 +63,7 @@ switch ver
 
 		block_codes.PRIMARY_MODULE = 110;                                   %Primary module name, for systems with interchangeable modules.
 		block_codes.PRIMARY_INPUT = 111;                                    %Primary input name, for modules with multiple input signals.
+        block_codes.SAMD_CHIP_ID = 112;                                     %The SAMD manufacturer's unique chip identifier.
 
 		block_codes.ESP8266_MAC_ADDR = 120;                                 %The MAC address of the device's ESP8266 module.
 		block_codes.ESP8266_IP4_ADDR = 121;                                 %The local IPv4 address of the device's ESP8266 module.

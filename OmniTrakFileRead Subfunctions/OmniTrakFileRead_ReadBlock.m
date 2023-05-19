@@ -125,6 +125,9 @@ switch data.file_version
 			case block_codes.PRIMARY_INPUT                                  %Primary input name, for modules with multiple input signals.
 				data = OmniTrakFileRead_ReadBlock_V1_PRIMARY_INPUT(fid,data);
 
+            case block_codes.SAMD_CHIP_ID                                   %The SAMD manufacturer's unique chip identifier.
+				data = OmniTrakFileRead_ReadBlock_V1_SAMD_CHIP_ID(fid,data);
+
 			case block_codes.ESP8266_MAC_ADDR                               %The MAC address of the device's ESP8266 module.
 				data = OmniTrakFileRead_ReadBlock_V1_ESP8266_MAC_ADDR(fid,data);
 
