@@ -2,10 +2,10 @@
 ---
 
 * #### Block Code: 43981
- * Block Definition: OMNITRAK_FILE_VERIFY
- * Description: "First unsigned 16-bit integer written to every *.OmniTrak file to identify the file type, has a hex value of 0xABCD."
- * Status: "In use in deployed programs."
- * Block Format:
+  * Block Definition: OMNITRAK_FILE_VERIFY
+  * Description: "First unsigned 16-bit integer written to every *.OmniTrak file to identify the file type, has a hex value of 0xABCD."
+  * Status: "In use in deployed programs."
+  * Block Format:
    * No data
 
 ---
