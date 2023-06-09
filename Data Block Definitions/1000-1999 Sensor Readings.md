@@ -2,18 +2,13 @@
 
 ---
 
-* #### Block Code: 43981
-  * Block Definition: OMNITRAK_FILE_VERIFY
-  * Description: "First unsigned 16-bit integer written to every *.OmniTrak file to identify the file type, has a hex value of 0xABCD."
-  * Status: "In use in deployed programs."
+* #### Block Code: 1000
+  * Block Definition: AMG8833_ENABLED
+  * Description: "Indicates that an AMG8833 thermopile array sensor is present in the system."
+  * Status: "Used in early prototypes, can probably be safely replaced."
   * Block Format:
     * No data
-
-
----
-
-* #### Block Code: 1000
-  * Block Definition: AMG8833_ENABLED,Indicates that an AMG8833 thermopile array sensor is present in the system.,-
+    * 
 ---
 
 * #### Block Code: 1001
