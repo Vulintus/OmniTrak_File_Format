@@ -8,7 +8,7 @@
   * Status: "Used in early prototypes, can probably be safely replaced."
   * Block Format:
     * No data
-    * 
+
 ---
 
 * #### Block Code: 1001
