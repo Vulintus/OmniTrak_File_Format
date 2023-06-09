@@ -1,4 +1,4 @@
-## File Format and Timing Data Blocks
+## Environmental Sensor Readings Data Blocks
 
 ---
 
@@ -153,10 +153,12 @@
 
 * #### Block Code: 1114
   * Block Definition: HTPA32X32_PIXELS_INT_K
-  * Description: "The current HTPA32x32 pixel readings represented as 32-bit unsigned integers in units of deciKelvin (dK, or Kelvin * 10)."
+  * Description: "The current HTPA32x32 pixel readings represented as 16-bit unsigned integers in units of deciKelvin (dK, or Kelvin * 10)."
   * Status:
   * Block Format:
-    * (1x byte HTPA32x32 I2C address or ID) - (1x uint32 millisecond timestamp) - (1024x uint32 pixel values)
+    * 1x (uint8): HTPA32x32 I2C address or ID.
+    * 1x (uint32): microcontroller timestamp, whole number of milliseconds.
+    * 1024x (uint16): pixel values, in deciKelvin (dK, tenths of a degree Kelvin).
 
 ---
 
@@ -165,7 +167,9 @@
   * Description: "The current ambient temperature measured by the HTPA32x32, represented as a 32-bit float, in units of Celcius."
   * Status:
   * Block Format:
-    * (1x byte HTPA32x32 I2C address or ID) - (1x uint32 millisecond timestamp) - (1x float32 temperature value)
+    * 1x (uint8): HTPA32x32 I2C address or ID.
+    * 1x (uint32): microcontroller timestamp, whole number of milliseconds.
+    * 1x (float32): ambient temperature value, in Celsius.
 
 ---
 
@@ -208,10 +212,12 @@
 
 * #### Block Code: 1202
   * Block Definition: BME680_TEMP_FL
-  * Description: "The current BME680 temperature reading as a converted float32 value, in Celsius."
+  * Description: "The current BME680/688 temperature reading as a converted float32 value, in Celsius."
   * Status:
   * Block Format:
-    * (1x byte BME280 I2C address or ID) - (1x uint32 millisecond timestamp) - (1x float32 temperature value)
+    * 1x (uint8): BME680/688 I2C address or ID.
+    * 1x (uint32): microcontroller timestamp, whole number of milliseconds.
+    * 1x (float32): ambient temperature value, in Celsius.
 
 ---
 
@@ -238,7 +244,9 @@
   * Description: "The current BME680 pressure reading as a converted float32 value, in Pascals (Pa)."
   * Status:
   * Block Format:
-    * (1x byte BME280 I2C address or ID) - (1x uint32 millisecond timestamp) - (1x float32 pressure value)
+    * 1x (uint8): BME680/688 I2C address or ID.
+    * 1x (uint32): microcontroller timestamp, whole number of milliseconds.
+    * 1x (float32): ambient pressure value, in Pascals.
 
 ---
 
@@ -256,7 +264,9 @@
   * Description: "The current BME680 humidity reading as a converted float32 value, in percent (%)."
   * Status:
   * Block Format:
-    * (1x byte BME680 I2C address or ID) - (1x uint32 millisecond timestamp) - (1x float32 humidity value)
+    * 1x (uint8): BME680/688 I2C address or ID.
+    * 1x (uint32): microcontroller timestamp, whole number of milliseconds.
+    * 1x (float32): ambient humidity value, in percent.
 
 ---
 
@@ -265,7 +275,9 @@
   * Description: "The current BME680 gas resistance reading as a converted float32 value, in units of kOhms"
   * Status:
   * Block Format:
-    * (1x byte BME680 I2C address or ID) - (1x uint32 millisecond timestamp) - (1x float32 gas resistance value)
+    * 1x (uint8): BME680/688 I2C address or ID.
+    * 1x (uint32): microcontroller timestamp, whole number of milliseconds.
+    * 1x (float32): gas resistance value, in kOhms.
 
 ---
 
