@@ -84,7 +84,7 @@
 
 * #### Block Code: 20
   * Block Definition: NTP_SYNC
-  * Description: "A fetched NTP time (seconds since January 1 1900) at the specified SoC millisecond clock time."
+  * Description: "A fetched NTP time (seconds since January 1 1900) at the specified SoC/microcontroller millisecond clock time."
   * Block Format:
     * 1x (uint32): NPT timestamp
     * 1x (uint32): millisecond clock time
@@ -102,10 +102,10 @@
 
 * #### Block Code: 22
   * Block Definition: MS_US_CLOCK_SYNC
-  * Description: "The current SoC microsecond clock time at the specified SoC millisecond clock time."
+  * Description: "The current SoC/microcontroller microsecond clock time at the specified SoC millisecond clock time."
   * Block Format:
-    * 1x (uint32): millisecond clock time
-    * 1x (uint32): microsecond clock time
+    * 1x (uint32): SoC/microcontroller millisecond clock time
+    * 1x (uint32): SoC/microcontroller microsecond clock time
   
 ---
 
