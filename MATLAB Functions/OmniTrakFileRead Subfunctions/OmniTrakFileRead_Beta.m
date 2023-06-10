@@ -25,12 +25,15 @@ function data = OmniTrakFileRead_Beta(file,varargin)
 
 verbose = 0;                                                                %Default to non-verbose output.
 header_only = 0;                                                            %Default to reading the entire file, not just the header.
+show_waitbar = 0;                                                           %Default to not showing a waitbar.
 for i = 1:numel(varargin)                                                   %Step through each optional input argument.
     switch lower(varargin{i})                                               %Switch between the recognized input arguments.
         case 'header'                                                       %Just read the header.
             header_only = 1;                                                %Set the header only flag to 1.
         case 'verbose'                                                      %Request verbose output.
             verbose = 1;                                                    %Set the verbose flag to 1.
+        case 'waitbar'                                                      %Request a waitbar.
+            show_waitbar = 1;                                               %Set the waitbar flag to 1.
     end
 end
 
@@ -42,7 +45,9 @@ if ~exist(file,'file') == 2                                                 %If 
 end
 
 fid = fopen(file,'r');                                                      %Open the input file for read access.
-fseek(fid,0,-1);                                                            %Rewind to the beginning of the file.
+fseek(fid,0,'eof');                                                         %Fast forward to the end of the file.
+file_size = ftell(fid);                                                     %Read in the number of bytes in the file.
+fseek(fid,0,'bof');                                                         %Rewind to the beginning of the file.
 
 block = fread(fid,1,'uint16');                                              %Read in the first data block code.
 if isempty(block) || block ~= hex2dec('ABCD')                               %If the first block isn't the expected OmniTrak file identifier...
@@ -59,9 +64,18 @@ if isempty(block) || block ~= 1                                             %If 
 end
 data.file_version = fread(fid,1,'uint16');                                  %Read in the file version.
 
+waitbar_closed = 0;                                                         %Create a flag to indicate when the waitbar is closed.
+if show_waitbar == 1                                                        %If we're showing a progress waitbar.
+    [~, shortfile, ext] = fileparts(file);                                  %Grab the filename minus the path.
+    waitbar_str = sprintf('Reading: %s%s',shortfile,ext);                   %Create a string for the waitbar.
+    waitbar = big_waitbar('title','OmniTrakFileRead Progress',...
+        'string',waitbar_str,...
+        'value',ftell(fid)/file_size);                                      %Create a waitbar figure.
+end
+
 try                                                                         %Attempt to read in the file.
     
-    while ~feof(fid)                                                        %Loop until the end of the file. 
+    while ~feof(fid) && ~waitbar_closed                                     %Loop until the end of the file. 
         
         block = fread(fid,1,'uint16');                                      %Read in the next data block code.
         if isempty(block)                                                   %If there was no new block code to read.
@@ -89,6 +103,17 @@ try                                                                         %Att
             end
                     
         end
+
+        if show_waitbar                                                     %If we're showing the waitbar...
+            if waitbar.isclosed()                                           %If the user closed the waitbar figure...
+                waitbar_closed = 1;                                         %Set the waitbar closed flag to 1.
+            else                                                            %If the waitbar hasn't been closed...
+                waitbar.value(ftell(fid)/file_size);                        %Update the waitbar value.
+                waitbar.string(sprintf('%s (%1.0f/%1.0f)',waitbar_str,...
+                    ftell(fid),file_size));                                 %Update the waitbar text.
+            end
+        end
+
     end
 
 catch err                                                                   %If an error occured...
@@ -113,3 +138,7 @@ catch err                                                                   %If 
 end
 
 fclose(fid);                                                                %Close the input file.
+
+if show_waitbar && ~waitbar.isclosed()                                      %If we're showing the waitbar and it's not yet closed....
+    waitbar.close();                                                        %Close the waitbar.
+end
