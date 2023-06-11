@@ -13,7 +13,7 @@
 
 * #### Block Code: 1001
   * Block Definition: BMP280_ENABLED
-  * Description: "Indicates that an BMP280 temperature/pressure sensor is present in the system.
+  * Description: "Indicates that an BMP280 temperature/pressure sensor is present in the system."
   * Status:
   * Block Format:
     * No data
@@ -168,8 +168,8 @@
 ---
 
 * #### Block Code: 1114
-  * Block Definition: HTPA32X32_PIXELS_INT_K
-  * Description: "The current HTPA32x32 pixel readings represented as 16-bit unsigned integers in units of deciKelvin (dK, or Kelvin * 10):."
+  * Block Definition: HTPA32X32_PIXELS_INT16_K
+  * Description: "The current HTPA32x32 pixel readings represented as 16-bit unsigned integers in units of deciKelvin (dK, or Kelvin * 10)."
   * Status:
   * Block Format:
     * 1x (uint8): HTPA32x32 I2C address or ID.
@@ -186,6 +186,17 @@
     * 1x (uint8): HTPA32x32 I2C address or ID.
     * 1x (uint32): microcontroller timestamp, whole number of milliseconds.
     * 1x (float32): ambient temperature value, in Celsius.
+
+---
+
+* #### Block Code: 116
+  * Block Definition: HTPA32X32_PIXELS_INT12_C
+  * Description: "The current HTPA32x32 pixel readings represented as 12-bit signed integers (2 pixels for every 3 bytes) in units of deciCelsius (dC, or Celsius * 10), with values under-range set to the minimum  (2048 dC) and values over-range set to the maximum (2047 dC)."
+  * Status:
+  * Block Format:
+    * 1x (uint8): HTPA32x32 I2C address or ID.
+    * 1x (uint32): microcontroller timestamp, whole number of milliseconds.
+    * 1024x (uint12): pixel values, in deciCelsius (dC, tenths of a degree Celsius), paresed 2 pixels per 3 bytes.
 
 ---
 
