@@ -8,7 +8,7 @@
   * Status:
   * Block Format:
     * 1x (uint8): Vulintus system ID number.
-    * 
+
 ---
 
 * #### Block Code: 101
@@ -16,22 +16,91 @@
   * Description: "Vulintus system name (a.k.a. the overall Vulintus product family name, NOT a name set by the user)."
   * Status:
   * Block Format:
-    * 1x (uint8): AMG8833 I2C address or ID. 
-    * 1x (uint32): millisecond timestamp. 
-    * 1x (float32): thermistor value.
+    * 1x (uint8): number of characters to follow.
+    * Nx (char): characters of the system name.
+
+---
+
+* #### Block Code: 102
+  * Block Definition: SYSTEM_HW_VER
+  * Description: "Vulintus system hardware version."
+  * Status:
+  * Block Format:
+    * 1x (float32): hardware version number.
+
+---
+
+* #### Block Code: 103
+  * Block Definition: SYSTEM_FW_VER
+  * Description: "Vulintus system firmware version, written as characters."
+  * Status:
+  * Block Format:
+    * 1x (uint8): number of characters to follow.
+    * Nx (char): characters of the firmware version.
+   
+---
+
+* #### Block Code: 104
+  * Block Definition: SYSTEM_SN
+  * Description: "Vulintus system firmware version, written as characters."
+  * Status:
+  * Block Format:
+    * 1x (uint8): number of characters to follow.
+    * Nx (char): characters of the firmware version.
+
+---
+
+* #### Block Code: 105
+  * Block Definition: SYSTEM_MFR
+  * Description: "Manufacturer name for non-Vulintus systems."
+  * Status:
+  * Block Format:
+    * 1x (uint8): number of characters to follow.
+    * Nx (char): characters of the manufacturer name.
+ 
+---
+
+* #### Block Code: 106
+  * Block Definition: COMPUTER_NAME
+  * Description: "Windows PC computer name."
+  * Status:
+  * Block Format:
+    * 1x (uint8): number of characters to follow.
+    * Nx (char): characters of the computer name.
+   
+---
+
+* #### Block Code: 107
+  * Block Definition: COM_PORT
+  * Description: "The COM port of a computer-connected system."
+  * Status:
+  * Block Format:
+    * 1x (uint8): number of characters to follow.
+    * Nx (char): characters of the COM port name.
+
+---
+
+* #### Block Code: 108
+  * Block Definition: DEVICE_ALIAS
+  * Description: "Human-readable Adjective + Noun alias/name for the device, assigned by Vulintus during manufacturing."
+  * Status:
+  * Block Format:
+    * 1x (uint8): number of characters to follow.
+    * Nx (char): characters of the alias.
+
+---
+
+* #### Block Code: 110
+  * Block Definition: PRIMARY_MODULE
+  * Description: "Primary module name, for systems with interchangeable modules."
+  * Status:
+  * Block Format:
+    * 1x (uint8): number of characters to follow.
+    * Nx (char): characters of the primary module name.
+
 ---
 
 
-101,SYSTEM_NAME,System name.,(1x uint8 number of characters) - (Nx characters)
-102,SYSTEM_HW_VER,Vulintus system hardware version.,(1x float32 hardware version number)
-103,SYSTEM_FW_VER,"System firmware version, written as characters.",(1x uint8 number of characters) - (Nx characters)
-104,SYSTEM_SN,"System serial number, written as characters.",(1x uint8 number of characters) - (Nx characters)
-105,SYSTEM_MFR,Manufacturer name for non-Vulintus systems.,(1x uint8 number of characters) - (Nx characters)
-106,COMPUTER_NAME,Windows PC computer name.,(1x uint8 number of characters) - (Nx characters)
-107,COM_PORT,The COM port of a computer-connected system.,(1x uint8 number of characters) - (Nx characters)
-108,DEVICE_ALIAS,"Human-readable Adjective + Noun alias/name for the device, assigned by Vulintus during manufacturing",(1x uint8 number of characters) - (Nx characters)
-
-110,PRIMARY_MODULE,"Primary module name, for systems with interchangeable modules.",(1x uint8 number of characters) - (Nx characters)
 111,PRIMARY_INPUT,"Primary input name, for modules with multiple input signals.",(1x uint8 number of characters) - (Nx characters)
 112,SAMD_CHIP_ID,The SAMD manufacturer's unique chip identifier.,(4x uint32)
 
