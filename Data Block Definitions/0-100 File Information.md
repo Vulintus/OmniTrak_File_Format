@@ -50,7 +50,7 @@
 * #### Block Code: 4
   * Block Definition: SUBJECT_DEPRECATED
   * Description: "A single subject's name."
-  * Status: "Deprecated. Do not use in new programs."
+  * Status: "<u>Deprecated</u>. Do not use in new programs."
   * Block Format:
     * 1x (uint16): number of characters to follow.
     * Nx (char): characters of the subject name.
