@@ -2,8 +2,26 @@
 
 ---
 
-Block Code (uint16),Definition Name,Description,Block Format
-100,SYSTEM_TYPE,"Vulintus system ID code (1 = MotoTrak, 2 = OmniTrak, 3 = HabiTrak, 4 = OmniHome, 5 = SensiTrak, 6 = Prototype).",(1x uint8 Vulintus system ID number)
+* #### Block Code: 100
+  * Block Definition: SYSTEM_TYPE
+  * Description: "Vulintus system ID code (1 = MotoTrak, 2 = OmniTrak, 3 = HabiTrak, 4 = OmniHome, 5 = SensiTrak, 6 = Prototype)."
+  * Status:
+  * Block Format:
+    * 1x (uint8): Vulintus system ID number.
+    * 
+---
+
+* #### Block Code: 101
+  * Block Definition: SYSTEM_NAME
+  * Description: "Vulintus system name (a.k.a. the overall Vulintus product family name, NOT a name set by the user)."
+  * Status:
+  * Block Format:
+    * 1x (uint8): AMG8833 I2C address or ID. 
+    * 1x (uint32): millisecond timestamp. 
+    * 1x (float32): thermistor value.
+---
+
+
 101,SYSTEM_NAME,System name.,(1x uint8 number of characters) - (Nx characters)
 102,SYSTEM_HW_VER,Vulintus system hardware version.,(1x float32 hardware version number)
 103,SYSTEM_FW_VER,"System firmware version, written as characters.",(1x uint8 number of characters) - (Nx characters)
