@@ -7,7 +7,7 @@
 
 	https://github.com/Vulintus/OmniTrak_File_Format
 
-	This file was programmatically generated: 2023-06-09, 08:58:53 (UTC).
+	This file was programmatically generated: 2023-06-21, 10:04:24 (UTC).
 */
 
 
@@ -41,6 +41,7 @@
 #define	OFBC_MS_TIMER_ROLLOVER                    23        // Indicates that the millisecond timer rolled over since the last loop.
 #define	OFBC_US_TIMER_ROLLOVER                    24        // Indicates that the microsecond timer rolled over since the last loop.
 #define	OFBC_TIME_ZONE_OFFSET                     25        // Computer clock time zone offset from UTC.
+#define	OFBC_TIME_ZONE_OFFSET_HHMM                26        // Computer clock time zone offset from UTC as two integers, one for hours, and the other for minutes
 
 #define	OFBC_RTC_STRING_DEPRECATED                30        // Current date/time string from the real-time clock.
 #define	OFBC_RTC_STRING                           31        // Current date/time string from the real-time clock.
@@ -132,6 +133,7 @@
 #define	OFBC_HTPA32X32_PIXELS_FP62                1113      // The current HTPA32x32 pixel readings as a fixed-point 6/2 type (6 bits for the unsigned integer part, 2 bits for the decimal part), in units of Celcius. This allows temperatures from 0 to 63.75 C.
 #define	OFBC_HTPA32X32_PIXELS_INT_K               1114      // The current HTPA32x32 pixel readings represented as 16-bit unsigned integers in units of deciKelvin (dK, or Kelvin * 10).
 #define	OFBC_HTPA32X32_AMBIENT_TEMP               1115      // The current ambient temperature measured by the HTPA32x32, represented as a 32-bit float, in units of Celcius.
+#define	OFBC_HTPA32X32_PIXELS_INT12_C             1116      // The current HTPA32x32 pixel readings represented as 12-bit signed integers (2 pixels for every 3 bytes) in units of deciCelsius (dC, or Celsius * 10), with values under-range set to the minimum  (2048 dC) and values over-range set to the maximum (2047 dC).
 
 #define	OFBC_BH1749_RGB                           1120      // The current red, green, blue, IR, and green2 sensor readings from the BH1749 sensor
 #define	OFBC_DEBUG_SANITY_CHECK                   1121      // A special block acting as a sanity check, only used in cases of debugging

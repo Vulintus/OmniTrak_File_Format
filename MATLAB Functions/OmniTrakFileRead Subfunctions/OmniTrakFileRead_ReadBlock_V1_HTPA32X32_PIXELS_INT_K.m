@@ -18,6 +18,6 @@ end
 data.htpa = OmniTrakFileRead_Check_Field_Name(data.htpa,'pixels');          %Call the subfunction to check for existing fieldnames.
 reading_i = length(data.htpa(sensor_i).pixels) + 1;                         %Increment the sensor index.
 data.htpa(sensor_i).pixels(reading_i).timestamp = fread(fid,1,'uint32');    %Save the microcontroller millisecond clock timestamp for the reading.
-temp = fread(fid,1024,'uint8');                                             %Read in the pixel values as 16-bit unsigned integers of deciKelvin.
-% temp = fread(fid,1024,'uint16');                                            %Read in the pixel values as 16-bit unsigned integers of deciKelvin.
+% temp = fread(fid,1024,'uint8');                                             %Read in the pixel values as 16-bit unsigned integers of deciKelvin.
+temp = fread(fid,1024,'uint16');                                            %Read in the pixel values as 16-bit unsigned integers of deciKelvin.
 data.htpa(sensor_i).pixels(reading_i).decikelvin = reshape(temp,32,32)';    %Reshape the values into a 32x32 matrix.

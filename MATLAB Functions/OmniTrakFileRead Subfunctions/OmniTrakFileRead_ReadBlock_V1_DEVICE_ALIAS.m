@@ -5,4 +5,6 @@ function data = OmniTrakFileRead_ReadBlock_V1_DEVICE_ALIAS(fid,data)
 %		DEFINITION:		DEVICE_ALIAS
 %		DESCRIPTION:	Human-readable Adjective + Noun alias/name for the device, assigned by Vulintus during manufacturing
 
-fprintf(1,'Need to finish coding for Block 108: DEVICE_ALIAS\n');
+data = OmniTrakFileRead_Check_Field_Name(data,'device','alias');            %Call the subfunction to check for existing fieldnames.
+nchar = fread(fid,1,'uint8');                                               %Read in the number of characters in the device alias.
+data.device.alias = char(fread(fid,nchar,'uchar')');                        %Save the 32-bit SAMD chip ID.

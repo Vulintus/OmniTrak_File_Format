@@ -8,7 +8,7 @@ function data = OmniTrakFileRead_ReadBlock(fid,block,data,verbose)
 %
 %	https://github.com/Vulintus/OmniTrak_File_Format
 %
-%	This file was programmatically generated: 2023-06-09, 08:58:53 (UTC).
+%	This file was programmatically generated: 2023-06-21, 10:04:24 (UTC).
 %
 
 block_codes = Load_OmniTrak_File_Block_Codes(data.file_version);
@@ -66,6 +66,9 @@ switch data.file_version
 
 			case block_codes.TIME_ZONE_OFFSET                               %Computer clock time zone offset from UTC.
 				data = OmniTrakFileRead_ReadBlock_V1_TIME_ZONE_OFFSET(fid,data);
+
+			case block_codes.TIME_ZONE_OFFSET_HHMM                          %Computer clock time zone offset from UTC as two integers, one for hours, and the other for minutes
+				data = OmniTrakFileRead_ReadBlock_V1_TIME_ZONE_OFFSET_HHMM(fid,data);
 
 			case block_codes.RTC_STRING_DEPRECATED                          %Current date/time string from the real-time clock.
 				data = OmniTrakFileRead_ReadBlock_V1_RTC_STRING_DEPRECATED(fid,data);
@@ -276,6 +279,9 @@ switch data.file_version
 
 			case block_codes.HTPA32X32_AMBIENT_TEMP                         %The current ambient temperature measured by the HTPA32x32, represented as a 32-bit float, in units of Celcius.
 				data = OmniTrakFileRead_ReadBlock_V1_HTPA32X32_AMBIENT_TEMP(fid,data);
+
+			case block_codes.HTPA32X32_PIXELS_INT12_C                       %The current HTPA32x32 pixel readings represented as 12-bit signed integers (2 pixels for every 3 bytes) in units of deciCelsius (dC, or Celsius * 10), with values under-range set to the minimum  (2048 dC) and values over-range set to the maximum (2047 dC).
+				data = OmniTrakFileRead_ReadBlock_V1_HTPA32X32_PIXELS_INT12_C(fid,data);
 
 			case block_codes.BH1749_RGB                                     %The current red, green, blue, IR, and green2 sensor readings from the BH1749 sensor
 				data = OmniTrakFileRead_ReadBlock_V1_BH1749_RGB(fid,data);
