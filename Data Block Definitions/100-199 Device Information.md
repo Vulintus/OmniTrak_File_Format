@@ -100,9 +100,33 @@
 
 ---
 
+* #### Block Code: 111
+  * Block Definition: PRIMARY_INPUT
+  * Description: "Primary input name, for modules with multiple input signals."
+  * Status:
+  * Block Format:
+    * 1x (uint8): number of characters to follow.
+    * Nx (char): characters of the primary input name.
 
-111,PRIMARY_INPUT,"Primary input name, for modules with multiple input signals.",(1x uint8 number of characters) - (Nx characters)
-112,SAMD_CHIP_ID,The SAMD manufacturer's unique chip identifier.,(4x uint32)
+---
+
+* #### Block Code: 112
+  * Block Definition: SAMD_CHIP_ID
+  * Description: "The unique chip identifier assigned and programmed to Atmel/Microchip SAMD microcontrollers during manufacturing."
+  * Status:
+  * Block Format:
+    * 4x (uint32): blocks of the unique ID number.
+
+---
+
+* #### Block Code: 112
+  * Block Definition: SAMD_CHIP_ID
+  * Description: "The unique chip identifier assigned and programmed to Atmel/Microchip SAMD microcontrollers during manufacturing."
+  * Status:
+  * Block Format:
+    * 4x (uint32): blocks of the unique ID number.
+
+---
 
 120,ESP8266_MAC_ADDR,The MAC address of the device's ESP8266 module.,(6x uint8 MAC address)
 121,ESP8266_IP4_ADDR,The local IPv4 address of the device's ESP8266 module.,(4x uint8)
