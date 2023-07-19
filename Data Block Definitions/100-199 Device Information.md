@@ -128,32 +128,242 @@
 
 ---
 
-120,ESP8266_MAC_ADDR,The MAC address of the device's ESP8266 module.,(6x uint8 MAC address)
-121,ESP8266_IP4_ADDR,The local IPv4 address of the device's ESP8266 module.,(4x uint8)
-122,ESP8266_CHIP_ID,The ESP8266 manufacturer's unique chip identifier,(1x uint32)
-123,ESP8266_FLASH_ID,The ESP8266 flash chip's unique chip identifier,(1x uint32)
+* #### Block Code: 120
+  * Block Definition: WIFI_MAC_ADDR
+  * Description: "The MAC address of the device's embedded WiFi module (formerly specific to the ESP8266, but now generalized to all systems with an embedded WiFi module)."
+  * Status:
+  * Block Format:
+    * 6x (uint8): MAC address bytes.
 
-130,USER_SYSTEM_NAME,"The user's name for the system, i.e. booth number.",(1x uint16 number of characters) - (Nx characters)
+---
 
-140,DEVICE_RESET_COUNT,The current reboot count saved in EEPROM or flash memory.,(1x uint16)
-141,CTRL_FW_FILENAME,"Controller firmware filename, copied from the macro, written as characters.",(1x uint8 number of characters) - (Nx characters)
-142,CTRL_FW_DATE,"Controller firmware upload date, copied from the macro, written as characters.",(1x uint8 number of characters) - (Nx characters)
-143,CTRL_FW_TIME,"Controller firmware upload time, copied from the macro, written as characters.",(1x uint8 number of characters) - (Nx characters)
-144,MODULE_FW_FILENAME,"OTMP Module firmware filename, copied from the macro, written as characters.",(1x uint8 module index) - (1x uint8 number of characters) - (Nx characters)
-145,MODULE_FW_DATE,"OTMP Module firmware upload date, copied from the macro, written as characters.",(1x uint8 module index) - (1x uint8 number of characters) - (Nx characters)
-146,MODULE_FW_TIME,"OTMP Module firmware upload time, copied from the macro, written as characters.",(1x uint8 module index) - (1x uint8 number of characters) - (Nx characters)
+* #### Block Code: 121
+  * Block Definition: ESP8266_IP4_ADDR
+  * Description: "The local IPv4 address of the device's embedded WiFi module (formerly specific to the ESP8266, but now generalized to all systems with an embedded WiFi module)."
+  * Status:
+  * Block Format:
+    * 4x (uint8): fields of the IPv4 address.
 
-150,WINC1500_MAC_ADDR,The MAC address of the device's ATWINC1500 module.,(6x uint8 MAC address)
-151,WINC1500_IP4_ADDR,The local IPv4 address of the device's ATWINC1500 module.,(4x uint8)
+---
 
-170,BATTERY_SOC,"Current battery state-of charge, in percent, measured the BQ27441",(1x uint32 millisecond timestamp) - (1x uint16 state of charge)
-171,BATTERY_VOLTS,"Current battery voltage, in millivolts, measured by the BQ27441",(1x uint32 millisecond timestamp) - (1x uint16 battery voltage)
-172,BATTERY_CURRENT,"Average current draw from the battery, in milli-amps, measured by the BQ27441",(1x uint32 millisecond timestamp) - (1x int16 current draw)
-173,BATTERY_FULL,"Full capacity of the battery, in milli-amp hours, measured by the BQ27441",(1x uint32 millisecond timestamp) - (1x uint16)
-174,BATTERY_REMAIN,"Remaining capacity of the battery, in milli-amp hours, measured by the BQ27441",(1x uint32 millisecond timestamp) - (1x uint16)
-175,BATTERY_POWER,"Average power draw, in milliWatts, measured by the BQ27441",(1x uint32 millisecond timestamp) - (1x int16)
-176,BATTERY_SOH,"Battery state-of-health, in percent, measured by the BQ27441",(1x uint32 millisecond timestamp) - (1x int16)
-177,BATTERY_STATUS,"Combined battery state-of-charge, voltage, current, capacity, power, and state-of-health, measured by the BQ27441","(1x uint32 millisecond timestamp) - (1x uint16 state-of-charge, in %) - (1x uint16 voltage, in mV) -(1x int16 current, in mA) - (1x uint16 full capacity, in mAh) - (1x uint16 remaining capacity, in mAh) - (1x int16 average power, in mW) - (1x int16 state-of-health, in %)"
+* #### Block Code: 122
+  * Block Definition: ESP8266_CHIP_ID
+  * Description: "The ESP8266 manufacturer's unique chip identifier."
+  * Status:
+  * Block Format:
+    * 1x (uint32): unique chip ID number.
 
-190,FEED_SERVO_MAX_RPM,"Actual rotation rate, in RPM, of the feeder servo (OmniHome) when set to 180 speed.",(1x uint8 dispenser index) - (1x float32)
-191,FEED_SERVO_SPEED,Current speed setting (0-180) for the feeder servo (OmniHome).,(1x uint8 dispenser index) - (1x uint8)
+---
+
+* #### Block Code: 123
+  * Block Definition: ESP8266_FLASH_ID
+  * Description: "The ESP8266 flash chip's unique chip identifier."
+  * Block Format:
+    * 1x (uint32): unique chip ID number.
+
+---
+
+* #### Block Code: 130
+  * Block Definition: USER_SYSTEM_NAME
+  * Description: "The user's name for the system, i.e. cage/booth/arena number."
+  * Status:
+  * Block Format:
+    * 1x (uint16): number of characters to follow.
+    * Nx (char): characters of the user's name for the system.
+
+---
+
+* #### Block Code: 140
+  * Block Definition: DEVICE_RESET_COUNT
+  * Description: "The current reboot count saved in EEPROM or flash memory."
+  * Status:
+  * Block Format:
+    * 1x (uint16): Number of reboots since programming, or since the last memory wipe.
+
+---
+
+* #### Block Code: 141
+  * Block Definition: CTRL_FW_FILENAME
+  * Description: "Controller firmware filename, copied from the macro, written as characters."
+  * Status:
+  * Block Format:
+    * 1x (uint8): number of characters to follow.
+    * Nx (char): characters of firmware filename.
+
+---
+
+* #### Block Code: 142
+  * Block Definition: CTRL_FW_DATE
+  * Description: "Controller firmware upload date, copied from the macro, written as characters."
+  * Status:
+  * Block Format:
+    * 1x (uint8): number of characters to follow.
+    * Nx (char): characters of firmware upload date.
+
+---
+
+* #### Block Code: 143
+  * Block Definition: CTRL_FW_TIME
+  * Description: "Controller firmware upload time, copied from the macro, written as characters."
+  * Status:
+  * Block Format:
+    * 1x (uint8): number of characters to follow.
+    * Nx (char): characters of firmware upload time.
+
+---
+
+* #### Block Code: 144
+  * Block Definition: MODULE_FW_FILENAME
+  * Description: "OTMP Module firmware filename, copied from the macro, written as characters."
+  * Block Format:
+    * 1x (uint8): module index.
+    * 1x (uint8): number of characters to follow.
+    * Nx (char): characters of the module firmware filename.
+
+---
+
+* #### Block Code: 145
+  * Block Definition: MODULE_FW_DATE
+  * Description: "OTMP Module firmware upload date, copied from the macro, written as characters."
+  * Status:
+  * Block Format:
+    * 1x (uint8): module index.
+    * 1x (uint8): number of characters to follow.
+    * Nx (char): characters of the module firmware upload date.
+
+---
+
+* #### Block Code: 146
+  * Block Definition: MODULE_FW_TIME
+  * Description: "OTMP Module firmware upload time, copied from the macro, written as characters."
+  * Status:
+  * Block Format:
+    * 1x (uint8): module index.
+    * 1x (uint8): number of characters to follow.
+    * Nx (char): characters of the module firmware upload time.
+
+---
+
+* #### Block Code: 150
+  * Block Definition: ~~WINC1500_MAC_ADDR_DEPRECATED~~
+  * Description: "The MAC address of the device's ATWINC1500 module."
+  * Status: "**Deprecated.** Do not use in new programs. The WiFi MAC address is now written under block code 120 irrespective of the WiFi module make/model."
+  * Block Format:
+    * 6x (uint8): MAC address bytes.
+
+---
+
+* #### Block Code: 151
+  * Block Definition: ~~WINC1500_IP4_ADDR_DEPRECATED~~
+  * Description: "The local IPv4 address of the device's ATWINC1500 module."
+  * Status: "**Deprecated.** Do not use in new programs. The WiFi IP4 address is now written under block code 121 irrespective of the WiFi module make/model."
+  * Block Format:
+    * 4x (uint8): fields of the IPv4 address.
+
+---
+
+* #### Block Code: 170
+  * Block Definition: BATTERY_SOC
+  * Description: "Current battery state-of-charge, in percent, typically measured by the BQ27441 in Vulintus devices."
+  * Status:
+  * Block Format:
+    * 1x (uint32): millisecond timestamp.
+    * 1x (uint16): state of charge, in percent. **WHY IS THIS A uint16?**
+
+---
+
+* #### Block Code: 171
+  * Block Definition: BATTERY_VOLTS
+  * Description: "Current battery voltage, in millivolts, typically measured by the BQ27441 in Vulintus devices."
+  * Status:
+  * Block Format:
+    * 1x (uint32): millisecond timestamp.
+    * 1x (uint16): battery voltage, in millivolts.
+
+---
+
+* #### Block Code: 172
+  * Block Definition: BATTERY_CURRENT
+  * Description: "Average current draw from the battery, in milli-amps, typically measured by the BQ27441 in Vulintus devices."
+  * Status:
+  * Block Format:
+    * 1x (uint32): millisecond timestamp.
+    * 1x (int16): current draw, in milli-amps, can be positive or negative depending on the charging/discharging status.
+
+---
+
+* #### Block Code: 173
+  * Block Definition: BATTERY_FULL
+  * Description: "Full capacity of the battery, in milli-amp hours, typically measured by the BQ27441 in Vulintus devices."
+  * Status:
+  * Block Format:
+    * 1x (uint32): millisecond timestamp.
+    * 1x (int16): full battery capacity, in milli-amp hours.
+
+---
+
+* #### Block Code: 174
+  * Block Definition: BATTERY_REMAIN
+  * Description: "Remaining capacity of the battery, in milli-amp hours, typically measured by the BQ27441 in Vulintus devices."
+  * Status:
+  * Block Format:
+    * 1x (uint32): millisecond timestamp.
+    * 1x (uint16): remaining battery capacity, in milli-amp hours.
+
+---
+
+* #### Block Code: 175
+  * Block Definition: BATTERY_POWER
+  * Description: "Average power draw, in milliWatts, typically measured by the BQ27441 in Vulintus devices."
+  * Status:
+  * Block Format:
+    * 1x (uint32): millisecond timestamp.
+    * 1x (int16): average power draw, in milliWatts, can be positive or negative depending on the charging/discharging status.
+
+---
+
+* #### Block Code: 176
+  * Block Definition: BATTERY_SOH
+  * Description: "Battery state-of-health, in percent, typically measured by the BQ27441 in Vulintus devices."
+  * Status:
+  * Block Format:
+    * 1x (uint32): millisecond timestamp.
+    * 1x (uint16): battery state-of-health, in percent.  **WHY IS THIS A uint16?**
+
+---
+
+* #### Block Code: 177
+  * Block Definition: BATTERY_STATUS
+  * Description: "Combined battery state-of-charge, voltage, current, capacity, power, and state-of-health, typically measured by the BQ27441 in Vulintus devices."
+  * Status:
+  * Block Format:
+    * 1x (uint32): millisecond timestamp.
+    * 1x (uint16): state of charge, in percent.
+    * 1x (uint16): battery voltage, in millivolts.
+    * 1x (int16): current draw, in milli-amps, can be positive or negative depending on the charging/discharging status.
+    * 1x (uint16): full battery capacity, in milli-amp hours.
+    * 1x (uint16): remaining battery capacity, in milli-amp hours.
+    * 1x (int16): average power draw, in milliWatts, can be positive or negative depending on the charging/discharging status.
+    * 1x (uint16): battery state-of-health, in percent.
+
+---
+
+* #### Block Code: 190
+  * Block Definition: FEED_SERVO_MAX_RPM
+  * Description: "Maximum rotation rate, in RPM, of the feeder disc. In OmniHome devices, this is measured when the servo is set to 180 speed."
+  * Status:
+  * Block Format:
+    * 1x (uint8): dispenser index.
+    * 1x (float32): rotation speed, in RPM.
+
+---
+
+* #### Block Code: 191
+  * Block Definition: FEED_SERVO_SPEED
+  * Description: "Current speed setting (0-180) for the feeder servo (OmniHome)."
+  * Status:
+  * Block Format:
+    * 1x (uint8): dispenser index.
+    * 1x (uint8): servo speed setting, 0-180.
+
+---

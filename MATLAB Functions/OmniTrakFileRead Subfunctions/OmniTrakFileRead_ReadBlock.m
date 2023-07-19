@@ -133,11 +133,11 @@ switch data.file_version
 			case block_codes.SAMD_CHIP_ID                                   %The SAMD manufacturer's unique chip identifier.
 				data = OmniTrakFileRead_ReadBlock_V1_SAMD_CHIP_ID(fid,data);
 
-			case block_codes.ESP8266_MAC_ADDR                               %The MAC address of the device's ESP8266 module.
-				data = OmniTrakFileRead_ReadBlock_V1_ESP8266_MAC_ADDR(fid,data);
+            case block_codes.WIFI_MAC_ADDR                                  %The MAC address of the device's embedded WiFi module.
+				data = OmniTrakFileRead_ReadBlock_V1_WIFI_MAC_ADDR(fid,data);
 
-			case block_codes.ESP8266_IP4_ADDR                               %The local IPv4 address of the device's ESP8266 module.
-				data = OmniTrakFileRead_ReadBlock_V1_ESP8266_IP4_ADDR(fid,data);
+            case block_codes.WIFI_IP4_ADDR                                  %The local IPv4 address of the device's embedded WiFi module.
+				data = OmniTrakFileRead_ReadBlock_V1_WIFI_IP4_ADDR(fid,data);
 
 			case block_codes.ESP8266_CHIP_ID                                %The ESP8266 manufacturer's unique chip identifier
 				data = OmniTrakFileRead_ReadBlock_V1_ESP8266_CHIP_ID(fid,data);

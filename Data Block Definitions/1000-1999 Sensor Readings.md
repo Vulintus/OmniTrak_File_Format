@@ -220,9 +220,8 @@
   * Description: "A special block acting as a sanity check, only used in cases of debugging."
   * Status:
   * Block Format:
-    * ."
-    * 1x (uint16) number of characters. (
-    * Nx characters ."DEBUG.")."
+    * 1x (uint16): number of characters to follow (value should be 5).
+    * Nx (char): "DEBUG."
 
 ---
 
@@ -231,9 +230,9 @@
   * Description: "The current BME280 temperature reading as a converted float32 value, in Celsius."
   * Status:
   * Block Format:
-    * 1x (uint8) BME280 I2C address or ID. 
-    * 1x (uint32) millisecond timestamp. 
-    * 1x (float32) temperature value)
+    * 1x (uint8): BME280 I2C address or ID. 
+    * 1x (uint32): millisecond timestamp. 
+    * 1x (float32): temperature value, in Celsius.
 
 ---
 
@@ -242,14 +241,14 @@
   * Description: "The current BMP280 temperature reading as a converted float32 value, in Celsius."
   * Status:
   * Block Format:
-    * 1x (uint8) BMP280 I2C address or ID. 
-    * 1x (uint32) millisecond timestamp. 
-    * 1x (float32) temperature value)
+    * 1x (uint8): BMP280 I2C address or ID. 
+    * 1x (uint32): millisecond timestamp. 
+    * 1x (float32): temperature value, in Celsius.
 
 ---
 
 * #### Block Code: 1202
-  * Block Definition: BME680_TEMP_FL
+  * Block Definition: BME68X_TEMP_FL
   * Description: "The current BME680/688 temperature reading as a converted float32 value, in Celsius."
   * Status:
   * Block Format:
@@ -264,9 +263,9 @@
   * Description: "The current BME280 pressure reading as a converted float32 value, in Pascals (Pa)."
   * Status:
   * Block Format:
-    * 1x (uint8) BME280 I2C address or ID. 
-    * 1x (uint32) millisecond timestamp. 
-    * 1x (float32) pressure value)
+    * 1x (uint8): BME280 I2C address or ID. 
+    * 1x (uint32): millisecond timestamp. 
+    * 1x (float32): pressure value, in Pascals.
 
 ---
 
@@ -275,9 +274,9 @@
   * Description: "The current BMP280 pressure reading as a converted float32 value, in Pascals (Pa)."
   * Status:
   * Block Format:
-    * 1x (uint8) BMP280 I2C address or ID. 
-    * 1x (uint32) millisecond timestamp. 
-    * 1x (float32) pressure value)
+    * 1x (uint8): BMP280 I2C address or ID. 
+    * 1x (uint32): millisecond timestamp. 
+    * 1x (float32): pressure value, in Pascals.
 
 ---
 
