@@ -32,7 +32,7 @@
 
 ---
 
-* <a name="1"> #### Block Code: 1 </a>
+* #### <a name="1"> Block Code: 1 </a>
   * Block Definition: FILE_VERSION
   * Description: "The version of the file format used."
   * Status: "In use in deployed programs."
