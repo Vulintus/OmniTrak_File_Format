@@ -2,6 +2,45 @@
 
 ---
 
+| 100 | [SYSTEM_TYPE](#block-code-100) | Vulintus system ID code (1 = MotoTrak, 2 = OmniTrak, 3 = HabiTrak, 4 = OmniHome, 5 = SensiTrak, 6 = Prototype). |
+| 101 | [SYSTEM_NAME](#block-code-101) | System name. |
+| 102 | [SYSTEM_HW_VER](#block-code-102) | Vulintus system hardware version. |
+| 103 | [SYSTEM_FW_VER](#block-code-103) | System firmware version, written as characters. |
+| 104 | [SYSTEM_SN](#block-code-104) | System serial number, written as characters. |
+| 105 | [SYSTEM_MFR](#block-code-105) | Manufacturer name for non-Vulintus systems. |
+| 106 | [COMPUTER_NAME](#block-code-106) | Windows PC computer name. |
+| 107 | [COM_PORT](#block-code-107) | The COM port of a computer-connected system. |
+| 108 | [DEVICE_ALIAS](#block-code-108) | Human-readable Adjective + Noun alias/name for the device, assigned by Vulintus during manufacturing |
+| 110 | [PRIMARY_MODULE](#block-code-110) | Primary module name, for systems with interchangeable modules. |
+| 111 | [PRIMARY_INPUT](#block-code-111) | Primary input name, for modules with multiple input signals. |
+| 112 | [SAMD_CHIP_ID](#block-code-112) | The SAMD manufacturer's unique chip identifier. |
+| 120 | [ESP8266_MAC_ADDR](#block-code-120) | The MAC address of the device's ESP8266 module. |
+| 121 | [ESP8266_IP4_ADDR](#block-code-121) | The local IPv4 address of the device's ESP8266 module. |
+| 122 | [ESP8266_CHIP_ID](#block-code-122) | The ESP8266 manufacturer's unique chip identifier |
+| 123 | [ESP8266_FLASH_ID](#block-code-123) | The ESP8266 flash chip's unique chip identifier |
+| 130 | [USER_SYSTEM_NAME](#block-code-130) | The user's name for the system, i.e. booth number. |
+| 140 | [DEVICE_RESET_COUNT](#block-code-140) | The current reboot count saved in EEPROM or flash memory. |
+| 141 | [CTRL_FW_FILENAME](#block-code-141) | Controller firmware filename, copied from the macro, written as characters. |
+| 142 | [CTRL_FW_DATE](#block-code-142) | Controller firmware upload date, copied from the macro, written as characters. |
+| 143 | [CTRL_FW_TIME](#block-code-143) | Controller firmware upload time, copied from the macro, written as characters. |
+| 144 | [MODULE_FW_FILENAME](#block-code-144) | OTMP Module firmware filename, copied from the macro, written as characters. |
+| 145 | [MODULE_FW_DATE](#block-code-145) | OTMP Module firmware upload date, copied from the macro, written as characters. |
+| 146 | [MODULE_FW_TIME](#block-code-146) | OTMP Module firmware upload time, copied from the macro, written as characters. |
+| 150 | [WINC1500_MAC_ADDR](#block-code-150) | The MAC address of the device's ATWINC1500 module. |
+| 151 | [WINC1500_IP4_ADDR](#block-code-151) | The local IPv4 address of the device's ATWINC1500 module. |
+| 170 | [BATTERY_SOC](#block-code-170) | Current battery state-of charge, in percent, measured the BQ27441 |
+| 171 | [BATTERY_VOLTS](#block-code-171) | Current battery voltage, in millivolts, measured by the BQ27441 |
+| 172 | [BATTERY_CURRENT](#block-code-172) | Average current draw from the battery, in milli-amps, measured by the BQ27441 |
+| 173 | [BATTERY_FULL](#block-code-173) | Full capacity of the battery, in milli-amp hours, measured by the BQ27441 |
+| 174 | [BATTERY_REMAIN](#block-code-174) | Remaining capacity of the battery, in milli-amp hours, measured by the BQ27441 |
+| 175 | [BATTERY_POWER](#block-code-175) | Average power draw, in milliWatts, measured by the BQ27441 |
+| 176 | [BATTERY_SOH](#block-code-176) | Battery state-of-health, in percent, measured by the BQ27441 |
+| 177 | [BATTERY_STATUS](#block-code-177) | Combined battery state-of-charge, voltage, current, capacity, power, and state-of-health, measured by the BQ27441 |
+| 190 | [FEED_SERVO_MAX_RPM](#block-code-190) | Actual rotation rate, in RPM, of the feeder servo (OmniHome) when set to 180 speed. |
+| 191 | [FEED_SERVO_SPEED](#block-code-191) | Current speed setting (0-180) for the feeder servo (OmniHome). |
+
+---
+
 * #### Block Code: 100
   * Block Definition: SYSTEM_TYPE
   * Description: "Vulintus system ID code (1 = MotoTrak, 2 = OmniTrak, 3 = HabiTrak, 4 = OmniHome, 5 = SensiTrak, 6 = Prototype)."
