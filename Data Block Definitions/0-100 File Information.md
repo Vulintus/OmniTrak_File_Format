@@ -50,8 +50,8 @@
 
 ---
 
-* #### Block Code: 3
-  * <a name="3">Block Definition: MS_FILE_STOP</a>
+* #### <a name="3"> Block Code: 3 </a>
+  * Block Definition: MS_FILE_STOP
   * Description: "Value of the microcontroller millisecond clock when the file is closed."
   * Status: "In use in deployed programs."
   * Block Format:
