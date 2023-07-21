@@ -10,7 +10,7 @@
   </tr>
   <tr>
     <td> 43981 </td>
-    <td> [OMNITRAK_FILE_VERIFY](#file-format-and-timing-data-blocks) </td>
+    <td> [OMNITRAK_FILE_VERIFY](#43981) </td>
     <td> First unsigned 16-bit integer written to every *.OmniTrak file to identify the file type, has a hex value of 0xABCD. </td>
   </tr>
   <tr>
@@ -23,7 +23,7 @@
 ---
 
 * #### Block Code: 43981
-  * Block Definition: OMNITRAK_FILE_VERIFY
+  * <a name="43981">Block Definition: OMNITRAK_FILE_VERIFY</a>
   * Description: "First unsigned 16-bit integer written to every *.OmniTrak file to identify the file type, has a hex value of 0xABCD."
   * Status: "In use in deployed programs."
   * Block Format:
