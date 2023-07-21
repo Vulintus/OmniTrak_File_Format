@@ -2,19 +2,19 @@
 ---
 <table>
   <tr>
-    <th>Company</th>
-    <th>Contact</th>
-    <th>Country</th>
+    <th>Block Code (uint16)</th>
+    <th>Definition Name</th>
+    <th>Description</th>
   </tr>
   <tr>
-    <td>Alfreds Futterkiste</td>
-    <td>Maria Anders</td>
-    <td>Germany</td>
+    <td> 43981 </td>
+    <td> OMNITRAK_FILE_VERIFY </td>
+    <td> First unsigned 16-bit integer written to every *.OmniTrak file to identify the file type, has a hex value of 0xABCD. </td>
   </tr>
   <tr>
-    <td>Centro comercial Moctezuma</td>
-    <td>Francisco Chang</td>
-    <td>Mexico</td>
+    <td> 0 </td>
+    <td> - </td>
+    <td> **RESERVED TO INDICATE END-OF-FILE OR ERROR.** </td>
   </tr>
 </table>
 ---
