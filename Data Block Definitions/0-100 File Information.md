@@ -60,7 +60,7 @@
 ---
 
 * #### <a name="4"> Block Code: 4 </a>
-  * Block Definition: ~~SUBJECT_DEPRECATED~~
+  * Block Definition: SUBJECT_DEPRECATED
   * Description: "A single subject's name."
   * Status: "**Deprecated**. Do not use in new programs."
   * Block Format:
