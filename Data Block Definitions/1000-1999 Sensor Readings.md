@@ -2,6 +2,11 @@
 
 ---
 
+| Block Code (uint16) | Definition Name | Description |
+| - | - | - |
+
+---
+
 * #### Block Code: 1000
   * Block Definition: AMG8833_ENABLED
   * Description: "Indicates that an AMG8833 thermopile array sensor is present in the system."
