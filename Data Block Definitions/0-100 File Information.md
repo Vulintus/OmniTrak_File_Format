@@ -1,5 +1,7 @@
 ## File Format and Timing Data Blocks
+
 ---
+
 <table>
   <tr>
     <th>Block Code (uint16)</th>
@@ -14,9 +16,10 @@
   <tr>
     <td> 0 </td>
     <td> - </td>
-    <td> **RESERVED TO INDICATE END-OF-FILE OR ERROR.** </td>
+    <td> *RESERVED TO INDICATE END-OF-FILE OR ERROR.* </td>
   </tr>
 </table>
+
 ---
 
 * #### Block Code: 43981
