@@ -6,6 +6,11 @@
 | - | - | - |
 | 43981 | [OMNITRAK_FILE_VERIFY](#43981) | First unsigned 16-bit integer written to every *.OmniTrak file to identify the file type, has a hex value of 0xABCD. |
 | 0 | [ERROR](#0) | **RESERVED TO INDICATE END-OF-FILE OR ERROR.** |
+| 0 | [FILE_VERSION](#1) | The version of the file format used. |
+| 0 | [MS_FILE_START](#2) | Value of the microcontroller millisecond clock at file creation. |
+| 0 | [ERROR](#0) | **RESERVED TO INDICATE END-OF-FILE OR ERROR.** |
+| 0 | [ERROR](#0) | **RESERVED TO INDICATE END-OF-FILE OR ERROR.** |
+| 0 | [ERROR](#0) | **RESERVED TO INDICATE END-OF-FILE OR ERROR.** |
 
 ---
 
@@ -28,7 +33,7 @@
 ---
 
 * #### Block Code: 1
-  * Block Definition: FILE_VERSION
+  * <a name="1">Block Definition: FILE_VERSION</a>
   * Description: "The version of the file format used."
   * Status: "In use in deployed programs."
   * Block Format:
@@ -37,8 +42,8 @@
 ---
 
 * #### Block Code: 2
-  * Block Definition: MS_FILE_START
-  * Description: "Value of the SoC millisecond clock at file creation."
+  * <a name="2">Block Definition: MS_FILE_START</a>
+  * Description: "Value of the microcontroller millisecond clock at file creation."
   * Status: "In use in deployed programs."
   * Block Format:
     * 1x (uint32): timestamp, whole number of milliseconds.
@@ -46,7 +51,7 @@
 ---
 
 * #### Block Code: 3
-  * Block Definition: MS_FILE_STOP
+  * <a name="3">Block Definition: MS_FILE_STOP</a>
   * Description: "Value of the SoC millisecond clock when the file is closed."
   * Status: "In use in deployed programs."
   * Block Format:
@@ -55,7 +60,7 @@
 ---
 
 * #### Block Code: 4
-  * Block Definition: ~~SUBJECT_DEPRECATED~~
+  * <a name="4">Block Definition: ~~SUBJECT_DEPRECATED~~</a>
   * Description: "A single subject's name."
   * Status: "**Deprecated**. Do not use in new programs."
   * Block Format:
@@ -65,7 +70,7 @@
 ---
 
 * #### Block Code: 6
-  * CLOCK_FILE_START
+  * <a name="6"> Block Definition: CLOCK_FILE_START</a>
   * Description: "Computer clock serial date number at file creation (local time)."
   * Status: "In use in deployed programs."
   * Block Format:
