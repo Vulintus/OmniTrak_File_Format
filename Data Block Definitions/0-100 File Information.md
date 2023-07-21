@@ -2,7 +2,7 @@
 
 ---
 
-<table>
+<html><table>
   <tr>
     <th>Block Code (uint16)</th>
     <th>Definition Name</th>
@@ -18,7 +18,7 @@
     <td> - </td>
     <td> *RESERVED TO INDICATE END-OF-FILE OR ERROR.* </td>
   </tr>
-</table>
+</table></html>
 
 ---
 
