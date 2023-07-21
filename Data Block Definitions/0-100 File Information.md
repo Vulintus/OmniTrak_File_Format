@@ -8,9 +8,9 @@
 | 0 | [ERROR](#0) | **RESERVED TO INDICATE END-OF-FILE OR ERROR.** |
 | 1 | [FILE_VERSION](#1) | The version of the file format used. |
 | 2 | [MS_FILE_START](#2) | Value of the microcontroller millisecond clock at file creation. |
-| 3 | [ERROR](#0) | **RESERVED TO INDICATE END-OF-FILE OR ERROR.** |
-| 4 | [ERROR](#0) | **RESERVED TO INDICATE END-OF-FILE OR ERROR.** |
-| 6 | [ERROR](#0) | **RESERVED TO INDICATE END-OF-FILE OR ERROR.** |
+| 3 | [MS_FILE_STOP](#3) | **RESERVED TO INDICATE END-OF-FILE OR ERROR.** |
+| 4 | [ERROR](#4) | **RESERVED TO INDICATE END-OF-FILE OR ERROR.** |
+| 6 | [ERROR](#6) | **RESERVED TO INDICATE END-OF-FILE OR ERROR.** |
 
 ---
 
@@ -41,8 +41,8 @@
 
 ---
 
-* #### Block Code: 2
-  * <a name="2">Block Definition: MS_FILE_START</a>
+* #### <a name="2"> Block Code: 2 </a>
+  * <a name="2">Block Definition: MS_FILE_START
   * Description: "Value of the microcontroller millisecond clock at file creation."
   * Status: "In use in deployed programs."
   * Block Format:
@@ -59,8 +59,8 @@
 
 ---
 
-* #### Block Code: 4
-  * <a name="4">Block Definition: ~~SUBJECT_DEPRECATED~~</a>
+* #### <a name="4"> Block Code: 4 </a>
+  * Block Definition: ~~SUBJECT_DEPRECATED~~
   * Description: "A single subject's name."
   * Status: "**Deprecated**. Do not use in new programs."
   * Block Format:
@@ -69,8 +69,8 @@
 
 ---
 
-* #### Block Code: 6
-  * <a name="6"> Block Definition: CLOCK_FILE_START</a>
+* #### <a name="6"> Block Code: 6 </a>
+  * Block Definition: CLOCK_FILE_START
   * Description: "Computer clock serial date number at file creation (local time)."
   * Status: "In use in deployed programs."
   * Block Format:
