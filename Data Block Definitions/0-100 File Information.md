@@ -6,11 +6,11 @@
 | - | - | - |
 | 43981 | [OMNITRAK_FILE_VERIFY](#43981) | First unsigned 16-bit integer written to every *.OmniTrak file to identify the file type, has a hex value of 0xABCD. |
 | 0 | [ERROR](#0) | **RESERVED TO INDICATE END-OF-FILE OR ERROR.** |
-| 0 | [FILE_VERSION](#1) | The version of the file format used. |
-| 0 | [MS_FILE_START](#2) | Value of the microcontroller millisecond clock at file creation. |
-| 0 | [ERROR](#0) | **RESERVED TO INDICATE END-OF-FILE OR ERROR.** |
-| 0 | [ERROR](#0) | **RESERVED TO INDICATE END-OF-FILE OR ERROR.** |
-| 0 | [ERROR](#0) | **RESERVED TO INDICATE END-OF-FILE OR ERROR.** |
+| 1 | [FILE_VERSION](#1) | The version of the file format used. |
+| 2 | [MS_FILE_START](#2) | Value of the microcontroller millisecond clock at file creation. |
+| 3 | [ERROR](#0) | **RESERVED TO INDICATE END-OF-FILE OR ERROR.** |
+| 4 | [ERROR](#0) | **RESERVED TO INDICATE END-OF-FILE OR ERROR.** |
+| 6 | [ERROR](#0) | **RESERVED TO INDICATE END-OF-FILE OR ERROR.** |
 
 ---
 
@@ -32,8 +32,8 @@
 
 ---
 
-* #### Block Code: 1
-  * <a name="1">Block Definition: FILE_VERSION</a>
+* <a name="1"> #### Block Code: 1 </a>
+  * Block Definition: FILE_VERSION
   * Description: "The version of the file format used."
   * Status: "In use in deployed programs."
   * Block Format:
