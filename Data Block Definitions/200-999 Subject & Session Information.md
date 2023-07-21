@@ -4,6 +4,12 @@
 
 | Block Code (uint16) | Definition Name | Description |
 | - | - | - |
+| 200 | [SUBJECT_NAME](#block-code-200) | A single subject's name. |
+| 201 | [GROUP_NAME](#block-code-201) | The subject's or subjects' experimental group name. |
+| 300 | [EXP_NAME](#block-code-300) | The user's name for the current experiment. |
+| 301 | [TASK_TYPE](#block-code-301) | The user's name for task type, which can be a variant of the overall experiment type. |
+| 400 | [STAGE_NAME](#block-code-400) | The stage name for a behavioral session. |
+| 401 | [STAGE_DESCRIPTION](#block-code-401) | The stage description for a behavioral session. |
 
 ---
 
