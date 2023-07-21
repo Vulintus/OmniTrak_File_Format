@@ -2,6 +2,10 @@
 
 ---
 
+| Block Code (uint16) | Definition Name | Description |
+| -----               | ------------------------------ |  |
+| 43981               | [OMNITRAK_FILE_VERIFY](#43981) | First unsigned 16-bit integer written to every *.OmniTrak file to identify the file type, has a hex value of 0xABCD. |
+
 <html><table>
   <tr>
     <th>Block Code (uint16)</th>
