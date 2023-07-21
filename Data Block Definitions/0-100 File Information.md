@@ -3,31 +3,10 @@
 ---
 
 | Block Code (uint16) | Definition Name | Description |
-| -----               | - | ----------------------------------------------------------------------------------------------------------------------- |
+| - | - | - |
 | 43981 | [OMNITRAK_FILE_VERIFY](#43981) | First unsigned 16-bit integer written to every *.OmniTrak file to identify the file type, has a hex value of 0xABCD. |
 | 0 | [ERROR](#0) | **RESERVED TO INDICATE END-OF-FILE OR ERROR.** |
 
-<html><table>
-  <tr>
-    <th>Block Code (uint16)</th>
-    <th>Definition Name</th>
-    <th>Description</th>
-  </tr>
-  <tr>
-    <td> 43981 </td>
-    <td></html> [OMNITRAK_FILE_VERIFY](#43981) <html></td>
-    <td> First unsigned 16-bit integer written to every *.OmniTrak file to identify the file type, has a hex value of 0xABCD. </td>
-  </tr>
-  <tr>
-    <td> 0 </td>
-    <td> - </td>
-    <td> *RESERVED TO INDICATE END-OF-FILE OR ERROR.* </td>
-  </tr>
-</table></html>
-
-| Site                                                | Excellence | Modesty |
-| --------------------------------------------------- | ---------- | ------- |
-| [tabletomarkdown.com](https://tabletomarkdown.com/) | High       | Low     |
 ---
 
 * #### Block Code: 43981
