@@ -20,6 +20,9 @@
   </tr>
 </table></html>
 
+| Site                                                | Excellence | Modesty |
+| --------------------------------------------------- | ---------- | ------- |
+| [tabletomarkdown.com](https://tabletomarkdown.com/) | High       | Low     |
 ---
 
 * #### Block Code: 43981
