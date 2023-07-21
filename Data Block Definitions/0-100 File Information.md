@@ -4,19 +4,19 @@
 
 | Block Code (uint16) | Definition Name | Description |
 | - | - | - |
-| 43981 | [OMNITRAK_FILE_VERIFY](#43981) | First unsigned 16-bit integer written to every *.OmniTrak file to identify the file type, has a hex value of 0xABCD. |
-| 0 | [ERROR](#0) | **RESERVED TO INDICATE END-OF-FILE OR ERROR.** |
-| 1 | [FILE_VERSION](#1) | The version of the file format used. |
-| 2 | [MS_FILE_START](#2) | Value of the microcontroller millisecond clock at file creation. |
-| 3 | [MS_FILE_STOP](#3) | Value of the microcontroller millisecond clock when the file is closed. |
-| 4 | [SUBJECT_DEPRECATED](#4) | A single subject's name. |
-| 6 | [CLOCK_FILE_START](#6) | Computer clock serial date number at file creation (local time). |
+| 43981 | [OMNITRAK_FILE_VERIFY](#block-code-43981) | First unsigned 16-bit integer written to every *.OmniTrak file to identify the file type, has a hex value of 0xABCD. |
+| 0 | [ERROR](#block-code-0) | **RESERVED TO INDICATE END-OF-FILE OR ERROR.** |
+| 1 | [FILE_VERSION](#block-code-1) | The version of the file format used. |
+| 2 | [MS_FILE_START](#block-code-2) | Value of the microcontroller millisecond clock at file creation. |
+| 3 | [MS_FILE_STOP](#block-code-3) | Value of the microcontroller millisecond clock when the file is closed. |
+| 4 | [SUBJECT_DEPRECATED](#block-code-4) | A single subject's name. |
+| 6 | [CLOCK_FILE_START](#block-code-6) | Computer clock serial date number at file creation (local time). |
 | 7 | [CLOCK_FILE_STOP](#block-code-7) | Computer clock serial date number at file creation (local time). |
 
 ---
 
 * #### Block Code: 43981
-  * <a name="43981">Block Definition: OMNITRAK_FILE_VERIFY</a>
+  * Block Definition: OMNITRAK_FILE_VERIFY<
   * Description: "First unsigned 16-bit integer written to every *.OmniTrak file to identify the file type, has a hex value of 0xABCD."
   * Status: "In use in deployed programs."
   * Block Format:
@@ -25,7 +25,7 @@
 ---
 
 * #### Block Code: 0
-  * <a name="0">Block Definition: ERROR</a>
+  * Block Definition: ERROR
   * Description: "Reserved to indicate end-of-file or an error."
   * Status: "In use in deployed programs."
   * Block Format:
@@ -33,7 +33,7 @@
 
 ---
 
-* #### <a name="1"> Block Code: 1 </a>
+* #### Block Code: 1 
   * Block Definition: FILE_VERSION
   * Description: "The version of the file format used."
   * Status: "In use in deployed programs."
@@ -42,8 +42,8 @@
 
 ---
 
-* #### <a name="2"> Block Code: 2 </a>
-  * <a name="2">Block Definition: MS_FILE_START
+* #### Block Code: 2 
+  * Block Definition: MS_FILE_START
   * Description: "Value of the microcontroller millisecond clock at file creation."
   * Status: "In use in deployed programs."
   * Block Format:
@@ -51,7 +51,7 @@
 
 ---
 
-* #### <a name="3"> Block Code: 3 </a>
+* #### Block Code: 3 
   * Block Definition: MS_FILE_STOP
   * Description: "Value of the microcontroller millisecond clock when the file is closed."
   * Status: "In use in deployed programs."
@@ -60,7 +60,7 @@
 
 ---
 
-* #### <a name="4"> Block Code: 4 </a>
+* #### Block Code: 4 
   * Block Definition: SUBJECT_DEPRECATED
   * Description: "A single subject's name."
   * Status: "**Deprecated**. Do not use in new programs."
@@ -70,7 +70,7 @@
 
 ---
 
-* #### <a name="6"> Block Code: 6 </a>
+* #### Block Code: 6 
   * Block Definition: CLOCK_FILE_START
   * Description: "Computer clock serial date number at file creation (local time)."
   * Status: "In use in deployed programs."
