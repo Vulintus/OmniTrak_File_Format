@@ -1,4 +1,4 @@
-function block_codes = Load_OmniTrak_File_Block_Codes(ver)
+function block_codes = Load_OmniTrak_File_Block_Codes(varargin)
 
 %LOAD_OMNITRAK_FILE_BLOCK_CODES.m
 %
@@ -6,11 +6,16 @@ function block_codes = Load_OmniTrak_File_Block_Codes(ver)
 %
 %	OmniTrak file format block code libary.
 %
-%	Library V1 documentation:
-%	https://docs.google.com/spreadsheets/d/e/2PACX-1vSt8EQXvF5DNkU8MrZYNL_1TcYMDagQc-U6WyK51xt2nk6oHyXr6Z0jQPUfQTLzla4QNMagKPDmxKJ0/pubhtml
+%	https://github.com/Vulintus/OmniTrak_File_Format
 %
-%	This function was programmatically generated: 15-Mar-2022 09:52:43
+%	This file was programmatically generated: 2023-06-21, 10:04:24 (UTC).
 %
+
+if nargin > 0
+	ver = varargin{1};
+else
+	ver = 1;
+end
 
 block_codes = [];
 
@@ -38,6 +43,7 @@ switch ver
 		block_codes.MS_TIMER_ROLLOVER = 23;                                 %Indicates that the millisecond timer rolled over since the last loop.
 		block_codes.US_TIMER_ROLLOVER = 24;                                 %Indicates that the microsecond timer rolled over since the last loop.
 		block_codes.TIME_ZONE_OFFSET = 25;                                  %Computer clock time zone offset from UTC.
+		block_codes.TIME_ZONE_OFFSET_HHMM = 26;                             %Computer clock time zone offset from UTC as two integers, one for hours, and the other for minutes
 
 		block_codes.RTC_STRING_DEPRECATED = 30;                             %Current date/time string from the real-time clock.
 		block_codes.RTC_STRING = 31;                                        %Current date/time string from the real-time clock.
@@ -60,13 +66,14 @@ switch ver
 		block_codes.SYSTEM_MFR = 105;                                       %Manufacturer name for non-Vulintus systems.
 		block_codes.COMPUTER_NAME = 106;                                    %Windows PC computer name.
 		block_codes.COM_PORT = 107;                                         %The COM port of a computer-connected system.
+		block_codes.DEVICE_ALIAS = 108;                                     %Human-readable Adjective + Noun alias/name for the device, assigned by Vulintus during manufacturing
 
 		block_codes.PRIMARY_MODULE = 110;                                   %Primary module name, for systems with interchangeable modules.
 		block_codes.PRIMARY_INPUT = 111;                                    %Primary input name, for modules with multiple input signals.
-        block_codes.SAMD_CHIP_ID = 112;                                     %The SAMD manufacturer's unique chip identifier.
+		block_codes.SAMD_CHIP_ID = 112;                                     %The SAMD manufacturer's unique chip identifier.
 
-		block_codes.ESP8266_MAC_ADDR = 120;                                 %The MAC address of the device's ESP8266 module.
-		block_codes.ESP8266_IP4_ADDR = 121;                                 %The local IPv4 address of the device's ESP8266 module.
+		block_codes.WIFI_MAC_ADDR = 120;                                    %The MAC address of the device's ESP8266 module.
+		block_codes.WIFI_IP4_ADDR = 121;                                    %The local IPv4 address of the device's ESP8266 module.
 		block_codes.ESP8266_CHIP_ID = 122;                                  %The ESP8266 manufacturer's unique chip identifier
 		block_codes.ESP8266_FLASH_ID = 123;                                 %The ESP8266 flash chip's unique chip identifier
 
@@ -122,6 +129,13 @@ switch ver
 		block_codes.AMG8833_PIXELS_CONV = 1110;                             %The conversion factor, in degrees Celsius, for converting 16-bit integer AMG8833 pixel readings to temperature.
 		block_codes.AMG8833_PIXELS_FL = 1111;                               %The current AMG8833 pixel readings as converted float32 values, in Celsius.
 		block_codes.AMG8833_PIXELS_INT = 1112;                              %The current AMG8833 pixel readings as a raw, signed 16-bit integers.
+		block_codes.HTPA32X32_PIXELS_FP62 = 1113;                           %The current HTPA32x32 pixel readings as a fixed-point 6/2 type (6 bits for the unsigned integer part, 2 bits for the decimal part), in units of Celcius. This allows temperatures from 0 to 63.75 C.
+		block_codes.HTPA32X32_PIXELS_INT_K = 1114;                          %The current HTPA32x32 pixel readings represented as 16-bit unsigned integers in units of deciKelvin (dK, or Kelvin * 10).
+		block_codes.HTPA32X32_AMBIENT_TEMP = 1115;                          %The current ambient temperature measured by the HTPA32x32, represented as a 32-bit float, in units of Celcius.
+		block_codes.HTPA32X32_PIXELS_INT12_C = 1116;                        %The current HTPA32x32 pixel readings represented as 12-bit signed integers (2 pixels for every 3 bytes) in units of deciCelsius (dC, or Celsius * 10), with values under-range set to the minimum  (2048 dC) and values over-range set to the maximum (2047 dC).
+
+		block_codes.BH1749_RGB = 1120;                                      %The current red, green, blue, IR, and green2 sensor readings from the BH1749 sensor
+		block_codes.DEBUG_SANITY_CHECK = 1121;                              %A special block acting as a sanity check, only used in cases of debugging
 
 		block_codes.BME280_TEMP_FL = 1200;                                  %The current BME280 temperature reading as a converted float32 value, in Celsius.
 		block_codes.BMP280_TEMP_FL = 1201;                                  %The current BMP280 temperature reading as a converted float32 value, in Celsius.
@@ -132,6 +146,9 @@ switch ver
 		block_codes.BME680_PRES_FL = 1212;                                  %The current BME680 pressure reading as a converted float32 value, in Pascals (Pa).
 
 		block_codes.BME280_HUM_FL = 1220;                                   %The current BM280 humidity reading as a converted float32 value, in percent (%).
+		block_codes.BME680_HUM_FL = 1221;                                   %The current BME680 humidity reading as a converted float32 value, in percent (%).
+
+		block_codes.BME680_GAS_FL = 1230;                                   %The current BME680 gas resistance reading as a converted float32 value, in units of kOhms
 
 		block_codes.VL53L0X_DIST = 1300;                                    %The current VL53L0X distance reading as a 16-bit integer, in millimeters (-1 indicates out-of-range).
 		block_codes.VL53L0X_FAIL = 1301;                                    %Indicates the VL53L0X sensor experienced a range failure.
@@ -174,6 +191,7 @@ switch ver
 		block_codes.LSM303_MAG_SETTINGS = 1801;                             %Current magnetometer reading settings on any enabled LSM303.
 		block_codes.LSM303_ACC_FL = 1802;                                   %Current readings from the LSM303 accelerometer, as float values in m/s^2.
 		block_codes.LSM303_MAG_FL = 1803;                                   %Current readings from the LSM303 magnetometer, as float values in uT.
+		block_codes.LSM303_TEMP_FL = 1804;                                  %Current readings from the LSM303 temperature sensor, as float value in degrees Celcius
 
 		block_codes.SPECTRO_WAVELEN = 1900;                                 %Spectrometer wavelengths, in nanometers.
 		block_codes.SPECTRO_TRACE = 1901;                                   %Spectrometer measurement trace.
