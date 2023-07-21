@@ -2,6 +2,11 @@
 
 ---
 
+| Block Code (uint16) | Definition Name | Description |
+| - | - | - |
+
+---
+
 * #### Block Code: 2000
   * Block Definition: PELLET_DISPENSE
   * Description: "Timestamped event for feeding/pellet dispensing."
