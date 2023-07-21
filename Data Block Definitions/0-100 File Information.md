@@ -9,7 +9,7 @@
 | 1 | [FILE_VERSION](#1) | The version of the file format used. |
 | 2 | [MS_FILE_START](#2) | Value of the microcontroller millisecond clock at file creation. |
 | 3 | [MS_FILE_STOP](#3) | Value of the microcontroller millisecond clock when the file is closed. |
-| 4 | [~~SUBJECT_DEPRECATED~~](#4) | A single subject's name. |
+| 4 | [SUBJECT_DEPRECATED](#4) | A single subject's name. |
 | 6 | [CLOCK_FILE_START](#6) | Computer clock serial date number at file creation (local time). |
 
 ---
