@@ -10,7 +10,7 @@
   </tr>
   <tr>
     <td> 43981 </td>
-    <td> [OMNITRAK_FILE_VERIFY](#File-Format-and-Timing-Data-Blocks) </td>
+    <td> [OMNITRAK_FILE_VERIFY](#file-format-and-timing-data-blocks) </td>
     <td> First unsigned 16-bit integer written to every *.OmniTrak file to identify the file type, has a hex value of 0xABCD. </td>
   </tr>
   <tr>
