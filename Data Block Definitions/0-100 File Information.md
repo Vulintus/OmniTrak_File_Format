@@ -8,9 +8,9 @@
 | 0 | [ERROR](#0) | **RESERVED TO INDICATE END-OF-FILE OR ERROR.** |
 | 1 | [FILE_VERSION](#1) | The version of the file format used. |
 | 2 | [MS_FILE_START](#2) | Value of the microcontroller millisecond clock at file creation. |
-| 3 | [MS_FILE_STOP](#3) | **RESERVED TO INDICATE END-OF-FILE OR ERROR.** |
-| 4 | [ERROR](#4) | **RESERVED TO INDICATE END-OF-FILE OR ERROR.** |
-| 6 | [ERROR](#6) | **RESERVED TO INDICATE END-OF-FILE OR ERROR.** |
+| 3 | [MS_FILE_STOP](#3) | Value of the microcontroller millisecond clock when the file is closed. |
+| 4 | [~~SUBJECT_DEPRECATED~~](#4) | A single subject's name. |
+| 6 | [CLOCK_FILE_START](#6) | Computer clock serial date number at file creation (local time). |
 
 ---
 
@@ -52,7 +52,7 @@
 
 * #### Block Code: 3
   * <a name="3">Block Definition: MS_FILE_STOP</a>
-  * Description: "Value of the SoC millisecond clock when the file is closed."
+  * Description: "Value of the microcontroller millisecond clock when the file is closed."
   * Status: "In use in deployed programs."
   * Block Format:
     * 1x (uint32): timestamp, whole number of milliseconds.
