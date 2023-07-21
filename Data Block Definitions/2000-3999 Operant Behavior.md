@@ -60,7 +60,7 @@
 
 ---
 
-* ### Block Code: 2001
+* #### Block Code: 2001
   * Block Definition: PELLET_FAILURE
   * Description: "Timestamped event for feeding/pellet dispensing in which no pellet was detected."
   * Status:
@@ -69,7 +69,7 @@
 
 ---
 
-* ### Block Code: 2010
+* #### Block Code: 2010
   * Block Definition: HARD_PAUSE_START
   * Description: "Timestamped event marker for the start of a session pause, with no events recorded during the pause."
   * Status:
@@ -78,7 +78,7 @@
 
 ---
 
-* ### Block Code: 2011
+* #### Block Code: 2011
   * Block Definition: HARD_PAUSE_START
   * Description: "Timestamped event marker for the stop of a session pause, with no events recorded during the pause."
   * Status:
@@ -87,7 +87,7 @@
 
 ---
 
-* ### Block Code: 2012
+* #### Block Code: 2012
   * Block Definition: SOFT_PAUSE_START
   * Description: "Timestamped event marker for the start of a session pause, with non-operant events recorded during the pause."
   * Status:
@@ -96,7 +96,7 @@
 
 ---
 
-* ### Block Code: 2013
+* #### Block Code: 2013
   * Block Definition: SOFT_PAUSE_START
   * Description: "Timestamped event marker for the stop of a session pause, with non-operant events recorded during the pause."
   * Status:
@@ -105,7 +105,7 @@
 
 ---
 
-* ### Block Code: 2020
+* #### Block Code: 2020
   * Block Definition: POSITION_START_X
   * Description: "Starting position of an autopositioner in just the x-direction, with distance in millimeters."
   * Status:
@@ -114,7 +114,7 @@
 
 ---
 
-* ### Block Code: 2021
+* #### Block Code: 2021
   * Block Definition: POSITION_MOVE_X
   * Description: "Timestamped movement of an autopositioner in just the x-direction, with distance in millimeters."
   * Status:
@@ -123,7 +123,7 @@
 
 ---
 
-* ### Block Code: 2022
+* #### Block Code: 2022
   * Block Definition: POSITION_START_XY
   * Description: "Starting position of an autopositioner in just the x- and y-directions, with distance in millimeters."
   * Status:
@@ -132,7 +132,7 @@
 
 ---
 
-* ### Block Code: 2023
+* #### Block Code: 2023
   * Block Definition: POSITION_MOVE_XY
   * Description: "Timestamped movement of an autopositioner in just the x- and y-directions, with distance in millimeters."
   * Status:
@@ -141,7 +141,7 @@
 
 ---
 
-* ### Block Code: 2024
+* #### Block Code: 2024
   * Block Definition: POSITION_START_XYZ
   * Description: "Starting position of an autopositioner in the x-, y-, and z- directions, with distance in millimeters."
   * Status:
@@ -150,7 +150,7 @@
 
 ---
 
-* ### Block Code: 2025
+* #### Block Code: 2025
   * Block Definition: POSITION_MOVE_XYZ
   * Description: "Timestamped movement of an autopositioner in the x-, y-, and z- directions, with distance in millimeters."
   * Status:
@@ -159,7 +159,7 @@
 
 ---
 
-* ### Block Code: 2100
+* #### Block Code: 2100
   * Block Definition: STREAM_INPUT_NAME
   * Description: "Stream input name for the specified input index."
   * Status:
@@ -168,7 +168,7 @@
 
 ---
 
-* ### Block Code: 2200
+* #### Block Code: 2200
   * Block Definition: CALIBRATION_BASELINE
   * Description: "Starting calibration baseline coefficient, for the specified module index."
   * Status:
@@ -177,7 +177,7 @@
 
 ---
 
-* ### Block Code: 2201
+* #### Block Code: 2201
   * Block Definition: CALIBRATION_SLOPE
   * Description: "Starting calibration slope coefficient, for the specified module index."
   * Status:
@@ -186,7 +186,7 @@
 
 ---
 
-* ### Block Code: 2202
+* #### Block Code: 2202
   * Block Definition: CALIBRATION_BASELINE_ADJUST
   * Description: "Timestamped in-session calibration baseline coefficient adjustment, for the specified module index."
   * Status:
@@ -195,7 +195,7 @@
 
 ---
 
-* ### Block Code: 2203
+* #### Block Code: 2203
   * Block Definition: CALIBRATION_SLOPE_ADJUST
   * Description: "Timestamped in-session calibration slope coefficient adjustment, for the specified module index."
   * Status:
@@ -204,7 +204,7 @@
 
 ---
 
-* ### Block Code: 2300
+* #### Block Code: 2300
   * Block Definition: HIT_THRESH_TYPE
   * Description: "Type of hit threshold (i.e. peak force), for the specified input."
   * Status:
@@ -213,7 +213,7 @@
 
 ---
 
-* ### Block Code: 2310
+* #### Block Code: 2310
   * Block Definition: SECONDARY_THRESH_NAME
   * Description: "A name/description of secondary thresholds used in the behavior."
   * Status:
@@ -222,7 +222,7 @@
 
 ---
 
-* ### Block Code: 2320
+* #### Block Code: 2320
   * Block Definition: INIT_THRESH_TYPE
   * Description: "Type of initation threshold (i.e. force or touch), for the specified input."
   * Status:
@@ -231,7 +231,7 @@
 
 ---
 
-* ### Block Code: 2400
+* #### Block Code: 2400
   * Block Definition: REMOTE_MANUAL_FEED
   * Description: "A timestamped manual feed event, triggered remotely."
   * Status:
@@ -240,7 +240,7 @@
 
 ---
 
-* ### Block Code: 2401
+* #### Block Code: 2401
   * Block Definition: HWUI_MANUAL_FEED
   * Description: "A timestamped manual feed event, triggered from the hardware user interface."
   * Status:
@@ -249,7 +249,7 @@
 
 ---
 
-* ### Block Code: 2402
+* #### Block Code: 2402
   * Block Definition: FW_RANDOM_FEED
   * Description: "A timestamped manual feed event, triggered randomly by the firmware."
   * Status:
@@ -258,7 +258,7 @@
 
 ---
 
-* ### Block Code: 2403
+* #### Block Code: 2403
   * Block Definition: SWUI_MANUAL_FEED_DEPRECATED
   * Description: "A timestamped manual feed event, triggered from a computer software user interface."
   * Status:
@@ -267,7 +267,7 @@
  
 ---
 
-* ### Block Code: 2404
+* #### Block Code: 2404
   * Block Definition: FW_OPERANT_FEED
   * Description: "A timestamped operant-rewarded feed event, trigged by the OmniHome firmware, with the possibility of multiple feedings."
   * Status:
@@ -276,7 +276,7 @@
 
 ---
 
-* ### Block Code: 2405
+* #### Block Code: 2405
   * Block Definition: SWUI_MANUAL_FEED
   * Description: "A timestamped manual feed event, triggered from a computer software user interface."
   * Status:
@@ -285,7 +285,7 @@
  
 ---
 
-* ### Block Code: 2406
+* #### Block Code: 2406
   * Block Definition: SW_RANDOM_FEED
   * Description: "A timestamped manual feed event, triggered randomly by computer software."
   * Status:
@@ -294,7 +294,7 @@
  
 ---
 
-* ### Block Code: 2407
+* #### Block Code: 2407
   * Block Definition: SW_OPERANT_FEED
   * Description: "A timestamped operant-rewarded feed event, trigged by the PC-based behavioral software, with the possibility of multiple feedings."
   * Status:
@@ -303,7 +303,7 @@
  
 ---
 
-* ### Block Code: 2500
+* #### Block Code: 2500
   * Block Definition: MOTOTRAK_V3P0_OUTCOME
   * Description: "MotoTrak version 3.0 trial outcome data."
   * Status:
@@ -312,7 +312,7 @@
  
 ---
 
-* ### Block Code: 2501
+* #### Block Code: 2501
   * Block Definition: MOTOTRAK_V3P0_SIGNAL
   * Description: "MotoTrak version 3.0 trial stream signal."
   * Status:
@@ -321,7 +321,7 @@
  
 ---
 
-* ### Block Code: 2600
+* #### Block Code: 2600
   * Block Definition: OUTPUT_TRIGGER_NAME
   * Description: "Name/description of the output trigger type for the given index."
   * Status:
@@ -330,7 +330,7 @@
 
 ---
 
-* ### Block Code: 2700
+* #### Block Code: 2700
   * Block Definition: VIBRATION_TASK_TRIAL_OUTCOME
   * Description: "Vibration task trial outcome data."
   * Status:
@@ -339,7 +339,7 @@
  
 ---
 
-* ### Block Code: 2710
+* #### Block Code: 2710
   * Block Definition: LED_DETECTION_TASK_TRIAL_OUTCOME
   * Description: "LED detection task trial outcome data."
   * Status:
@@ -348,7 +348,7 @@
  
 ---
 
-* ### Block Code: 2711
+* #### Block Code: 2711
   * Block Definition: LIGHT_SRC_MODEL
   * Description: "Light source model name."
   * Status:
@@ -357,7 +357,7 @@
 
 ---
 
-* ### Block Code: 2712
+* #### Block Code: 2712
   * Block Definition: LIGHT_SRC_TYPE
   * Description: "Light source type (i.e. LED, LASER, etc)."
   * Status:
@@ -366,7 +366,7 @@
  
 ---
 
-* ### Block Code: 2720
+* #### Block Code: 2720
   * Block Definition: STTC_2AFC_TRIAL_OUTCOME
   * Description: "SensiTrak tactile discrimination task trial outcome data."
   * Status:
@@ -374,7 +374,7 @@
     *
 ---
 
-* ### Block Code: 2721
+* #### Block Code: 2721
   * Block Definition: STTC_NUM_PADS
   * Description: "Number of pads on the SensiTrak Tactile Carousel module."
   * Status:
@@ -383,7 +383,7 @@
 
 ---
 
-* ### Block Code: 2722
+* #### Block Code: 2722
   * Block Definition: MODULE_MICROSTEP
   * Description: "Microstep setting on the specified OTMP module."
   * Status:
@@ -392,7 +392,7 @@
 
 ---
 
-* ### Block Code: 2723
+* #### Block Code: 2723
   * Block Definition: MODULE_STEPS_PER_ROT
   * Description: "Steps per rotation on the specified OTMP module."
   * Status:
@@ -401,7 +401,7 @@
 
 ---
 
-* ### Block Code: 2730
+* #### Block Code: 2730
   * Block Definition: MODULE_PITCH_CIRC
   * Description: "Pitch circumference, in millimeters, of the driving gear on the specified OTMP module."
   * Status:
@@ -410,7 +410,7 @@
  
 ---
 
-* ### Block Code: 2731
+* #### Block Code: 2731
   * Block Definition: MODULE_CENTER_OFFSET
   * Description: "Center offset, in millimeters, for the specified OTMP module."
   * Status:
@@ -419,7 +419,7 @@
  
 ---
 
-* ### Block Code: 2740
+* #### Block Code: 2740
   * Block Definition: STAP_2AFC_TRIAL_OUTCOME
   * Description: "SensiTrak proprioception discrimination task trial outcome data."
   * Status:
