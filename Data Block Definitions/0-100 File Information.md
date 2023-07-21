@@ -11,7 +11,7 @@
 | 3 | [MS_FILE_STOP](#3) | Value of the microcontroller millisecond clock when the file is closed. |
 | 4 | [SUBJECT_DEPRECATED](#4) | A single subject's name. |
 | 6 | [CLOCK_FILE_START](#6) | Computer clock serial date number at file creation (local time). |
-| 7 | [CLOCK_FILE_STOP](#block-code:-7) | Computer clock serial date number at file creation (local time). |
+| 7 | [CLOCK_FILE_STOP](#block-code-7) | Computer clock serial date number at file creation (local time). |
 
 ---
 
