@@ -2,6 +2,8 @@
 
 ---
 
+| Block Code (uint16) | Definition Name | Description |
+| - | - | - |
 | 100 | [SYSTEM_TYPE](#block-code-100) | Vulintus system ID code (1 = MotoTrak, 2 = OmniTrak, 3 = HabiTrak, 4 = OmniHome, 5 = SensiTrak, 6 = Prototype). |
 | 101 | [SYSTEM_NAME](#block-code-101) | System name. |
 | 102 | [SYSTEM_HW_VER](#block-code-102) | Vulintus system hardware version. |
