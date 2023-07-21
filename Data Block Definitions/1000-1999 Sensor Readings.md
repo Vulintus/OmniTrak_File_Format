@@ -4,6 +4,71 @@
 
 | Block Code (uint16) | Definition Name | Description |
 | - | - | - |
+| 1000 | [AMG8833_ENABLED](#block-code-1000) | Indicates that an AMG8833 thermopile array sensor is present in the system. |
+| 1001 | [BMP280_ENABLED](#block-code-1001) | Indicates that an BMP280 temperature/pressure sensor is present in the system. |
+| 1002 | [BME280_ENABLED](#block-code-1002) | Indicates that an BME280 temperature/pressure/humidty sensor is present in the system. |
+| 1003 | [BME680_ENABLED](#block-code-1003) | Indicates that an BME680 temperature/pressure/humidy/VOC sensor is present in the system. |
+| 1004 | [CCS811_ENABLED](#block-code-1004) | Indicates that an CCS811 VOC/eC02 sensor is present in the system. |
+| 1005 | [SGP30_ENABLED](#block-code-1005) | Indicates that an SGP30 VOC/eC02 sensor is present in the system. |
+| 1006 | [VL53L0X_ENABLED](#block-code-1006) | Indicates that an VL53L0X time-of-flight distance sensor is present in the system. |
+| 1007 | [ALSPT19_ENABLED](#block-code-1007) | Indicates that an ALS-PT19 ambient light sensor is present in the system. |
+| 1008 | [MLX90640_ENABLED](#block-code-1008) | Indicates that an MLX90640 thermopile array sensor is present in the system. |
+| 1009 | [ZMOD4410_ENABLED](#block-code-1009) | Indicates that an ZMOD4410 VOC/eC02 sensor is present in the system. |
+| 1100 | [AMG8833_THERM_CONV](#block-code-1100) | The conversion factor, in degrees Celsius, for converting 16-bit integer AMG8833 pixel readings to temperature. |
+| 1101 | [AMG8833_THERM_FL](#block-code-1101) | The current AMG8833 thermistor reading as a converted float32 value, in Celsius. |
+| 1102 | [AMG8833_THERM_INT](#block-code-1102) | The current AMG8833 thermistor reading as a raw, signed 16-bit integer. |
+| 1110 | [AMG8833_PIXELS_CONV](#block-code-1110) | The conversion factor, in degrees Celsius, for converting 16-bit integer AMG8833 pixel readings to temperature. |
+| 1111 | [AMG8833_PIXELS_FL](#block-code-1111) | The current AMG8833 pixel readings as converted float32 values, in Celsius. |
+| 1112 | [AMG8833_PIXELS_INT](#block-code-1112) | The current AMG8833 pixel readings as a raw, signed 16-bit integers. |
+| 1113 | [HTPA32X32_PIXELS_FP62](#block-code-1113) | The current HTPA32x32 pixel readings as a fixed-point 6/2 type (6 bits for the unsigned integer part, 2 bits for the decimal part), in units of Celcius. This allows temperatures from 0 to 63.75 C. |
+| 1114 | [HTPA32X32_PIXELS_INT_K](#block-code-1114) | The current HTPA32x32 pixel readings represented as 16-bit unsigned integers in units of deciKelvin (dK, or Kelvin * 10). |
+| 1115 | [HTPA32X32_AMBIENT_TEMP](#block-code-1115) | The current ambient temperature measured by the HTPA32x32, represented as a 32-bit float, in units of Celcius. |
+| 1116 | [HTPA32X32_PIXELS_INT12_C](#block-code-1116) | The current HTPA32x32 pixel readings represented as 12-bit signed integers (2 pixels for every 3 bytes) in units of deciCelsius (dC, or Celsius * 10), with values under-range set to the minimum  (2048 dC) and values over-range set to the maximum (2047 dC). |
+| 1120 | [BH1749_RGB](#block-code-1120) | The current red, green, blue, IR, and green2 sensor readings from the BH1749 sensor |
+| 1121 | [DEBUG_SANITY_CHECK](#block-code-1121) | A special block acting as a sanity check, only used in cases of debugging |
+| 1200 | [BME280_TEMP_FL](#block-code-1200) | The current BME280 temperature reading as a converted float32 value, in Celsius. |
+| 1201 | [BMP280_TEMP_FL](#block-code-1201) | The current BMP280 temperature reading as a converted float32 value, in Celsius. |
+| 1202 | [BME680_TEMP_FL](#block-code-1202) | The current BME680 temperature reading as a converted float32 value, in Celsius. |
+| 1210 | [BME280_PRES_FL](#block-code-1210) | The current BME280 pressure reading as a converted float32 value, in Pascals (Pa). |
+| 1211 | [BMP280_PRES_FL](#block-code-1211) | The current BMP280 pressure reading as a converted float32 value, in Pascals (Pa). |
+| 1212 | [BME680_PRES_FL](#block-code-1212) | The current BME680 pressure reading as a converted float32 value, in Pascals (Pa). |
+| 1220 | [BME280_HUM_FL](#block-code-1220) | The current BM280 humidity reading as a converted float32 value, in percent (%). |
+| 1221 | [BME680_HUM_FL](#block-code-1221) | The current BME680 humidity reading as a converted float32 value, in percent (%). |
+| 1230 | [BME680_GAS_FL](#block-code-1230) | The current BME680 gas resistance reading as a converted float32 value, in units of kOhms |
+| 1300 | [VL53L0X_DIST](#block-code-1300) | The current VL53L0X distance reading as a 16-bit integer, in millimeters (-1 indicates out-of-range). |
+| 1301 | [VL53L0X_FAIL](#block-code-1301) | Indicates the VL53L0X sensor experienced a range failure. |
+| 1400 | [SGP30_SN](#block-code-1400) | The serial number of the SGP30. |
+| 1410 | [SGP30_EC02](#block-code-1410) | The current SGp30 eCO2 reading distance reading as a 16-bit integer, in parts per million (ppm). |
+| 1420 | [SGP30_TVOC](#block-code-1420) | The current SGp30 TVOC reading distance reading as a 16-bit integer, in parts per million (ppm). |
+| 1500 | [MLX90640_DEVICE_ID](#block-code-1500) | The MLX90640 unique device ID saved in the device's EEPROM. |
+| 1501 | [MLX90640_EEPROM_DUMP](#block-code-1501) | Raw download of the entire MLX90640 EEPROM, as unsigned 16-bit integers. |
+| 1502 | [MLX90640_ADC_RES](#block-code-1502) | ADC resolution setting on the MLX90640 (16-, 17-, 18-, or 19-bit). |
+| 1503 | [MLX90640_REFRESH_RATE](#block-code-1503) | Current refresh rate on the MLX90640 (0.25, 0.5, 1, 2, 4, 8, 16, or 32 Hz). |
+| 1504 | [MLX90640_I2C_CLOCKRATE](#block-code-1504) | Current I2C clock freqency used with the MLX90640 (100, 400, or 1000 kHz). |
+| 1510 | [MLX90640_PIXELS_TO](#block-code-1510) | The current MLX90640 pixel readings as converted float32 values, in Celsius. |
+| 1511 | [MLX90640_PIXELS_IM](#block-code-1511) | The current MLX90640 pixel readings as converted, but uncalibrationed, float32 values. |
+| 1512 | [MLX90640_PIXELS_INT](#block-code-1512) | The current MLX90640 pixel readings as a raw, unsigned 16-bit integers. |
+| 1520 | [MLX90640_I2C_TIME](#block-code-1520) | The I2C transfer time of the frame data from the MLX90640 to the microcontroller, in milliseconds. |
+| 1521 | [MLX90640_CALC_TIME](#block-code-1521) | The calculation time for the uncalibrated or calibrated image captured by the MLX90640. |
+| 1522 | [MLX90640_IM_WRITE_TIME](#block-code-1522) | The SD card write time for the MLX90640 float32 image data. |
+| 1523 | [MLX90640_INT_WRITE_TIME](#block-code-1523) | The SD card write time for the MLX90640 raw uint16 data. |
+| 1600 | [ALSPT19_LIGHT](#block-code-1600) | The current analog value of the ALS-PT19 ambient light sensor, as an unsigned integer ADC value. |
+| 1700 | [ZMOD4410_MOX_BOUND](#block-code-1700) | The current lower and upper bounds for the ZMOD4410 ADC reading used in calculations. |
+| 1701 | [ZMOD4410_CONFIG_PARAMS](#block-code-1701) | Current configuration values for the ZMOD4410. |
+| 1702 | [ZMOD4410_ERROR](#block-code-1702) | Timestamped ZMOD4410 error event. |
+| 1703 | [ZMOD4410_READING_FL](#block-code-1703) | Timestamped ZMOD4410 reading calibrated and converted to float32. |
+| 1704 | [ZMOD4410_READING_INT](#block-code-1704) | Timestamped ZMOD4410 reading saved as the raw uint16 ADC value. |
+| 1710 | [ZMOD4410_ECO2](#block-code-1710) | Timestamped ZMOD4410 eCO2 reading. |
+| 1711 | [ZMOD4410_IAQ](#block-code-1711) | Timestamped ZMOD4410 indoor air quality reading. |
+| 1712 | [ZMOD4410_TVOC](#block-code-1712) | Timestamped ZMOD4410 total volatile organic compound reading. |
+| 1713 | [ZMOD4410_R_CDA](#block-code-1713) | Timestamped ZMOD4410 total volatile organic compound reading. |
+| 1800 | [LSM303_ACC_SETTINGS](#block-code-1800) | Current accelerometer reading settings on any enabled LSM303. |
+| 1801 | [LSM303_MAG_SETTINGS](#block-code-1801) | Current magnetometer reading settings on any enabled LSM303. |
+| 1802 | [LSM303_ACC_FL](#block-code-1802) | Current readings from the LSM303 accelerometer, as float values in m/s^2. |
+| 1803 | [LSM303_MAG_FL](#block-code-1803) | Current readings from the LSM303 magnetometer, as float values in uT. |
+| 1804 | [LSM303_TEMP_FL](#block-code-1804) | Current readings from the LSM303 temperature sensor, as float value in degrees Celcius |
+| 1900 | [SPECTRO_WAVELEN](#block-code-1900) | Spectrometer wavelengths, in nanometers. |
+| 1901 | [SPECTRO_TRACE](#block-code-1901) | Spectrometer measurement trace. |
 
 ---
 
