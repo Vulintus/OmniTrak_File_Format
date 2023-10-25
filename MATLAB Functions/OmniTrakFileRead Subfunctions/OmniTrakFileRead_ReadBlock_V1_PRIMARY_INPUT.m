@@ -6,4 +6,4 @@ function data = OmniTrakFileRead_ReadBlock_V1_PRIMARY_INPUT(fid,data)
 
 data = OmniTrakFileRead_Check_Field_Name(data,'input');                     %Call the subfunction to check for existing fieldnames.
 N = fread(fid,1,'uint16');                                                  %Read in the number of characters.
-data.input.primary = fread(fid,N,'*char')';                                 %Read in the characters of the primary module name.
+data.input(1).primary = fread(fid,N,'*char')';                              %Read in the characters of the primary module name.

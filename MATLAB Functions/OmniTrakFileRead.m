@@ -1,6 +1,6 @@
 function data = OmniTrakFileRead(file,varargin)
 
-%Collated: 06/07/2023, 13:33:43
+%Collated: 10/24/2023, 21:05:18
 
 
 %
@@ -28,12 +28,15 @@ function data = OmniTrakFileRead(file,varargin)
 
 verbose = 0;                                                                %Default to non-verbose output.
 header_only = 0;                                                            %Default to reading the entire file, not just the header.
+show_waitbar = 0;                                                           %Default to not showing a waitbar.
 for i = 1:numel(varargin)                                                   %Step through each optional input argument.
     switch lower(varargin{i})                                               %Switch between the recognized input arguments.
         case 'header'                                                       %Just read the header.
             header_only = 1;                                                %Set the header only flag to 1.
         case 'verbose'                                                      %Request verbose output.
             verbose = 1;                                                    %Set the verbose flag to 1.
+        case 'waitbar'                                                      %Request a waitbar.
+            show_waitbar = 1;                                               %Set the waitbar flag to 1.
     end
 end
 
@@ -45,7 +48,9 @@ if ~exist(file,'file') == 2                                                 %If 
 end
 
 fid = fopen(file,'r');                                                      %Open the input file for read access.
-fseek(fid,0,-1);                                                            %Rewind to the beginning of the file.
+fseek(fid,0,'eof');                                                         %Fast forward to the end of the file.
+file_size = ftell(fid);                                                     %Read in the number of bytes in the file.
+fseek(fid,0,'bof');                                                         %Rewind to the beginning of the file.
 
 block = fread(fid,1,'uint16');                                              %Read in the first data block code.
 if isempty(block) || block ~= hex2dec('ABCD')                               %If the first block isn't the expected OmniTrak file identifier...
@@ -62,9 +67,18 @@ if isempty(block) || block ~= 1                                             %If 
 end
 data.file_version = fread(fid,1,'uint16');                                  %Read in the file version.
 
+waitbar_closed = 0;                                                         %Create a flag to indicate when the waitbar is closed.
+if show_waitbar == 1                                                        %If we're showing a progress waitbar.
+    [~, shortfile, ext] = fileparts(file);                                  %Grab the filename minus the path.
+    waitbar_str = sprintf('Reading: %s%s',shortfile,ext);                   %Create a string for the waitbar.
+    waitbar = big_waitbar('title','OmniTrakFileRead Progress',...
+        'string',waitbar_str,...
+        'value',ftell(fid)/file_size);                                      %Create a waitbar figure.
+end
+
 try                                                                         %Attempt to read in the file.
     
-    while ~feof(fid)                                                        %Loop until the end of the file. 
+    while ~feof(fid) && ~waitbar_closed                                     %Loop until the end of the file. 
         
         block = fread(fid,1,'uint16');                                      %Read in the next data block code.
         if isempty(block)                                                   %If there was no new block code to read.
@@ -92,6 +106,17 @@ try                                                                         %Att
             end
                     
         end
+
+        if show_waitbar                                                     %If we're showing the waitbar...
+            if waitbar.isclosed()                                           %If the user closed the waitbar figure...
+                waitbar_closed = 1;                                         %Set the waitbar closed flag to 1.
+            else                                                            %If the waitbar hasn't been closed...
+                waitbar.value(ftell(fid)/file_size);                        %Update the waitbar value.
+                waitbar.string(sprintf('%s (%1.0f/%1.0f)',waitbar_str,...
+                    ftell(fid),file_size));                                 %Update the waitbar text.
+            end
+        end
+
     end
 
 catch err                                                                   %If an error occured...
@@ -117,8 +142,12 @@ end
 
 fclose(fid);                                                                %Close the input file.
 
+if show_waitbar && ~waitbar.isclosed()                                      %If we're showing the waitbar and it's not yet closed....
+    waitbar.close();                                                        %Close the waitbar.
+end
 
-function block_codes = Load_OmniTrak_File_Block_Codes(ver)
+
+function block_codes = Load_OmniTrak_File_Block_Codes(varargin)
 
 %LOAD_OMNITRAK_FILE_BLOCK_CODES.m
 %
@@ -126,11 +155,16 @@ function block_codes = Load_OmniTrak_File_Block_Codes(ver)
 %
 %	OmniTrak file format block code libary.
 %
-%	Library V1 documentation:
-%	https://docs.google.com/spreadsheets/d/e/2PACX-1vSt8EQXvF5DNkU8MrZYNL_1TcYMDagQc-U6WyK51xt2nk6oHyXr6Z0jQPUfQTLzla4QNMagKPDmxKJ0/pubhtml
+%	https://github.com/Vulintus/OmniTrak_File_Format
 %
-%	This function was programmatically generated: 15-Mar-2022 09:52:43
+%	This file was programmatically generated: 2023-06-21, 10:04:24 (UTC).
 %
+
+if nargin > 0
+	ver = varargin{1};
+else
+	ver = 1;
+end
 
 block_codes = [];
 
@@ -158,6 +192,7 @@ switch ver
 		block_codes.MS_TIMER_ROLLOVER = 23;                                 %Indicates that the millisecond timer rolled over since the last loop.
 		block_codes.US_TIMER_ROLLOVER = 24;                                 %Indicates that the microsecond timer rolled over since the last loop.
 		block_codes.TIME_ZONE_OFFSET = 25;                                  %Computer clock time zone offset from UTC.
+		block_codes.TIME_ZONE_OFFSET_HHMM = 26;                             %Computer clock time zone offset from UTC as two integers, one for hours, and the other for minutes
 
 		block_codes.RTC_STRING_DEPRECATED = 30;                             %Current date/time string from the real-time clock.
 		block_codes.RTC_STRING = 31;                                        %Current date/time string from the real-time clock.
@@ -180,13 +215,14 @@ switch ver
 		block_codes.SYSTEM_MFR = 105;                                       %Manufacturer name for non-Vulintus systems.
 		block_codes.COMPUTER_NAME = 106;                                    %Windows PC computer name.
 		block_codes.COM_PORT = 107;                                         %The COM port of a computer-connected system.
+		block_codes.DEVICE_ALIAS = 108;                                     %Human-readable Adjective + Noun alias/name for the device, assigned by Vulintus during manufacturing
 
 		block_codes.PRIMARY_MODULE = 110;                                   %Primary module name, for systems with interchangeable modules.
 		block_codes.PRIMARY_INPUT = 111;                                    %Primary input name, for modules with multiple input signals.
-        block_codes.SAMD_CHIP_ID = 112;                                     %The SAMD manufacturer's unique chip identifier.
+		block_codes.SAMD_CHIP_ID = 112;                                     %The SAMD manufacturer's unique chip identifier.
 
-		block_codes.ESP8266_MAC_ADDR = 120;                                 %The MAC address of the device's ESP8266 module.
-		block_codes.ESP8266_IP4_ADDR = 121;                                 %The local IPv4 address of the device's ESP8266 module.
+		block_codes.WIFI_MAC_ADDR = 120;                                    %The MAC address of the device's ESP8266 module.
+		block_codes.WIFI_IP4_ADDR = 121;                                    %The local IPv4 address of the device's ESP8266 module.
 		block_codes.ESP8266_CHIP_ID = 122;                                  %The ESP8266 manufacturer's unique chip identifier
 		block_codes.ESP8266_FLASH_ID = 123;                                 %The ESP8266 flash chip's unique chip identifier
 
@@ -242,6 +278,13 @@ switch ver
 		block_codes.AMG8833_PIXELS_CONV = 1110;                             %The conversion factor, in degrees Celsius, for converting 16-bit integer AMG8833 pixel readings to temperature.
 		block_codes.AMG8833_PIXELS_FL = 1111;                               %The current AMG8833 pixel readings as converted float32 values, in Celsius.
 		block_codes.AMG8833_PIXELS_INT = 1112;                              %The current AMG8833 pixel readings as a raw, signed 16-bit integers.
+		block_codes.HTPA32X32_PIXELS_FP62 = 1113;                           %The current HTPA32x32 pixel readings as a fixed-point 6/2 type (6 bits for the unsigned integer part, 2 bits for the decimal part), in units of Celcius. This allows temperatures from 0 to 63.75 C.
+		block_codes.HTPA32X32_PIXELS_INT_K = 1114;                          %The current HTPA32x32 pixel readings represented as 16-bit unsigned integers in units of deciKelvin (dK, or Kelvin * 10).
+		block_codes.HTPA32X32_AMBIENT_TEMP = 1115;                          %The current ambient temperature measured by the HTPA32x32, represented as a 32-bit float, in units of Celcius.
+		block_codes.HTPA32X32_PIXELS_INT12_C = 1116;                        %The current HTPA32x32 pixel readings represented as 12-bit signed integers (2 pixels for every 3 bytes) in units of deciCelsius (dC, or Celsius * 10), with values under-range set to the minimum  (2048 dC) and values over-range set to the maximum (2047 dC).
+
+		block_codes.BH1749_RGB = 1120;                                      %The current red, green, blue, IR, and green2 sensor readings from the BH1749 sensor
+		block_codes.DEBUG_SANITY_CHECK = 1121;                              %A special block acting as a sanity check, only used in cases of debugging
 
 		block_codes.BME280_TEMP_FL = 1200;                                  %The current BME280 temperature reading as a converted float32 value, in Celsius.
 		block_codes.BMP280_TEMP_FL = 1201;                                  %The current BMP280 temperature reading as a converted float32 value, in Celsius.
@@ -252,6 +295,9 @@ switch ver
 		block_codes.BME680_PRES_FL = 1212;                                  %The current BME680 pressure reading as a converted float32 value, in Pascals (Pa).
 
 		block_codes.BME280_HUM_FL = 1220;                                   %The current BM280 humidity reading as a converted float32 value, in percent (%).
+		block_codes.BME680_HUM_FL = 1221;                                   %The current BME680 humidity reading as a converted float32 value, in percent (%).
+
+		block_codes.BME680_GAS_FL = 1230;                                   %The current BME680 gas resistance reading as a converted float32 value, in units of kOhms
 
 		block_codes.VL53L0X_DIST = 1300;                                    %The current VL53L0X distance reading as a 16-bit integer, in millimeters (-1 indicates out-of-range).
 		block_codes.VL53L0X_FAIL = 1301;                                    %Indicates the VL53L0X sensor experienced a range failure.
@@ -294,6 +340,7 @@ switch ver
 		block_codes.LSM303_MAG_SETTINGS = 1801;                             %Current magnetometer reading settings on any enabled LSM303.
 		block_codes.LSM303_ACC_FL = 1802;                                   %Current readings from the LSM303 accelerometer, as float values in m/s^2.
 		block_codes.LSM303_MAG_FL = 1803;                                   %Current readings from the LSM303 magnetometer, as float values in uT.
+		block_codes.LSM303_TEMP_FL = 1804;                                  %Current readings from the LSM303 temperature sensor, as float value in degrees Celcius
 
 		block_codes.SPECTRO_WAVELEN = 1900;                                 %Spectrometer wavelengths, in nanometers.
 		block_codes.SPECTRO_TRACE = 1901;                                   %Spectrometer measurement trace.
@@ -420,10 +467,9 @@ function data = OmniTrakFileRead_ReadBlock(fid,block,data,verbose)
 %
 %	OmniTrak file block read subfunction router.
 %
-%	Library V1 documentation:
-%	https://docs.google.com/spreadsheets/d/e/2PACX-1vSt8EQXvF5DNkU8MrZYNL_1TcYMDagQc-U6WyK51xt2nk6oHyXr6Z0jQPUfQTLzla4QNMagKPDmxKJ0/pubhtml
+%	https://github.com/Vulintus/OmniTrak_File_Format
 %
-%	This function was programmatically generated: 15-Mar-2022 09:53:13
+%	This file was programmatically generated: 2023-06-21, 10:04:24 (UTC).
 %
 
 block_codes = Load_OmniTrak_File_Block_Codes(data.file_version);
@@ -482,6 +528,9 @@ switch data.file_version
 			case block_codes.TIME_ZONE_OFFSET                               %Computer clock time zone offset from UTC.
 				data = OmniTrakFileRead_ReadBlock_V1_TIME_ZONE_OFFSET(fid,data);
 
+			case block_codes.TIME_ZONE_OFFSET_HHMM                          %Computer clock time zone offset from UTC as two integers, one for hours, and the other for minutes
+				data = OmniTrakFileRead_ReadBlock_V1_TIME_ZONE_OFFSET_HHMM(fid,data);
+
 			case block_codes.RTC_STRING_DEPRECATED                          %Current date/time string from the real-time clock.
 				data = OmniTrakFileRead_ReadBlock_V1_RTC_STRING_DEPRECATED(fid,data);
 
@@ -533,20 +582,23 @@ switch data.file_version
 			case block_codes.COM_PORT                                       %The COM port of a computer-connected system.
 				data = OmniTrakFileRead_ReadBlock_V1_COM_PORT(fid,data);
 
+			case block_codes.DEVICE_ALIAS                                   %Human-readable Adjective + Noun alias/name for the device, assigned by Vulintus during manufacturing
+				data = OmniTrakFileRead_ReadBlock_V1_DEVICE_ALIAS(fid,data);
+
 			case block_codes.PRIMARY_MODULE                                 %Primary module name, for systems with interchangeable modules.
 				data = OmniTrakFileRead_ReadBlock_V1_PRIMARY_MODULE(fid,data);
 
 			case block_codes.PRIMARY_INPUT                                  %Primary input name, for modules with multiple input signals.
 				data = OmniTrakFileRead_ReadBlock_V1_PRIMARY_INPUT(fid,data);
 
-            case block_codes.SAMD_CHIP_ID                                   %The SAMD manufacturer's unique chip identifier.
+			case block_codes.SAMD_CHIP_ID                                   %The SAMD manufacturer's unique chip identifier.
 				data = OmniTrakFileRead_ReadBlock_V1_SAMD_CHIP_ID(fid,data);
 
-			case block_codes.ESP8266_MAC_ADDR                               %The MAC address of the device's ESP8266 module.
-				data = OmniTrakFileRead_ReadBlock_V1_ESP8266_MAC_ADDR(fid,data);
+            case block_codes.WIFI_MAC_ADDR                                  %The MAC address of the device's embedded WiFi module.
+				data = OmniTrakFileRead_ReadBlock_V1_WIFI_MAC_ADDR(fid,data);
 
-			case block_codes.ESP8266_IP4_ADDR                               %The local IPv4 address of the device's ESP8266 module.
-				data = OmniTrakFileRead_ReadBlock_V1_ESP8266_IP4_ADDR(fid,data);
+            case block_codes.WIFI_IP4_ADDR                                  %The local IPv4 address of the device's embedded WiFi module.
+				data = OmniTrakFileRead_ReadBlock_V1_WIFI_IP4_ADDR(fid,data);
 
 			case block_codes.ESP8266_CHIP_ID                                %The ESP8266 manufacturer's unique chip identifier
 				data = OmniTrakFileRead_ReadBlock_V1_ESP8266_CHIP_ID(fid,data);
@@ -680,6 +732,24 @@ switch data.file_version
 			case block_codes.AMG8833_PIXELS_INT                             %The current AMG8833 pixel readings as a raw, signed 16-bit integers.
 				data = OmniTrakFileRead_ReadBlock_V1_AMG8833_PIXELS_INT(fid,data);
 
+			case block_codes.HTPA32X32_PIXELS_FP62                          %The current HTPA32x32 pixel readings as a fixed-point 6/2 type (6 bits for the unsigned integer part, 2 bits for the decimal part), in units of Celcius. This allows temperatures from 0 to 63.75 C.
+				data = OmniTrakFileRead_ReadBlock_V1_HTPA32X32_PIXELS_FP62(fid,data);
+
+			case block_codes.HTPA32X32_PIXELS_INT_K                         %The current HTPA32x32 pixel readings represented as 16-bit unsigned integers in units of deciKelvin (dK, or Kelvin * 10).
+				data = OmniTrakFileRead_ReadBlock_V1_HTPA32X32_PIXELS_INT_K(fid,data);
+
+			case block_codes.HTPA32X32_AMBIENT_TEMP                         %The current ambient temperature measured by the HTPA32x32, represented as a 32-bit float, in units of Celcius.
+				data = OmniTrakFileRead_ReadBlock_V1_HTPA32X32_AMBIENT_TEMP(fid,data);
+
+			case block_codes.HTPA32X32_PIXELS_INT12_C                       %The current HTPA32x32 pixel readings represented as 12-bit signed integers (2 pixels for every 3 bytes) in units of deciCelsius (dC, or Celsius * 10), with values under-range set to the minimum  (2048 dC) and values over-range set to the maximum (2047 dC).
+				data = OmniTrakFileRead_ReadBlock_V1_HTPA32X32_PIXELS_INT12_C(fid,data);
+
+			case block_codes.BH1749_RGB                                     %The current red, green, blue, IR, and green2 sensor readings from the BH1749 sensor
+				data = OmniTrakFileRead_ReadBlock_V1_BH1749_RGB(fid,data);
+
+			case block_codes.DEBUG_SANITY_CHECK                             %A special block acting as a sanity check, only used in cases of debugging
+				data = OmniTrakFileRead_ReadBlock_V1_DEBUG_SANITY_CHECK(fid,data);
+
 			case block_codes.BME280_TEMP_FL                                 %The current BME280 temperature reading as a converted float32 value, in Celsius.
 				data = OmniTrakFileRead_ReadBlock_V1_BME280_TEMP_FL(fid,data);
 
@@ -700,6 +770,12 @@ switch data.file_version
 
 			case block_codes.BME280_HUM_FL                                  %The current BM280 humidity reading as a converted float32 value, in percent (%).
 				data = OmniTrakFileRead_ReadBlock_V1_BME280_HUM_FL(fid,data);
+
+			case block_codes.BME680_HUM_FL                                  %The current BME680 humidity reading as a converted float32 value, in percent (%).
+				data = OmniTrakFileRead_ReadBlock_V1_BME680_HUM_FL(fid,data);
+
+			case block_codes.BME680_GAS_FL                                  %The current BME680 gas resistance reading as a converted float32 value, in units of kOhms
+				data = OmniTrakFileRead_ReadBlock_V1_BME680_GAS_FL(fid,data);
 
 			case block_codes.VL53L0X_DIST                                   %The current VL53L0X distance reading as a 16-bit integer, in millimeters (-1 indicates out-of-range).
 				data = OmniTrakFileRead_ReadBlock_V1_VL53L0X_DIST(fid,data);
@@ -793,6 +869,9 @@ switch data.file_version
 
 			case block_codes.LSM303_MAG_FL                                  %Current readings from the LSM303 magnetometer, as float values in uT.
 				data = OmniTrakFileRead_ReadBlock_V1_LSM303_MAG_FL(fid,data);
+
+			case block_codes.LSM303_TEMP_FL                                 %Current readings from the LSM303 temperature sensor, as float value in degrees Celcius
+				data = OmniTrakFileRead_ReadBlock_V1_LSM303_TEMP_FL(fid,data);
 
 			case block_codes.SPECTRO_WAVELEN                                %Spectrometer wavelengths, in nanometers.
 				data = OmniTrakFileRead_ReadBlock_V1_SPECTRO_WAVELEN(fid,data);
@@ -926,7 +1005,7 @@ switch data.file_version
 			case block_codes.STAP_2AFC_TRIAL_OUTCOME                        %SensiTrak proprioception discrimination task trial outcome data.
 				data = OmniTrakFileRead_ReadBlock_V1_STAP_2AFC_TRIAL_OUTCOME(fid,data);
 
-			otherwise
+			otherwise                                                       %No matching block.
 				data = OmniTrakFileRead_Unrecognized_Block(fid,data);
 
 	end
@@ -1177,6 +1256,22 @@ data.bat.volt(j).timestamp = readtime;                                      %Sav
 data.bat.volt(j).reading = double(fread(fid,1,'uint16'))/1000;              %Save the battery voltage, in volts.
 
 
+function data = OmniTrakFileRead_ReadBlock_V1_BH1749_RGB(fid,data)
+
+%	OmniTrak File Block Code (OFBC):
+%		1120
+%		BH1749_RGB
+
+data = OmniTrakFileRead_Check_Field_Name(data,'light');                     %Call the subfunction to check for existing fieldnames.
+i = length(data.light) + 1;                                                 %Grab a new ambient light reading index.
+data.light(i).src = 'BH1749';                                               %Save the source of the ambient light reading.
+data.light(i).id = fread(fid,1,'uint8');                                    %Read in the BME680/688 sensor index (there may be multiple sensors).
+data.light(i).timestamp = fread(fid,1,'uint32');                            %Save the microcontroller millisecond clock timestamp for the reading.
+data.light(i).rgb = fread(fid,3,'uint16');                                  %Save the primary RGB ADC readings as uint16 values.
+data.light(i).nir = fread(fid,1,'uint16');                                  %Save the near-infrared (NIR) ADC reading as a uint16 value.
+data.light(i).grn2 = fread(fid,1,'uint16');                                 %Save the secondary Green-2 ADC reading as a uint16 value.
+
+
 function data = OmniTrakFileRead_ReadBlock_V1_BME280_ENABLED(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
@@ -1243,13 +1338,48 @@ function data = OmniTrakFileRead_ReadBlock_V1_BME680_ENABLED(fid,data)
 fprintf(1,'Need to finish coding for Block 1003: BME680_ENABLED');
 
 
+function data = OmniTrakFileRead_ReadBlock_V1_BME680_GAS_FL(fid,data)
+
+%	OmniTrak File Block Code (OFBC):
+%		BLOCK VALUE:	1230
+%		DEFINITION:		BME680_GAS_FL
+%		DESCRIPTION:	The current BME680 gas resistance reading as a converted float32 value, in units of kOhms
+
+data = OmniTrakFileRead_Check_Field_Name(data,'gas');                       %Call the subfunction to check for existing fieldnames.
+i = length(data.gas) + 1;                                                   %Grab a new gas resistance reading index.
+data.gas(i).src = 'BME68X';                                                 %Save the source of the gas resistance reading.
+data.gas(i).id = fread(fid,1,'uint8');                                      %Read in the BME680/688 sensor index (there may be multiple sensors).
+data.gas(i).timestamp = fread(fid,1,'uint32');                              %Save the microcontroller millisecond clock timestamp for the reading.
+data.gas(i).kohms = fread(fid,1,'float32');                                 %Save the gas resistance reading as a float32 value.
+
+
+function data = OmniTrakFileRead_ReadBlock_V1_BME680_HUM_FL(fid,data)
+
+%	OmniTrak File Block Code (OFBC):
+%		BLOCK VALUE:	1221
+%		DEFINITION:		BME680_HUM_FL
+%		DESCRIPTION:	The current BME680 humidity reading as a converted float32 value, in percent (%).
+
+data = OmniTrakFileRead_Check_Field_Name(data,'hum');                       %Call the subfunction to check for existing fieldnames.
+i = length(data.hum) + 1;                                                   %Grab a new ambient humidity reading index.
+data.hum(i).src = 'BME68X';                                                 %Save the source of the ambient humidity reading.
+data.hum(i).id = fread(fid,1,'uint8');                                      %Read in the BME680/688 sensor index (there may be multiple sensors).
+data.hum(i).timestamp = fread(fid,1,'uint32');                              %Save the microcontroller millisecond clock timestamp for the reading.
+data.hum(i).percent = fread(fid,1,'float32');                               %Save the ambient humidity reading as a float32 value.
+
+
 function data = OmniTrakFileRead_ReadBlock_V1_BME680_PRES_FL(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		1212
 %		BME680_PRES_FL
 
-fprintf(1,'Need to finish coding for Block 1212: BME680_PRES_FL\n');
+data = OmniTrakFileRead_Check_Field_Name(data,'pres');                      %Call the subfunction to check for existing fieldnames.
+i = length(data.pres) + 1;                                                  %Grab a new ambient pressure reading index.
+data.pres(i).src = 'BME68X';                                                %Save the source of the ambient pressure reading.
+data.pres(i).id = fread(fid,1,'uint8');                                     %Read in the BME680/688 sensor index (there may be multiple sensors).
+data.pres(i).timestamp = fread(fid,1,'uint32');                             %Save the microcontroller millisecond clock timestamp for the reading.
+data.pres(i).pascals = fread(fid,1,'float32');                              %Save the ambient pressure reading as a float32 value.
 
 
 function data = OmniTrakFileRead_ReadBlock_V1_BME680_TEMP_FL(fid,data)
@@ -1258,7 +1388,12 @@ function data = OmniTrakFileRead_ReadBlock_V1_BME680_TEMP_FL(fid,data)
 %		1202
 %		BME680_TEMP_FL
 
-fprintf(1,'Need to finish coding for Block 1202: BME680_TEMP_FL');
+data = OmniTrakFileRead_Check_Field_Name(data,'temp');                      %Call the subfunction to check for existing fieldnames.
+i = length(data.temp) + 1;                                                  %Grab a new temperature reading index.
+data.temp(i).src = 'BME68X';                                                %Save the source of the temperature reading.
+data.temp(i).id = fread(fid,1,'uint8');                                     %Read in the BME680/688 sensor index (there may be multiple sensors).
+data.temp(i).timestamp = fread(fid,1,'uint32');                             %Save the microcontroller millisecond clock timestamp for the reading.
+data.temp(i).celsius = fread(fid,1,'float32');                              %Save the temperature reading as a float32 value.
 
 
 function data = OmniTrakFileRead_ReadBlock_V1_BMP280_ENABLED(fid,data)
@@ -1446,6 +1581,15 @@ data = OmniTrakFileRead_Check_Field_Name(data,'device','controller',...
     'firmware','filename');                                                 %Call the subfunction to check for existing fieldnames.
 N = fread(fid,1,'uint8');                                                   %Read in the number of characters.
 data.device.controller.firmware.filename = char(fread(fid,N,'uchar')');     %Read in the firmware filename.
+if ~endsWith(data.device.controller.firmware.filename,'ino')                %If the filename doesn't end in *.ino...
+    while ~endsWith(data.device.controller.firmware.filename,'.ino')        %Loop until we find the *.ino extension.
+        fseek(fid,-N,'cof');                                                %Rewind the file to the start of the characters.
+        N = N + 1;                                                          %Increment the character count.
+        data.device.controller.firmware.filename = ...
+            char(fread(fid,N,'uchar')');                                    %Read in the firmware filename.
+%         fprintf(1,'%s\n',data.device.controller.firmware.filename)
+    end
+end
 
 
 function data = OmniTrakFileRead_ReadBlock_V1_CTRL_FW_TIME(fid,data)
@@ -1485,6 +1629,28 @@ else                                                                        %Oth
     date_val = 0;                                                           %Set the non-fractional time to zero.
 end
 data.device.controller.firmware.upload_time = date_val + time_val;          %Save the date with any existing fractional time.
+
+
+function data = OmniTrakFileRead_ReadBlock_V1_DEBUG_SANITY_CHECK(fid,data)
+
+%	OmniTrak File Block Code (OFBC):
+%		BLOCK VALUE:	1121
+%		DEFINITION:		DEBUG_SANITY_CHECK
+%		DESCRIPTION:	A special block acting as a sanity check, only used in cases of debugging
+
+fprintf(1,'Need to finish coding for Block 1121: DEBUG_SANITY_CHECK\n');
+
+
+function data = OmniTrakFileRead_ReadBlock_V1_DEVICE_ALIAS(fid,data)
+
+%	OmniTrak File Block Code (OFBC):
+%		BLOCK VALUE:	108
+%		DEFINITION:		DEVICE_ALIAS
+%		DESCRIPTION:	Human-readable Adjective + Noun alias/name for the device, assigned by Vulintus during manufacturing
+
+data = OmniTrakFileRead_Check_Field_Name(data,'device','alias');            %Call the subfunction to check for existing fieldnames.
+nchar = fread(fid,1,'uint8');                                               %Read in the number of characters in the device alias.
+data.device.alias = char(fread(fid,nchar,'uchar')');                        %Save the 32-bit SAMD chip ID.
 
 
 function data = OmniTrakFileRead_ReadBlock_V1_DEVICE_FILE_INDEX(fid,data)
@@ -1531,7 +1697,8 @@ function data = OmniTrakFileRead_ReadBlock_V1_DOWNLOAD_TIME(fid,data)
 %		42
 %		DOWNLOAD_TIME
 
-data = OmniTrakFileRead_Check_Field_Name(data,'file_info','download');      %Call the subfunction to check for existing fieldnames.
+data = OmniTrakFileRead_Check_Field_Name(data,'file_info','download',...
+    'time');                                                                %Call the subfunction to check for existing fieldnames.
 data.file_info.download.time = fread(fid,1,'float64');                      %Read in the timestamp for the download.
 
 
@@ -1557,25 +1724,6 @@ if ~isfield(data,'device')                                                  %If 
     data.device = [];                                                       %Create the field.
 end
 data.device.flash_id = fread(fid,1,'uint32');                               %Save the device's unique flash chip ID.
-
-
-function data = OmniTrakFileRead_ReadBlock_V1_ESP8266_IP4_ADDR(fid,data)
-
-%	OmniTrak File Block Code (OFBC):
-%		121
-%		ESP8266_IP4_ADDR
-
-fprintf(1,'Need to finish coding for Block 121: ESP8266_IP4_ADDR');
-
-
-function data = OmniTrakFileRead_ReadBlock_V1_ESP8266_MAC_ADDR(fid,data)
-
-%	OmniTrak File Block Code (OFBC):
-%		120
-%		ESP8266_MAC_ADDR
-
-data = OmniTrakFileRead_Check_Field_Name(data,'device');                    %Call the subfunction to check for existing fieldnames.
-data.device.mac_addr = fread(fid,6,'uint8');                                %Save the device MAC address.
 
 
 function data = OmniTrakFileRead_ReadBlock_V1_EXP_NAME(fid,data)
@@ -1683,6 +1831,67 @@ N = fread(fid,1,'uint16');                                                  %Rea
 data.hit_thresh_type{i} = fread(fid,N,'*char')';                            %Read in the characters of the user's experiment name.
 
 
+function data = OmniTrakFileRead_ReadBlock_V1_HTPA32X32_AMBIENT_TEMP(fid,data)
+
+%	OmniTrak File Block Code (OFBC):
+%		BLOCK VALUE:	1115
+%		DEFINITION:		HTPA32X32_AMBIENT_TEMP
+%		DESCRIPTION:	The current ambient temperature measured by the HTPA32x32, represented as a 32-bit float, in units of Celcius.
+
+
+data = OmniTrakFileRead_Check_Field_Name(data,'temp');                      %Call the subfunction to check for existing fieldnames.
+i = length(data.temp) + 1;                                                  %Grab a new temperature reading index.
+data.temp(i).src = 'HTPA32x32';                                             %Save the source of the temperature reading.
+data.temp(i).id = fread(fid,1,'uint8');                                     %Read in the HTPA sensor index (there may be multiple sensors).
+data.temp(i).timestamp = fread(fid,1,'uint32');                             %Save the microcontroller millisecond clock timestamp for the reading.
+data.temp(i).celsius = fread(fid,1,'float32');                              %Save the temperature reading as a float32 value.
+
+
+function data = OmniTrakFileRead_ReadBlock_V1_HTPA32X32_PIXELS_FP62(fid,data)
+
+%	OmniTrak File Block Code (OFBC):
+%		BLOCK VALUE:	1113
+%		DEFINITION:		HTPA32X32_PIXELS_FP62
+%		DESCRIPTION:	The current HTPA32x32 pixel readings as a fixed-point 6/2 type (6 bits for the unsigned integer part, 2 bits for the decimal part), in units of Celcius. This allows temperatures from 0 to 63.75 C.
+
+fprintf(1,'Need to finish coding for Block 1113: HTPA32X32_PIXELS_FP62\n');
+
+
+function data = OmniTrakFileRead_ReadBlock_V1_HTPA32X32_PIXELS_INT12_C(fid,data)
+
+%	OmniTrak File Block Code (OFBC):
+%		BLOCK VALUE:	1116
+%		DEFINITION:		HTPA32X32_PIXELS_INT12_C
+%		DESCRIPTION:	The current HTPA32x32 pixel readings represented as 12-bit signed integers (2 pixels for every 3 bytes) in units of deciCelsius (dC, or Celsius * 10), with values under-range set to the minimum  (2048 dC) and values over-range set to the maximum (2047 dC).
+
+fprintf(1,'Need to finish coding for Block 1116: HTPA32X32_PIXELS_INT12_C\n');
+
+
+function data = OmniTrakFileRead_ReadBlock_V1_HTPA32X32_PIXELS_INT_K(fid,data)
+
+%	OmniTrak File Block Code (OFBC):
+%		BLOCK VALUE:	1114
+%		DEFINITION:		HTPA32X32_PIXELS_INT_K
+%		DESCRIPTION:	The current HTPA32x32 pixel readings represented as 16-bit unsigned integers in units of deciKelvin (dK, or Kelvin * 10).
+
+
+data = OmniTrakFileRead_Check_Field_Name(data,'htpa','id');                 %Call the subfunction to check for existing fieldnames.
+id = fread(fid,1,'uint8');                                                  %Read in the HTPA sensor index (there may be multiple sensors).
+if isempty(data.htpa(1).id)                                                 %If this is the first reading for any HTPA sensor.
+    sensor_i = 1;                                                           %Set the sensor index to 1.
+    data.htpa(sensor_i).id = id;                                            %Save the sensor index.
+else                                                                        %Otherwise...
+    existing_ids = vertcat(data.htpa.id);                                   %Grab all of the existing HTAP sensor IDs.
+    sensor_i = find(id == existing_ids);                                    %Find the index for the current sensor.
+end
+data.htpa = OmniTrakFileRead_Check_Field_Name(data.htpa,'pixels');          %Call the subfunction to check for existing fieldnames.
+reading_i = length(data.htpa(sensor_i).pixels) + 1;                         %Increment the sensor index.
+data.htpa(sensor_i).pixels(reading_i).timestamp = fread(fid,1,'uint32');    %Save the microcontroller millisecond clock timestamp for the reading.
+% temp = fread(fid,1024,'uint8');                                             %Read in the pixel values as 16-bit unsigned integers of deciKelvin.
+temp = fread(fid,1024,'uint16');                                            %Read in the pixel values as 16-bit unsigned integers of deciKelvin.
+data.htpa(sensor_i).pixels(reading_i).decikelvin = reshape(temp,32,32)';    %Reshape the values into a 32x32 matrix.
+
+
 function data = OmniTrakFileRead_ReadBlock_V1_HWUI_MANUAL_FEED(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
@@ -1774,16 +1983,22 @@ data.light_src(module_i).channel(ls_i).type = fread(fid,N,'*char')';        %Rea
 
 function data = OmniTrakFileRead_ReadBlock_V1_LSM303_ACC_FL(fid,data)
 
-%	OmniTrak File Block Code (OFBC):
-%		1802
-%		LSM303_ACC_FL
+%   Block Code: 1802
+%   Block Definition: LSM303_ACC_FL
+%   Description: "Current readings from the LSM303D accelerometer, as float values in m/s^2."
+%   Status:
+%   Block Format:
+%     * 1x (uint8): LSM303D I2C address or ID.
+%     * 1x (uint32): microcontroller timestamp, whole number of milliseconds.
+%     * 3x (float32): x, y, & z acceleration readings, in m/s^2.
 
-data = OmniTrakFileRead_Check_Field_Name(data,'acc');                       %Call the subfunction to check for existing fieldnames.
-i = length(data.acc) + 1;                                                   %Grab a new accelerometer reading index.
-data.acc(i).src = 'LSM303';                                                 %Save the source of the accelerometer reading.
-data.acc(i).id = fread(fid,1,'uint8');                                      %Read in the accelerometer sensor index (there may be multiple sensors).
-data.acc(i).time = fread(fid,1,'uint32');                                   %Save the millisecond clock timestamp for the reading.
-data.acc(i).xyz = fread(fid,3,'float32');                                   %Save the accelerometer x-y-z readings as float-32 values.
+
+data = OmniTrakFileRead_Check_Field_Name(data,'accel');                     %Call the subfunction to check for existing fieldnames.
+i = length(data.accel) + 1;                                                 %Grab a new accelerometer reading index.
+data.accel(i).src = 'LSM303';                                               %Save the source of the accelerometer reading.
+data.accel(i).id = fread(fid,1,'uint8');                                    %Read in the accelerometer sensor index (there may be multiple sensors).
+data.accel(i).time = fread(fid,1,'uint32');                                 %Save the millisecond clock timestamp for the reading.
+data.accel(i).xyz = fread(fid,3,'float32');                                 %Save the accelerometer x-y-z readings as float-32 values.
 
 
 function data = OmniTrakFileRead_ReadBlock_V1_LSM303_ACC_SETTINGS(fid,data)
@@ -1797,11 +2012,22 @@ fprintf(1,'Need to finish coding for Block 1800: LSM303_ACC_SETTINGS');
 
 function data = OmniTrakFileRead_ReadBlock_V1_LSM303_MAG_FL(fid,data)
 
-%	OmniTrak File Block Code (OFBC):
-%		1803
-%		LSM303_MAG_FL
+%   Block Code: 1803
+%   Block Definition: LSM303_MAG_FL
+%   Description: "Current readings from the LSM303D magnetometer, as float values in uT."
+%   Status:
+%   Block Format:
+%     * 1x (uint8): LSM303D I2C address or ID.
+%     * 1x (uint32): microcontroller timestamp, whole number of milliseconds.
+%     * 3x (float32): x, y, & z magnetometer readings, in uT.
 
-fprintf(1,'Need to finish coding for Block 1803: LSM303_MAG_FL');
+
+data = OmniTrakFileRead_Check_Field_Name(data,'mag');                       %Call the subfunction to check for existing fieldnames.
+i = length(data.mag) + 1;                                                   %Grab a new magnetometer reading index.
+data.mag(i).src = 'LSM303';                                                 %Save the source of the magnetometer reading.
+data.mag(i).id = fread(fid,1,'uint8');                                      %Read in the magnetometer sensor index (there may be multiple sensors).
+data.mag(i).time = fread(fid,1,'uint32');                                   %Save the millisecond clock timestamp for the reading.
+data.mag(i).xyz = fread(fid,3,'float32');                                   %Save the magnetometer x-y-z readings as float-32 values.
 
 
 function data = OmniTrakFileRead_ReadBlock_V1_LSM303_MAG_SETTINGS(fid,data)
@@ -1811,6 +2037,26 @@ function data = OmniTrakFileRead_ReadBlock_V1_LSM303_MAG_SETTINGS(fid,data)
 %		LSM303_MAG_SETTINGS
 
 fprintf(1,'Need to finish coding for Block 1801: LSM303_MAG_SETTINGS');
+
+
+function data = OmniTrakFileRead_ReadBlock_V1_LSM303_TEMP_FL(fid,data)
+
+%   Block Code: 1804
+%   Block Definition: LSM303_TEMP_FL
+%   Description: ."Current readings from the LSM303 temperature sensor, as float value in degrees Celsius."
+%   Status:
+%   Block Format:
+%     * 1x (uint8) LSM303 I2C address or ID. 
+%     * 1x (uint32) millisecond timestamp. 
+%     * 1x (float32) temperature reading, in Celsius.
+
+
+data = OmniTrakFileRead_Check_Field_Name(data,'temp');                      %Call the subfunction to check for existing fieldnames.
+i = length(data.temp) + 1;                                                  %Grab a new temperature reading index.
+data.temp(i).src = 'LSM303';                                                %Save the source of the temperature reading.
+data.temp(i).id = fread(fid,1,'uint8');                                     %Read in the HTPA sensor index (there may be multiple sensors).
+data.temp(i).timestamp = fread(fid,1,'uint32');                             %Save the microcontroller millisecond clock timestamp for the reading.
+data.temp(i).celsius = fread(fid,1,'float32');                              %Save the temperature reading as a float32 value.
 
 
 function data = OmniTrakFileRead_ReadBlock_V1_MLX90640_ADC_RES(fid,data)
@@ -2280,7 +2526,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_PRIMARY_INPUT(fid,data)
 
 data = OmniTrakFileRead_Check_Field_Name(data,'input');                     %Call the subfunction to check for existing fieldnames.
 N = fread(fid,1,'uint16');                                                  %Read in the number of characters.
-data.input.primary = fread(fid,N,'*char')';                                 %Read in the characters of the primary module name.
+data.input(1).primary = fread(fid,N,'*char')';                              %Read in the characters of the primary module name.
 
 
 function data = OmniTrakFileRead_ReadBlock_V1_PRIMARY_MODULE(fid,data)
@@ -2296,7 +2542,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_PRIMARY_MODULE(fid,data)
 % fwrite(fid,str,'uchar');
 
 data = OmniTrakFileRead_Check_Field_Name(data,'module');                    %Call the subfunction to check for existing fieldnames.
-N = fread(fid,1,'uint8');                                                   %Read in the number of characters.
+N = fread(fid,1,'uint16');                                                  %Read in the number of characters.
 data.module(1).name = fread(fid,N,'*char')';                                %Read in the characters of the primary module name.
 
 
@@ -2783,9 +3029,9 @@ function data = OmniTrakFileRead_ReadBlock_V1_TASK_TYPE(fid,data)
 %		301
 %		TASK_TYPE
 
-data = OmniTrakFileRead_Check_Field_Name(data,'task');                      %Call the subfunction to check for existing fieldnames.                
+data = OmniTrakFileRead_Check_Field_Name(data,'task');                    %Call the subfunction to check for existing fieldnames.                
 N = fread(fid,1,'uint16');                                                  %Read in the number of characters.
-data.task.type = fread(fid,N,'*char')';                                     %Read in the characters of the user's task type.
+data.task(1).type = fread(fid,N,'*char')';                                  %Read in the characters of the user's task type.
 
 
 function data = OmniTrakFileRead_ReadBlock_V1_TIME_ZONE_OFFSET(fid,data)
@@ -2802,6 +3048,25 @@ function data = OmniTrakFileRead_ReadBlock_V1_TIME_ZONE_OFFSET(fid,data)
 
 data = OmniTrakFileRead_Check_Field_Name(data,'clock');                     %Call the subfunction to check for existing fieldnames.
 data.clock(1).time_zone = fread(fid,1,'float64');                           %Read in the time zone adjustment relative to UTC.
+
+
+function data = OmniTrakFileRead_ReadBlock_V1_TIME_ZONE_OFFSET_HHMM(fid,data)
+
+%	OmniTrak File Block Code (OFBC):
+%		BLOCK VALUE:	26
+%		DEFINITION:		TIME_ZONE_OFFSET_HHMM
+%		DESCRIPTION:	Computer clock time zone offset from UTC as two integers, one for hours, and the other for minutes
+
+
+data = OmniTrakFileRead_Check_Field_Name(data,'clock');                     %Call the subfunction to check for existing fieldnames.    
+i = length(data.clock) + 1;                                                 %Find the next available index for a new real-time clock synchronization.
+hr = fread(fid,1,'int8');                                                   %Read in the hour of the time zone offset.
+min = fread(fid,1,'uint8');                                                 %Read in the minutes of the time zone offset.
+if hr < 0                                                                   %If the time zone offset is less than one.
+    data.clock(i).time_zone = double(hr) - double(min)/60;                  %Save the time zone offset in fractional hours.
+else                                                                        %Otherwise...
+    data.clock(i).time_zone = double(hr) + double(min)/60;                  %Save the time zone offset in fractional hours.
+end
 
 
 function data = OmniTrakFileRead_ReadBlock_V1_USER_SYSTEM_NAME(fid,data)
@@ -2930,6 +3195,25 @@ data.dist(i).time = fread(fid,1,'uint32');                      %Save the millis
 data.dist(i).int = NaN;                                         %Save a NaN in place of a value to indicate a read failure.
 
 
+function data = OmniTrakFileRead_ReadBlock_V1_WIFI_IP4_ADDR(fid,data)
+
+%	OmniTrak File Block Code (OFBC):
+%		121
+%		WIFI_IP4_ADDR
+
+fprintf(1,'Need to finish coding for Block 121: ESP8266_IP4_ADDR');
+
+
+function data = OmniTrakFileRead_ReadBlock_V1_WIFI_MAC_ADDR(fid,data)
+
+%	OmniTrak File Block Code (OFBC):
+%		120
+%		WIFI_MAC_ADDR
+
+data = OmniTrakFileRead_Check_Field_Name(data,'device');                    %Call the subfunction to check for existing fieldnames.
+data.device.mac_addr = fread(fid,6,'uint8');                                %Save the device MAC address.
+
+
 function data = OmniTrakFileRead_ReadBlock_V1_WINC1500_IP4_ADDR(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
@@ -3050,6 +3334,158 @@ fseek(fid,-2,'cof');                                                        %Rew
 data.unrecognized_block = [];                                               %Create an unrecognized block field.
 data.unrecognized_block.pos = ftell(fid);                                   %Save the file position.
 data.unrecognized_block.code = fread(fid,1,'uint16');                       %Read in the data block code.
+
+
+function waitbar = big_waitbar(varargin)
+
+figsize = [2,16];                                                           %Set the default figure size, in centimeters.
+barcolor = 'b';                                                             %Set the default waitbar color.
+titlestr = 'Waiting...';                                                    %Set the default waitbar title.
+txtstr = 'Waiting...';                                                      %Set the default waitbar string.
+val = 0;                                                                    %Set the default value of the waitbar to zero.
+
+str = {'FigureSize','Color','Title','String','Value'};                      %List the allowable parameter names.
+for i = 1:2:length(varargin)                                                %Step through any optional input arguments.
+    if ~ischar(varargin{i}) || ~any(strcmpi(varargin{i},str))               %If the first optional input argument isn't one of the expected property names...
+        beep;                                                               %Play the Matlab warning noise.
+        cprintf('red','%s\n',['ERROR IN BIG_WAITBAR: Property '...
+            'name not recognized! Optional input properties are:']);        %Show an error.
+        for j = 1:length(str)                                               %Step through each allowable parameter name.
+            cprintf('red','\t%s\n',str{j});                                 %List each parameter name in the command window, in red.
+        end
+        return                                                              %Skip execution of the rest of the function.
+    else                                                                    %Otherwise...
+        if strcmpi(varargin{i},'FigureSize')                                %If the optional input property is "FigureSize"...
+            figsize = varargin{i+1};                                        %Set the figure size to that specified, in centimeters.            
+        elseif strcmpi(varargin{i},'Color')                                 %If the optional input property is "Color"...
+            barcolor = varargin{i+1};                                       %Set the waitbar color the specified color.
+        elseif strcmpi(varargin{i},'Title')                                 %If the optional input property is "Title"...
+            titlestr = varargin{i+1};                                       %Set the waitbar figure title to the specified string.
+        elseif strcmpi(varargin{i},'String')                                %If the optional input property is "String"...
+            txtstr = varargin{i+1};                                         %Set the waitbar text to the specified string.
+        elseif strcmpi(varargin{i},'Value')                                 %If the optional input property is "Value"...
+            val = varargin{i+1};                                            %Set the waitbar value to the specified value.
+        end
+    end    
+end
+
+orig_units = get(0,'units');                                                %Grab the current system units.
+set(0,'units','centimeters');                                               %Set the system units to centimeters.
+pos = get(0,'Screensize');                                                  %Grab the screensize.
+h = figsize(1);                                                             %Set the height of the figure.
+w = figsize(2);                                                             %Set the width of the figure.
+fig = figure('numbertitle','off',...
+    'name',titlestr,...
+    'units','centimeters',...
+    'Position',[pos(3)/2-w/2, pos(4)/2-h/2, w, h],...
+    'menubar','none',...
+    'resize','off');                                                        %Create a figure centered in the screen.
+ax = axes('units','centimeters',...
+    'position',[0.25,0.25,w-0.5,h/2-0.3],...
+    'parent',fig);                                                          %Create axes for showing loading progress.
+if val > 1                                                                  %If the specified value is greater than 1...
+    val = 1;                                                                %Set the value to 1.
+elseif val < 0                                                              %If the specified value is less than 0...
+    val = 0;                                                                %Set the value to 0.
+end    
+obj = fill(val*[0 1 1 0 0],[0 0 1 1 0],barcolor,'edgecolor','k');           %Create a fill object to show loading progress.
+set(ax,'xtick',[],'ytick',[],'box','on','xlim',[0,1],'ylim',[0,1]);         %Set the axis limits and ticks.
+txt = uicontrol(fig,'style','text','units','centimeters',...
+    'position',[0.25,h/2+0.05,w-0.5,h/2-0.3],'fontsize',10,...
+    'horizontalalignment','left','backgroundcolor',get(fig,'color'),...
+    'string',txtstr);                                                       %Create a text object to show the current point in the wait process.  
+set(0,'units',orig_units);                                                  %Set the system units back to the original units.
+
+waitbar.type = 'big_waitbar';                                               %Set the structure type.
+waitbar.title = @(str)SetTitle(fig,str);                                    %Set the function for changing the waitbar title.
+waitbar.string = @(str)SetString(fig,txt,str);                              %Set the function for changing the waitbar string.
+% waitbar.value = @(val)SetVal(fig,obj,val);                                  %Set the function for changing waitbar value.
+waitbar.value = @(varargin)GetSetVal(fig,obj,varargin{:});                  %Set the function for reading/setting the waitbar value.
+waitbar.color = @(val)SetColor(fig,obj,val);                                %Set the function for changing waitbar color.
+waitbar.close = @()CloseWaitbar(fig);                                       %Set the function for closing the waitbar.
+waitbar.isclosed = @()WaitbarIsClosed(fig);                                 %Set the function for checking whether the waitbar figure is closed.
+
+drawnow;                                                                    %Immediately show the waitbar.
+
+
+%% This function sets the name/title of the waitbar figure.
+function SetTitle(fig,str)
+if ishandle(fig)                                                            %If the waitbar figure is still open...
+    set(fig,'name',str);                                                    %Set the figure name to the specified string.
+    drawnow;                                                                %Immediately update the figure.
+else                                                                        %Otherwise...
+    warning('Cannot update the waitbar figure. It has been closed.');       %Show a warning.
+end
+
+
+%% This function sets the string on the waitbar figure.
+function SetString(fig,txt,str)
+if ishandle(fig)                                                            %If the waitbar figure is still open...
+    set(txt,'string',str);                                                  %Set the string in the text object to the specified string.
+    drawnow;                                                                %Immediately update the figure.
+else                                                                        %Otherwise...
+    warning('Cannot update the waitbar figure. It has been closed.');       %Show a warning.
+end
+
+
+% %% This function sets the current value of the waitbar.
+% function SetVal(fig,obj,val)
+% if ishandle(fig)                                                            %If the waitbar figure is still open...
+%     if val > 1                                                              %If the specified value is greater than 1...
+%         val = 1;                                                            %Set the value to 1.
+%     elseif val < 0                                                          %If the specified value is less than 0...
+%         val = 0;                                                            %Set the value to 0.
+%     end
+%     set(obj,'xdata',val*[0 1 1 0 0]);                                       %Set the patch object to extend to the specified value.
+%     drawnow;                                                                %Immediately update the figure.
+% else                                                                        %Otherwise...
+%     warning('Cannot update the waitbar figure. It has been closed.');       %Show a warning.
+% end
+
+
+%% This function reads/sets the waitbar value.
+function val = GetSetVal(fig,obj,varargin)
+if ishandle(fig)                                                            %If the waitbar figure is still open...
+    if nargin > 2                                                           %If a value was passed.
+        val = varargin{1};                                                  %Grab the specified value.
+        if val > 1                                                          %If the specified value is greater than 1...
+            val = 1;                                                        %Set the value to 1.
+        elseif val < 0                                                      %If the specified value is less than 0...
+            val = 0;                                                        %Set the value to 0.
+        end
+        set(obj,'xdata',val*[0 1 1 0 0]);                                   %Set the patch object to extend to the specified value.
+        drawnow;                                                            %Immediately update the figure.
+    else                                                                    %Otherwise...
+        val = get(obj,'xdata');                                             %Grab the x-coordinates from the patch object.
+        val = val(2);                                                       %Return the right-hand x-coordinate.
+    end
+else                                                                        %Otherwise...
+    warning('Cannot access the waitbar figure. It has been closed.');       %Show a warning.
+end
+    
+
+
+%% This function sets the color of the waitbar.
+function SetColor(fig,obj,val)
+if ishandle(fig)                                                            %If the waitbar figure is still open...
+    set(obj,'facecolor',val);                                               %Set the patch object to have the specified facecolor.
+    drawnow;                                                                %Immediately update the figure.
+else                                                                        %Otherwise...
+    warning('Cannot update the waitbar figure. It has been closed.');       %Show a warning.
+end
+
+
+%% This function closes the waitbar figure.
+function CloseWaitbar(fig)
+if ishandle(fig)                                                            %If the waitbar figure is still open...
+    close(fig);                                                             %Close the waitbar figure.
+    drawnow;                                                                %Immediately update the figure to allow it to close.
+end
+
+
+%% This function returns a logical value indicate whether the waitbar figure has been closed.
+function isclosed = WaitbarIsClosed(fig)
+isclosed = ~ishandle(fig);                                                  %Check to see if the figure handle is still a valid handle.
 
 
 function count = cprintf(style,format,varargin)

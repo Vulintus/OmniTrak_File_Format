@@ -17,10 +17,10 @@ start_script = which('OmniTrakFileRead_Beta.m');                            %Set
 collated_filename = 'OmniTrakFileRead.m';                                   %Set the name for the collated script.
 
 [ofbc_dir, cur_dir, ~] = fileparts(start_script);                           %Strip out the filename from the path.
-while ~strcmpi(cur_dir,'OmniTrak File Format (OFBC)') && ~isempty(cur_dir)  %Loop until we get to the "Vulintus Software" folder.
+while ~strcmpi(cur_dir,'MATLAB Functions') && ~isempty(cur_dir)             %Loop until we get to the "MATLAB Functions" folder.
     [ofbc_dir, cur_dir, ~] = fileparts(ofbc_dir);                           %Strip out the filename from the path.
 end
-ofbc_dir = fullfile(ofbc_dir,'OmniTrak File Format (OFBC)');                %Add the OFBC directory back to the path.
+ofbc_dir = fullfile(ofbc_dir,'MATLAB Functions');                           %Add the "MATLAB Functions" directory back to the path.
 
 % [collated_file, ~] = ...
 %     Vulintus_Collate_Functions(start_script, collated_filename);            %Call the generalized function-collating script.
