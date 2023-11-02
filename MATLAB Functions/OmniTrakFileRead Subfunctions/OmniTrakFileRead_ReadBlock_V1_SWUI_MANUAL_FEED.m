@@ -4,10 +4,16 @@ function data = OmniTrakFileRead_ReadBlock_V1_SWUI_MANUAL_FEED(fid,data)
 %		2405
 %		SWUI_MANUAL_FEED
 
-data = OmniTrakFileRead_Check_Field_Name(data,'pellet',...
+data = OmniTrakFileRead_Check_Field_Name(data,'feed',...
     {'time','num','source'});                                               %Call the subfunction to check for existing fieldnames.
 i = fread(fid,1,'uint8');                                                   %Read in the dispenser index.                
-j = size(data.pellet(i).time,1) + 1;                                        %Find the next index for the pellet timestamp for this dispenser.
-data.pellet(i).time(j,1) = fread(fid,1,'float64');                          %Save the millisecond clock timestamp.
-data.pellet(i).num(j,1) = fread(fid,1,'uint16');                            %Save the number of feedings.
-data.pellet(i).source{j,1} = 'manual_software';                             %Save the feed trigger source.  
+j = size(data.feed(i).time,1) + 1;                                          %Find the next index for the feed timestamp for this dispenser.
+if j == 1                                                                   %If this is the first manual feeding...
+    data.feed(i).time = fread(fid,1,'float64');                             %Save the millisecond clock timestamp.
+    data.feed(i).num = fread(fid,1,'uint16');                               %Save the number of feedings.
+    data.feed(i).source = {'manual_software'};                              %Save the feed trigger source.  
+else                                                                        %Otherwise, if this isn't the first manual feeding...
+    data.feed(i).time(j,1) = fread(fid,1,'float64');                        %Save the millisecond clock timestamp.
+    data.feed(i).num(j,1) = fread(fid,1,'uint16');                          %Save the number of feedings.
+    data.feed(i).source{j,1} = 'manual_software';                           %Save the feed trigger source.
+end
