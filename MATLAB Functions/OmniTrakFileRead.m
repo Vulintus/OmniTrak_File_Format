@@ -1,6 +1,6 @@
 function data = OmniTrakFileRead(file,varargin)
 
-%Collated: 11/02/2023, 13:45:39
+%Collated: 11/07/2023, 21:10:54
 
 
 %
@@ -1523,9 +1523,9 @@ function data = OmniTrakFileRead_ReadBlock_V1_COM_PORT(fid,data)
 %		107
 %		COM_PORT
 
-data = OmniTrakFileRead_Check_Field_Name(data,'device','com');              %Call the subfunction to check for existing fieldnames.
+data = OmniTrakFileRead_Check_Field_Name(data,'device','com_port');         %Call the subfunction to check for existing fieldnames.
 N = fread(fid,1,'uint8');                                                   %Read in the number of characters.
-data.file_info.download.port = char(fread(fid,N,'uchar')');                 %Read in the port name.
+data.device.com_port = char(fread(fid,N,'uchar')');                         %Read in the port name.
 
 
 function data = OmniTrakFileRead_ReadBlock_V1_CTRL_FW_DATE(fid,data)
@@ -1980,11 +1980,11 @@ function data = OmniTrakFileRead_ReadBlock_V1_LIGHT_SRC_TYPE(fid,data)
 %		2712
 %		LIGHT_SRC_TYPE
 
-data = OmniTrakFileRead_Check_Field_Name(data,'light_src','channel');       %Call the subfunction to check for existing fieldnames.
+data = OmniTrakFileRead_Check_Field_Name(data,'light_src','chan');          %Call the subfunction to check for existing fieldnames.
 module_i = fread(fid,1,'uint8');                                            %Read in the module index.
 ls_i = fread(fid,1,'uint16');                                               %Read in the light source channel index.
 N = fread(fid,1,'uint8');                                                   %Read in the number of characters in the light source type.
-data.light_src(module_i).channel(ls_i).type = fread(fid,N,'*char')';        %Read in the characters of the light source type.
+data.light_src(module_i).chan(ls_i).type = fread(fid,N,'*char')';           %Read in the characters of the light source type.
 
 
 function data = OmniTrakFileRead_ReadBlock_V1_LSM303_ACC_FL(fid,data)
@@ -2706,7 +2706,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_SPECTRO_TRACE(fid,data)
 data = OmniTrakFileRead_Check_Field_Name(data,'spectro','trace');           %Call the subfunction to check for existing fieldnames.
 spectro_i = fread(fid,1,'uint8');                                           %Read in the spectrometer index.
 t = numel(data.spectro(spectro_i).trace) + 1;                               %Find the next trace index.
-data.spectro(spectro_i).trace(t).light_src = fread(fid,1,'uint8');          %Read in the module index.
+data.spectro(spectro_i).trace(t).module = fread(fid,1,'uint8');             %Read in the module index.
 data.spectro(spectro_i).trace(t).chan = fread(fid,1,'uint16');              %Read in the light source channel index.
 data.spectro(spectro_i).trace(t).time = fread(fid,1,'float64');             %Read in the trace timestamp.
 data.spectro(spectro_i).trace(t).intensity = fread(fid,1,'float32');        %Read in the light source intensity.
