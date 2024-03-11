@@ -45,7 +45,7 @@ appdata_path = Vulintus_Set_AppData_Path('Library Update Functions');       %Set
 config_file = ...
     fullfile(appdata_path,'update_omnitrak_file_block_codes_paths.json');   %Set the expected saved file paths JSON file.
 if exist(config_file,'file')                                                %If the file paths were previously saved on this computer...
-    temp_data = Vulintus_Read_JSON_File(config_file);                       %Read in the saved filenames.
+    temp_data = Vulintus_JSON_File_Read(config_file);                       %Read in the saved filenames.
     fields = fieldnames(config);                                            %Grab all of the fieldnames from the config file.
     for i = 1:length(fields)                                                %Step through each field of the configuration structure.
         if isfield(temp_data,fields{i})                                     %If a matching field value was stored...
@@ -91,7 +91,7 @@ if ~exist(config.arduino_dir,'dir')                                         %If 
     end
 end
 
-Vulintus_Write_JSON_File(config,config_file);                               %Save the configuration in the AppData folder.
+Vulintus_JSON_File_Write(config,config_file);                               %Save the configuration in the AppData folder.
 
 %Grab the current UTC time.
 cur_time = datetime('now','timezone','utc');                                %Grab the current UTC time.
