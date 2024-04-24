@@ -8,7 +8,7 @@ function data = OmniTrakFileRead_ReadBlock(fid,block,data,verbose)
 %
 %	https://github.com/Vulintus/OmniTrak_File_Format
 %
-%	This file was programmatically generated: 2023-06-21, 10:04:24 (UTC).
+%	This file was programmatically generated: 2024-04-24, 03:26:50 (UTC).
 %
 
 block_codes = Load_OmniTrak_File_Block_Codes(data.file_version);
@@ -100,7 +100,7 @@ switch data.file_version
 			case block_codes.SYSTEM_TYPE                                    %Vulintus system ID code (1 = MotoTrak, 2 = OmniTrak, 3 = HabiTrak, 4 = OmniHome, 5 = SensiTrak, 6 = Prototype).
 				data = OmniTrakFileRead_ReadBlock_V1_SYSTEM_TYPE(fid,data);
 
-			case block_codes.SYSTEM_NAME                                    %System name.
+			case block_codes.SYSTEM_NAME                                    %Vulintus system name.
 				data = OmniTrakFileRead_ReadBlock_V1_SYSTEM_NAME(fid,data);
 
 			case block_codes.SYSTEM_HW_VER                                  %Vulintus system hardware version.
@@ -133,11 +133,11 @@ switch data.file_version
 			case block_codes.SAMD_CHIP_ID                                   %The SAMD manufacturer's unique chip identifier.
 				data = OmniTrakFileRead_ReadBlock_V1_SAMD_CHIP_ID(fid,data);
 
-            case block_codes.WIFI_MAC_ADDR                                  %The MAC address of the device's embedded WiFi module.
-				data = OmniTrakFileRead_ReadBlock_V1_WIFI_MAC_ADDR(fid,data);
+			case block_codes.ESP8266_MAC_ADDR                               %The MAC address of the device's ESP8266 module.
+				data = OmniTrakFileRead_ReadBlock_V1_ESP8266_MAC_ADDR(fid,data);
 
-            case block_codes.WIFI_IP4_ADDR                                  %The local IPv4 address of the device's embedded WiFi module.
-				data = OmniTrakFileRead_ReadBlock_V1_WIFI_IP4_ADDR(fid,data);
+			case block_codes.ESP8266_IP4_ADDR                               %The local IPv4 address of the device's ESP8266 module.
+				data = OmniTrakFileRead_ReadBlock_V1_ESP8266_IP4_ADDR(fid,data);
 
 			case block_codes.ESP8266_CHIP_ID                                %The ESP8266 manufacturer's unique chip identifier
 				data = OmniTrakFileRead_ReadBlock_V1_ESP8266_CHIP_ID(fid,data);
@@ -543,6 +543,9 @@ switch data.file_version
 
 			case block_codes.STAP_2AFC_TRIAL_OUTCOME                        %SensiTrak proprioception discrimination task trial outcome data.
 				data = OmniTrakFileRead_ReadBlock_V1_STAP_2AFC_TRIAL_OUTCOME(fid,data);
+
+			case block_codes.FR_TASK_TRIAL                                  %Fixed reinforcement task trial data.
+				data = OmniTrakFileRead_ReadBlock_V1_FR_TASK_TRIAL(fid,data);
 
 			otherwise                                                       %No matching block.
 				data = OmniTrakFileRead_Unrecognized_Block(fid,data);

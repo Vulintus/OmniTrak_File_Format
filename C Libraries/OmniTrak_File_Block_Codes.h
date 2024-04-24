@@ -7,7 +7,7 @@
 
 	https://github.com/Vulintus/OmniTrak_File_Format
 
-	This file was programmatically generated: 2023-06-21, 10:04:24 (UTC).
+	This file was programmatically generated: 2024-04-24, 03:26:50 (UTC).
 */
 
 
@@ -58,7 +58,7 @@
 
 
 #define	OFBC_SYSTEM_TYPE                          100       // Vulintus system ID code (1 = MotoTrak, 2 = OmniTrak, 3 = HabiTrak, 4 = OmniHome, 5 = SensiTrak, 6 = Prototype).
-#define	OFBC_SYSTEM_NAME                          101       // System name.
+#define	OFBC_SYSTEM_NAME                          101       // Vulintus system name.
 #define	OFBC_SYSTEM_HW_VER                        102       // Vulintus system hardware version.
 #define	OFBC_SYSTEM_FW_VER                        103       // System firmware version, written as characters.
 #define	OFBC_SYSTEM_SN                            104       // System serial number, written as characters.
@@ -255,6 +255,8 @@
 #define	OFBC_MODULE_CENTER_OFFSET                 2731      // Center offset, in millimeters, for the specified OTMP module.
 
 #define	OFBC_STAP_2AFC_TRIAL_OUTCOME              2740      // SensiTrak proprioception discrimination task trial outcome data.
+
+#define	OFBC_FR_TASK_TRIAL                        2800      // Fixed reinforcement task trial data.
 
 
 #endif		// #if OFBC_DEF_VERSION == X
