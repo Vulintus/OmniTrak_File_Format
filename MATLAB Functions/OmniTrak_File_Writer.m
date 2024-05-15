@@ -241,7 +241,7 @@ file_writer.stage_description = @(str)OmniTrakFileWrite_WriteBlock_V1_Long_Chara
 % STAP_2AFC_TRIAL_OUTCOME: 2740
 
 % Block code: FR_TASK_TRIAL = 2800.
-file_writer.fr_task_trial = @(trial,session)OmniTrakFileWrite_WriteBlock_V1_FR_TASK_TRIAL(fid, ofbc.FR_TASK_TRIAL, trial, session);
+file_writer.fr_task_trial = @(trial,session,licks)OmniTrakFileWrite_WriteBlock_V1_FR_TASK_TRIAL(fid, ofbc.FR_TASK_TRIAL, trial, session, licks);
 
 
 
