@@ -37,7 +37,7 @@ function OmniTrakFileWrite_WriteBlock_V1_STOP_TASK_TRIAL (fid, block_code, trial
     fwrite(fid, trial_outcome(1), 'uchar');                                     
 
     %Write the target zone for this trial
-    fwrite(fid, trial.TargetZone, 'uint8');                                     
+    fwrite(fid, trial.TargetZone.real, 'uint8');                                     
 
     %Write the required amount of time that animal must "stop" in target zone
     fwrite(fid, trial.TargetStopDuration, 'float32');                           
@@ -71,18 +71,18 @@ function OmniTrakFileWrite_WriteBlock_V1_STOP_TASK_TRIAL (fid, block_code, trial
         fwrite(fid, entrance_time_datenum, 'float64');
 
         %Write the stop duration to the file
-        fwrite(fid, zone_event.StopDuration, 'float64');
+        fwrite(fid, seconds(zone_event.StopDuration), 'float64');
 
         %Write the zone id for this zone event
-        fwrite(fid, zone_event.Zone, 'uint8');
+        fwrite(fid, zone_event.Zone.real, 'uint8');
 
         %Write the number of anticipatory licks that occurred
         anticipatory_lick_count = length(zone_event.AnticipatoryLicks);
         fwrite(fid, anticipatory_lick_count, 'uint32');
 
         %Write out the timestamp of each lick
-        for i = 1:anticipatory_lick_count
-            d = datenum(zone_event.AnticipatoryLicks(i));
+        for j = 1:anticipatory_lick_count
+            d = datenum(zone_event.AnticipatoryLicks(j));
             fwrite(fid, d, 'float64');
         end
     end
