@@ -546,6 +546,8 @@ switch data.file_version
 
 			case block_codes.FR_TASK_TRIAL                                  %Fixed reinforcement task trial data.
 				data = OmniTrakFileRead_ReadBlock_V1_FR_TASK_TRIAL(fid,data);
+            case block_codes.STOP_TASK_TRIAL
+                data = OmniTrakFileRead_ReadBlock_V1_STOP_TASK_TRIAL(fid, data);
 
 			otherwise                                                       %No matching block.
 				data = OmniTrakFileRead_Unrecognized_Block(fid,data);

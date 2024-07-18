@@ -256,4 +256,6 @@ switch ver
 
 		block_codes.FR_TASK_TRIAL = 2800;                                   %Fixed reinforcement task trial data.
 
+        block_codes.STOP_TASK_TRIAL = 2801;                                 %Stop task trial data.
+
 end
