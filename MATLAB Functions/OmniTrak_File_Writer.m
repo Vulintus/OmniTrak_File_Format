@@ -78,7 +78,9 @@ file_writer.computer_name = @(str)OmniTrakFileWrite_WriteBlock_V1_Short_Characte
 % Block code: COM_PORT = 107.
 file_writer.com_port = @(str)OmniTrakFileWrite_WriteBlock_V1_Short_Character_Block(fid, ofbc.COM_PORT, str);
 
-% DEVICE_ALIAS: 108
+% Block code: DEVICE_ALIAS: 108
+file_writer.vulintus_alias = @(str)OmniTrakFileWrite_WriteBlock_V1_Short_Character_Block(fid, ofbc.DEVICE_ALIAS, str);
+
 % PRIMARY_MODULE: 110
 % PRIMARY_INPUT: 111
 % SAMD_CHIP_ID: 112
@@ -224,7 +226,10 @@ file_writer.stage_description = @(str)OmniTrakFileWrite_WriteBlock_V1_Long_Chara
 % FW_OPERANT_FEED: 2404
 % SWUI_MANUAL_FEED: 2405
 % SW_RANDOM_FEED: 2406
-% SW_OPERANT_FEED: 2407
+
+% Block code: SW_OPERANT_FEED = 2407.
+file_writer.sw_operant_feed = @(feeder_index)OmniTrakFileWrite_WriteBlock_V1_SW_OPERANT_FEED(fid, ofbc.SW_OPERANT_FEED, feeder_index);
+
 % MOTOTRAK_V3P0_OUTCOME: 2500
 % MOTOTRAK_V3P0_SIGNAL: 2501
 % OUTPUT_TRIGGER_NAME: 2600
