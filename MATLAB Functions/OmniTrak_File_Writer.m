@@ -246,7 +246,7 @@ file_writer.sw_operant_feed = @(feeder_index)OmniTrakFileWrite_WriteBlock_V1_SW_
 % STAP_2AFC_TRIAL_OUTCOME: 2740
 
 % Block code: FR_TASK_TRIAL = 2800.
-file_writer.fr_task_trial = @(trial,session,licks)OmniTrakFileWrite_WriteBlock_V1_FR_TASK_TRIAL(fid, ofbc.FR_TASK_TRIAL, trial, session, licks);
+file_writer.fr_task_trial = @(behavior,trial,licks)OmniTrakFileWrite_WriteBlock_V1_FR_TASK_TRIAL(fid, ofbc.FR_TASK_TRIAL, behavior, trial, licks);
 
 
 
