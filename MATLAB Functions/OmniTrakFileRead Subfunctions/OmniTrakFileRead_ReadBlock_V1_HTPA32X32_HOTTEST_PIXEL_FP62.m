@@ -1,4 +1,4 @@
-function data = OmniTrakFileRead_ReadBlock_V1_HTPA32X32_PIXELS_FP62(fid,data)
+function session = OmniTrakFileRead_ReadBlock_V1_HTPA32X32_PIXELS_FP62(fid, session)
 
 %	OmniTrak File Block Code (OFBC):
 %		BLOCK VALUE:	1117
