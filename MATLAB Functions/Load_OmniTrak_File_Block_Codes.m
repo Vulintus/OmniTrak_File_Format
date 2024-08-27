@@ -133,6 +133,7 @@ switch ver
 		block_codes.HTPA32X32_PIXELS_INT_K = 1114;                          %The current HTPA32x32 pixel readings represented as 16-bit unsigned integers in units of deciKelvin (dK, or Kelvin * 10).
 		block_codes.HTPA32X32_AMBIENT_TEMP = 1115;                          %The current ambient temperature measured by the HTPA32x32, represented as a 32-bit float, in units of Celcius.
 		block_codes.HTPA32X32_PIXELS_INT12_C = 1116;                        %The current HTPA32x32 pixel readings represented as 12-bit signed integers (2 pixels for every 3 bytes) in units of deciCelsius (dC, or Celsius * 10), with values under-range set to the minimum  (2048 dC) and values over-range set to the maximum (2047 dC).
+        block_codes.HTPA32X32_HOTTEST_PIXEL_FP62 = 1117;                    %The current location of the hottest pixel in the HTPA32x32 image, and the value of that pixel.
 
 		block_codes.BH1749_RGB = 1120;                                      %The current red, green, blue, IR, and green2 sensor readings from the BH1749 sensor
 		block_codes.DEBUG_SANITY_CHECK = 1121;                              %A special block acting as a sanity check, only used in cases of debugging

@@ -283,6 +283,9 @@ switch data.file_version
 			case block_codes.HTPA32X32_PIXELS_INT12_C                       %The current HTPA32x32 pixel readings represented as 12-bit signed integers (2 pixels for every 3 bytes) in units of deciCelsius (dC, or Celsius * 10), with values under-range set to the minimum  (2048 dC) and values over-range set to the maximum (2047 dC).
 				data = OmniTrakFileRead_ReadBlock_V1_HTPA32X32_PIXELS_INT12_C(fid,data);
 
+            case block_codes.HTPA32X32_HOTTEST_PIXEL_FP62                   %The current location of the hottest pixel in the HTPA32x32 image, and its value
+                data = OmniTrakFileRead_ReadBlock_V1_HTPA32X32_HOTTEST_PIXEL_FP62(fid, data);
+
 			case block_codes.BH1749_RGB                                     %The current red, green, blue, IR, and green2 sensor readings from the BH1749 sensor
 				data = OmniTrakFileRead_ReadBlock_V1_BH1749_RGB(fid,data);
 

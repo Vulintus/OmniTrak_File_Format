@@ -151,9 +151,14 @@ file_writer.stage_description = @(str)OmniTrakFileWrite_WriteBlock_V1_Long_Chara
 % AMG8833_PIXELS_FL: 1111
 % AMG8833_PIXELS_INT: 1112
 % HTPA32X32_PIXELS_FP62: 1113
+file_writer.htpa32x32_pixels_fp62 = @(str)OmniTrakFileWrite_WriteBlock_V1_HTPA32X32_PIXELS_FP62(fid, ofbc.HTPA32X32_PIXELS_FP62, thermal_data);
+
 % HTPA32X32_PIXELS_INT_K: 1114
 % HTPA32X32_AMBIENT_TEMP: 1115
 % HTPA32X32_PIXELS_INT12_C: 1116
+% HTPA32X32_HOTTEST_PIXEL_FP62: 1117
+file_writer.htpa32x32_hottest_pixel_fp62 = @(str)OmniTrakFileWrite_WriteBlock_V1_HTPA32X32_HOTTEST_PIXEL_FP62(fid, ofbc.HTPA32X32_HOTTEST_PIXEL_FP62, thermal_data);
+
 % BH1749_RGB: 1120
 % DEBUG_SANITY_CHECK: 1121
 % BME280_TEMP_FL: 1200
