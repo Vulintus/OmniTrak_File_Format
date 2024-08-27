@@ -8,7 +8,7 @@ function block_codes = Load_OmniTrak_File_Block_Codes(varargin)
 %
 %	https://github.com/Vulintus/OmniTrak_File_Format
 %
-%	This file was programmatically generated: 2023-06-21, 10:04:24 (UTC).
+%	This file was programmatically generated: 2024-04-24, 03:26:50 (UTC).
 %
 
 if nargin > 0
@@ -59,7 +59,7 @@ switch ver
 		block_codes.USER_TIME = 60;                                         %Date/time values from a user-set timestamp.
 
 		block_codes.SYSTEM_TYPE = 100;                                      %Vulintus system ID code (1 = MotoTrak, 2 = OmniTrak, 3 = HabiTrak, 4 = OmniHome, 5 = SensiTrak, 6 = Prototype).
-		block_codes.SYSTEM_NAME = 101;                                      %System name.
+		block_codes.SYSTEM_NAME = 101;                                      %Vulintus system name.
 		block_codes.SYSTEM_HW_VER = 102;                                    %Vulintus system hardware version.
 		block_codes.SYSTEM_FW_VER = 103;                                    %System firmware version, written as characters.
 		block_codes.SYSTEM_SN = 104;                                        %System serial number, written as characters.
@@ -72,8 +72,8 @@ switch ver
 		block_codes.PRIMARY_INPUT = 111;                                    %Primary input name, for modules with multiple input signals.
 		block_codes.SAMD_CHIP_ID = 112;                                     %The SAMD manufacturer's unique chip identifier.
 
-		block_codes.WIFI_MAC_ADDR = 120;                                    %The MAC address of the device's ESP8266 module.
-		block_codes.WIFI_IP4_ADDR = 121;                                    %The local IPv4 address of the device's ESP8266 module.
+		block_codes.ESP8266_MAC_ADDR = 120;                                 %The MAC address of the device's ESP8266 module.
+		block_codes.ESP8266_IP4_ADDR = 121;                                 %The local IPv4 address of the device's ESP8266 module.
 		block_codes.ESP8266_CHIP_ID = 122;                                  %The ESP8266 manufacturer's unique chip identifier
 		block_codes.ESP8266_FLASH_ID = 123;                                 %The ESP8266 flash chip's unique chip identifier
 
@@ -253,5 +253,9 @@ switch ver
 		block_codes.MODULE_CENTER_OFFSET = 2731;                            %Center offset, in millimeters, for the specified OTMP module.
 
 		block_codes.STAP_2AFC_TRIAL_OUTCOME = 2740;                         %SensiTrak proprioception discrimination task trial outcome data.
+
+		block_codes.FR_TASK_TRIAL = 2800;                                   %Fixed reinforcement task trial data.
+
+        block_codes.STOP_TASK_TRIAL = 2801;                                 %Stop task trial data.
 
 end

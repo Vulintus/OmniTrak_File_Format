@@ -1,6 +1,6 @@
 function data = OmniTrakFileRead(file,varargin)
 
-%Collated: 01/19/2024, 10:41:00
+%Collated: 08/01/2024, 11:24:57
 
 
 %
@@ -157,7 +157,7 @@ function block_codes = Load_OmniTrak_File_Block_Codes(varargin)
 %
 %	https://github.com/Vulintus/OmniTrak_File_Format
 %
-%	This file was programmatically generated: 2023-06-21, 10:04:24 (UTC).
+%	This file was programmatically generated: 2024-04-24, 03:26:50 (UTC).
 %
 
 if nargin > 0
@@ -208,7 +208,7 @@ switch ver
 		block_codes.USER_TIME = 60;                                         %Date/time values from a user-set timestamp.
 
 		block_codes.SYSTEM_TYPE = 100;                                      %Vulintus system ID code (1 = MotoTrak, 2 = OmniTrak, 3 = HabiTrak, 4 = OmniHome, 5 = SensiTrak, 6 = Prototype).
-		block_codes.SYSTEM_NAME = 101;                                      %System name.
+		block_codes.SYSTEM_NAME = 101;                                      %Vulintus system name.
 		block_codes.SYSTEM_HW_VER = 102;                                    %Vulintus system hardware version.
 		block_codes.SYSTEM_FW_VER = 103;                                    %System firmware version, written as characters.
 		block_codes.SYSTEM_SN = 104;                                        %System serial number, written as characters.
@@ -221,8 +221,8 @@ switch ver
 		block_codes.PRIMARY_INPUT = 111;                                    %Primary input name, for modules with multiple input signals.
 		block_codes.SAMD_CHIP_ID = 112;                                     %The SAMD manufacturer's unique chip identifier.
 
-		block_codes.WIFI_MAC_ADDR = 120;                                    %The MAC address of the device's ESP8266 module.
-		block_codes.WIFI_IP4_ADDR = 121;                                    %The local IPv4 address of the device's ESP8266 module.
+		block_codes.ESP8266_MAC_ADDR = 120;                                 %The MAC address of the device's ESP8266 module.
+		block_codes.ESP8266_IP4_ADDR = 121;                                 %The local IPv4 address of the device's ESP8266 module.
 		block_codes.ESP8266_CHIP_ID = 122;                                  %The ESP8266 manufacturer's unique chip identifier
 		block_codes.ESP8266_FLASH_ID = 123;                                 %The ESP8266 flash chip's unique chip identifier
 
@@ -403,6 +403,10 @@ switch ver
 
 		block_codes.STAP_2AFC_TRIAL_OUTCOME = 2740;                         %SensiTrak proprioception discrimination task trial outcome data.
 
+		block_codes.FR_TASK_TRIAL = 2800;                                   %Fixed reinforcement task trial data.
+
+        block_codes.STOP_TASK_TRIAL = 2801;                                 %Stop task trial data.
+
 end
 
 
@@ -469,7 +473,7 @@ function data = OmniTrakFileRead_ReadBlock(fid,block,data,verbose)
 %
 %	https://github.com/Vulintus/OmniTrak_File_Format
 %
-%	This file was programmatically generated: 2023-06-21, 10:04:24 (UTC).
+%	This file was programmatically generated: 2024-04-24, 03:26:50 (UTC).
 %
 
 block_codes = Load_OmniTrak_File_Block_Codes(data.file_version);
@@ -561,7 +565,7 @@ switch data.file_version
 			case block_codes.SYSTEM_TYPE                                    %Vulintus system ID code (1 = MotoTrak, 2 = OmniTrak, 3 = HabiTrak, 4 = OmniHome, 5 = SensiTrak, 6 = Prototype).
 				data = OmniTrakFileRead_ReadBlock_V1_SYSTEM_TYPE(fid,data);
 
-			case block_codes.SYSTEM_NAME                                    %System name.
+			case block_codes.SYSTEM_NAME                                    %Vulintus system name.
 				data = OmniTrakFileRead_ReadBlock_V1_SYSTEM_NAME(fid,data);
 
 			case block_codes.SYSTEM_HW_VER                                  %Vulintus system hardware version.
@@ -594,11 +598,11 @@ switch data.file_version
 			case block_codes.SAMD_CHIP_ID                                   %The SAMD manufacturer's unique chip identifier.
 				data = OmniTrakFileRead_ReadBlock_V1_SAMD_CHIP_ID(fid,data);
 
-            case block_codes.WIFI_MAC_ADDR                                  %The MAC address of the device's embedded WiFi module.
-				data = OmniTrakFileRead_ReadBlock_V1_WIFI_MAC_ADDR(fid,data);
+			case block_codes.ESP8266_MAC_ADDR                               %The MAC address of the device's ESP8266 module.
+				data = OmniTrakFileRead_ReadBlock_V1_ESP8266_MAC_ADDR(fid,data);
 
-            case block_codes.WIFI_IP4_ADDR                                  %The local IPv4 address of the device's embedded WiFi module.
-				data = OmniTrakFileRead_ReadBlock_V1_WIFI_IP4_ADDR(fid,data);
+			case block_codes.ESP8266_IP4_ADDR                               %The local IPv4 address of the device's ESP8266 module.
+				data = OmniTrakFileRead_ReadBlock_V1_ESP8266_IP4_ADDR(fid,data);
 
 			case block_codes.ESP8266_CHIP_ID                                %The ESP8266 manufacturer's unique chip identifier
 				data = OmniTrakFileRead_ReadBlock_V1_ESP8266_CHIP_ID(fid,data);
@@ -1004,6 +1008,11 @@ switch data.file_version
 
 			case block_codes.STAP_2AFC_TRIAL_OUTCOME                        %SensiTrak proprioception discrimination task trial outcome data.
 				data = OmniTrakFileRead_ReadBlock_V1_STAP_2AFC_TRIAL_OUTCOME(fid,data);
+
+			case block_codes.FR_TASK_TRIAL                                  %Fixed reinforcement task trial data.
+				data = OmniTrakFileRead_ReadBlock_V1_FR_TASK_TRIAL(fid,data);
+            case block_codes.STOP_TASK_TRIAL
+                data = OmniTrakFileRead_ReadBlock_V1_STOP_TASK_TRIAL(fid, data);
 
 			otherwise                                                       %No matching block.
 				data = OmniTrakFileRead_Unrecognized_Block(fid,data);
@@ -1502,7 +1511,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_CLOCK_FILE_STOP(fid,data)
 %		7
 %		CLOCK_FILE_STOP
 
-data = OmniTrakFileRead_Check_Field_Name(data,'file_stop');                 %Call the subfunction to check for existing fieldnames.   
+data = OmniTrakFileRead_Check_Field_Name(data,'file_stop','datenum');                 %Call the subfunction to check for existing fieldnames.   
 data.file_stop.datenum = fread(fid,1,'float64');                            %Save the file stop 32-bit millisecond clock timestamp.
 
 
@@ -1726,6 +1735,26 @@ end
 data.device.flash_id = fread(fid,1,'uint32');                               %Save the device's unique flash chip ID.
 
 
+function data = OmniTrakFileRead_ReadBlock_V1_ESP8266_IP4_ADDR(fid,data)
+
+%	OmniTrak File Block Code (OFBC):
+%		BLOCK VALUE:	121
+%		DEFINITION:		ESP8266_IP4_ADDR
+%		DESCRIPTION:	The local IPv4 address of the device's ESP8266 module.
+
+fprintf(1,'Need to finish coding for Block 121: ESP8266_IP4_ADDR\n');
+
+
+function data = OmniTrakFileRead_ReadBlock_V1_ESP8266_MAC_ADDR(fid,data)
+
+%	OmniTrak File Block Code (OFBC):
+%		BLOCK VALUE:	120
+%		DEFINITION:		ESP8266_MAC_ADDR
+%		DESCRIPTION:	The MAC address of the device's ESP8266 module.
+
+fprintf(1,'Need to finish coding for Block 120: ESP8266_MAC_ADDR\n');
+
+
 function data = OmniTrakFileRead_ReadBlock_V1_EXP_NAME(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
@@ -1765,6 +1794,16 @@ function data = OmniTrakFileRead_ReadBlock_V1_FILE_VERSION(fid,data)
 %		FILE_VERSION
 
 fprintf(1,'Need to finish coding for Block 1: FILE_VERSION');
+
+
+function data = OmniTrakFileRead_ReadBlock_V1_FR_TASK_TRIAL(fid,data)
+
+%	OmniTrak File Block Code (OFBC):
+%		BLOCK VALUE:	2800
+%		DEFINITION:		FR_TASK_TRIAL
+%		DESCRIPTION:	Fixed reinforcement task trial data.
+
+fprintf(1,'Need to finish coding for Block 2800: FR_TASK_TRIAL\n');
 
 
 function data = OmniTrakFileRead_ReadBlock_V1_FW_OPERANT_FEED(fid,data)
@@ -2809,6 +2848,132 @@ catch
 end
 
 
+function session = OmniTrakFileRead_ReadBlock_V1_STOP_TASK_TRIAL(fid, session)
+    %OMNITRAKFILEREAD_READBLOCK_V1_STOP_TASK_TRIAL reads data of an
+    %individual trial of the STOP task.
+
+    if (~isfield(session, 'trial'))
+        session.trial = struct( ...
+            'start_time', {}, ...
+            'outcome', {}, ...
+            'target_zone', {}, ...
+            'target_stop_duration', {}, ...
+            'reward_time', {}, ...
+            'zone_events', {} ...
+        );
+    end
+    %session = OmniTrakFileRead_Check_Field_Name(session, 'trial');
+
+    %Create a struct to hold the trial data
+    trial_data = struct( ...
+        'start_time', NaT, ...
+        'outcome', 'M', ...
+        'target_zone', 0, ...
+        'target_stop_duration', 0, ...
+        'reward_time', NaT, ...
+        'zone_events', [] ...
+    );
+
+    zone_events = struct( ...
+        'entrance_time', {}, ...
+        'stop_duration', {}, ...
+        'zone_id', {}, ...
+        'anticipatory_licks', {} ...
+    );
+
+    %Read in the version of the stop task trial block
+    stop_task_trial_block_version = fread(fid, 1, 'uint16');
+
+    %Check to see if the version is supported
+    if (stop_task_trial_block_version == 1)
+
+        %Read in the trial number
+        trial_number = fread(fid, 1, 'uint16');
+
+        %Read in the trial start time
+        trial_start_time = fread(fid, 1, 'float64');
+        trial_start_datetime = datetime(datevec(trial_start_time));
+
+        %Read in the trial outcome
+        trial_outcome = fread(fid, 1, 'uchar');
+
+        %Read in the trial's target zone
+        trial_target_zone = fread(fid, 1, 'uint8');
+
+        %Read in the target stop duration
+        trial_target_stop_duration = fread(fid, 1, 'float32');
+
+        %Read in the trial's reward time
+        trial_reward_time = fread(fid, 1, 'float64');
+        trial_reward_datetime = datetime(datevec(trial_reward_time));
+
+        %Read in the number of zone events that occurred during this trial
+        trial_num_zone_events = fread(fid, 1, 'uint32');
+
+        %Read in each individual zone event
+        for i = 1:trial_num_zone_events
+
+            %Read in the version of the zone-event sub-block
+            zone_event_block_version = fread(fid, 1, 'uint16');
+
+            %Read in the zone entrance time
+            zone_entrance_time = fread(fid, 1, 'float64');
+            zone_entrance_datetime = datetime(datevec(zone_entrance_time));
+
+            %Read in the stop duration
+            zone_stop_duration = fread(fid, 1, 'float64');
+
+            %Read in the zone id
+            zone_id = fread(fid, 1, 'uint8');
+
+            %Read in the number of licks that occurred
+            zone_licks = fread(fid, 1, 'uint32');
+
+            %Read in the timestamp of each lick
+            zone_lick_times = datetime.empty;
+            for j = 1:zone_licks
+                zone_lick_time = fread(fid, 1, 'float64');
+                zone_lick_times = [zone_lick_times zone_lick_time];
+            end
+
+            %Form a struct representing this zone event
+            zone_event = struct( ...
+                'entrance_time', zone_entrance_datetime, ...
+                'stop_duration', zone_stop_duration, ...
+                'zone_id', zone_id, ...
+                'anticipatory_licks', zone_lick_times ...
+            );
+
+            %Add this zone event to the array of all zone events
+            zone_events = [zone_events zone_event];
+
+        end
+
+        %Set the trial data
+        trial_data.start_time = trial_start_datetime;
+        trial_data.outcome = trial_outcome;
+        trial_data.target_zone = trial_target_zone;
+        trial_data.target_stop_duration = trial_target_stop_duration;
+        trial_data.reward_time = trial_reward_datetime;
+        trial_data.zone_events = zone_events;
+
+        %Append the trial onto the session
+        session.trial(trial_number) = trial_data;
+
+    end
+
+
+
+
+
+
+
+
+
+
+
+
+
 function data = OmniTrakFileRead_ReadBlock_V1_STREAM_INPUT_NAME(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
@@ -3211,25 +3376,6 @@ data.dist(i).src = 'SGP30';                                     %Save the source
 data.dist(i).id = fread(fid,1,'uint8');                         %Read in the VL53L0X sensor index (there may be multiple sensors).
 data.dist(i).time = fread(fid,1,'uint32');                      %Save the millisecond clock timestamp for the reading.
 data.dist(i).int = NaN;                                         %Save a NaN in place of a value to indicate a read failure.
-
-
-function data = OmniTrakFileRead_ReadBlock_V1_WIFI_IP4_ADDR(fid,data)
-
-%	OmniTrak File Block Code (OFBC):
-%		121
-%		WIFI_IP4_ADDR
-
-fprintf(1,'Need to finish coding for Block 121: ESP8266_IP4_ADDR');
-
-
-function data = OmniTrakFileRead_ReadBlock_V1_WIFI_MAC_ADDR(fid,data)
-
-%	OmniTrak File Block Code (OFBC):
-%		120
-%		WIFI_MAC_ADDR
-
-data = OmniTrakFileRead_Check_Field_Name(data,'device');                    %Call the subfunction to check for existing fieldnames.
-data.device.mac_addr = fread(fid,6,'uint8');                                %Save the device MAC address.
 
 
 function data = OmniTrakFileRead_ReadBlock_V1_WINC1500_IP4_ADDR(fid,data)
