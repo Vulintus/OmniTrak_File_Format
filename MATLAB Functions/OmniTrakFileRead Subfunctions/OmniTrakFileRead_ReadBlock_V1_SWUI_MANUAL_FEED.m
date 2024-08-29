@@ -6,7 +6,12 @@ function data = OmniTrakFileRead_ReadBlock_V1_SWUI_MANUAL_FEED(fid,data)
 
 data = OmniTrakFileRead_Check_Field_Name(data,'feed',...
     {'time','num','source'});                                               %Call the subfunction to check for existing fieldnames.
-i = fread(fid,1,'uint8');                                                   %Read in the dispenser index.                
+i = fread(fid,1,'uint8');                                                   %Read in the dispenser index.
+if length(data.feed) < i                                                    %If the structure doesn't yet have this dispenser index...
+    for j = (length(data.feed)+1):i                                         %Step through each missing index.
+        data.feed(i) = struct('time',[],'num',[],'source',[]);              %Add new indices to the structure.
+    end 
+end
 j = size(data.feed(i).time,1) + 1;                                          %Find the next index for the feed timestamp for this dispenser.
 if j == 1                                                                   %If this is the first manual feeding...
     data.feed(i).time = fread(fid,1,'float64');                             %Save the millisecond clock timestamp.
