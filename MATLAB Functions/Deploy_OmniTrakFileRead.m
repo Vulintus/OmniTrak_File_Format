@@ -158,7 +158,7 @@ for f = 1:length(depfuns)                                                   %Ste
 end
 if ~isempty(matproducts)                                                    %If there's any required MATLAB products.
     fun_file = fullfile(depfun_dir,'required_matlab_products.txt');         %Create a text filename to hold the list of MATLAB products.
-    Vulintus_TSV_Write_File(matproducts',fun_file);                         %Write the required products to the list.
+    Vulintus_TSV_File_Write(matproducts',fun_file);                         %Write the required products to the list.
 end
 
 open('OmniTrakFileRead');                                                   %Open the new OmniTrakFileRead.

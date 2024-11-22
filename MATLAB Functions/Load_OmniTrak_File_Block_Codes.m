@@ -8,7 +8,7 @@ function block_codes = Load_OmniTrak_File_Block_Codes(varargin)
 %
 %	https://github.com/Vulintus/OmniTrak_File_Format
 %
-%	This file was programmatically generated: 2024-04-24, 03:26:50 (UTC).
+%	This file was programmatically generated: 2024-11-05, 03:36:07 (UTC).
 %
 
 if nargin > 0
@@ -133,6 +133,7 @@ switch ver
 		block_codes.HTPA32X32_PIXELS_INT_K = 1114;                          %The current HTPA32x32 pixel readings represented as 16-bit unsigned integers in units of deciKelvin (dK, or Kelvin * 10).
 		block_codes.HTPA32X32_AMBIENT_TEMP = 1115;                          %The current ambient temperature measured by the HTPA32x32, represented as a 32-bit float, in units of Celcius.
 		block_codes.HTPA32X32_PIXELS_INT12_C = 1116;                        %The current HTPA32x32 pixel readings represented as 12-bit signed integers (2 pixels for every 3 bytes) in units of deciCelsius (dC, or Celsius * 10), with values under-range set to the minimum  (2048 dC) and values over-range set to the maximum (2047 dC).
+		block_codes.HTPA32X32_HOTTEST_PIXEL_FP62 = 1117;                    %The location and temperature of the hottest pixel in the HTPA32x32 image. This may not be the raw hottest pixel. It may have gone through some processing and filtering to determine the true hottest pixel. The temperature will be in FP62 formatted Celsius.
 
 		block_codes.BH1749_RGB = 1120;                                      %The current red, green, blue, IR, and green2 sensor readings from the BH1749 sensor
 		block_codes.DEBUG_SANITY_CHECK = 1121;                              %A special block acting as a sanity check, only used in cases of debugging
@@ -236,6 +237,8 @@ switch ver
 		block_codes.MOTOTRAK_V3P0_OUTCOME = 2500;                           %MotoTrak version 3.0 trial outcome data.
 		block_codes.MOTOTRAK_V3P0_SIGNAL = 2501;                            %MotoTrak version 3.0 trial stream signal.
 
+		block_codes.POKE_BITMASK = 2560;                                    %Nosepoke status bitmask, typically written only when it changes.
+
 		block_codes.OUTPUT_TRIGGER_NAME = 2600;                             %Name/description of the output trigger type for the given index.
 
 		block_codes.VIBRATION_TASK_TRIAL_OUTCOME = 2700;                    %Vibration task trial outcome data.
@@ -255,5 +258,6 @@ switch ver
 		block_codes.STAP_2AFC_TRIAL_OUTCOME = 2740;                         %SensiTrak proprioception discrimination task trial outcome data.
 
 		block_codes.FR_TASK_TRIAL = 2800;                                   %Fixed reinforcement task trial data.
+		block_codes.STOP_TASK_TRIAL = 2801;                                 %Stop task trial data.
 
 end

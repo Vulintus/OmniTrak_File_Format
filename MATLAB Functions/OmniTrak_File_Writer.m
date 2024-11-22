@@ -232,6 +232,10 @@ file_writer.sw_operant_feed = @(feeder_index)OmniTrakFileWrite_WriteBlock_V1_SW_
 
 % MOTOTRAK_V3P0_OUTCOME: 2500
 % MOTOTRAK_V3P0_SIGNAL: 2501
+
+% Block code: POKE_BITMASK = 2560.
+file_writer.poke_bitmask = @(micros, num_pokes, bitmask)OmniTrakFileWrite_WriteBlock_V1_POKE_BITMASK(fid, ofbc.POKE_BITMASK, micros, num_pokes, bitmask);
+
 % OUTPUT_TRIGGER_NAME: 2600
 % VIBRATION_TASK_TRIAL_OUTCOME: 2700
 % LED_DETECTION_TASK_TRIAL_OUTCOME: 2710

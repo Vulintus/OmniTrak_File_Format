@@ -1,6 +1,6 @@
 function data = OmniTrakFileRead(file,varargin)
 
-%Collated: 08/29/2024, 12:25:23
+%Collated: 11/21/2024, 18:56:07
 
 
 %
@@ -157,7 +157,7 @@ function block_codes = Load_OmniTrak_File_Block_Codes(varargin)
 %
 %	https://github.com/Vulintus/OmniTrak_File_Format
 %
-%	This file was programmatically generated: 2024-04-24, 03:26:50 (UTC).
+%	This file was programmatically generated: 2024-11-05, 03:36:07 (UTC).
 %
 
 if nargin > 0
@@ -282,6 +282,7 @@ switch ver
 		block_codes.HTPA32X32_PIXELS_INT_K = 1114;                          %The current HTPA32x32 pixel readings represented as 16-bit unsigned integers in units of deciKelvin (dK, or Kelvin * 10).
 		block_codes.HTPA32X32_AMBIENT_TEMP = 1115;                          %The current ambient temperature measured by the HTPA32x32, represented as a 32-bit float, in units of Celcius.
 		block_codes.HTPA32X32_PIXELS_INT12_C = 1116;                        %The current HTPA32x32 pixel readings represented as 12-bit signed integers (2 pixels for every 3 bytes) in units of deciCelsius (dC, or Celsius * 10), with values under-range set to the minimum  (2048 dC) and values over-range set to the maximum (2047 dC).
+		block_codes.HTPA32X32_HOTTEST_PIXEL_FP62 = 1117;                    %The location and temperature of the hottest pixel in the HTPA32x32 image. This may not be the raw hottest pixel. It may have gone through some processing and filtering to determine the true hottest pixel. The temperature will be in FP62 formatted Celsius.
 
 		block_codes.BH1749_RGB = 1120;                                      %The current red, green, blue, IR, and green2 sensor readings from the BH1749 sensor
 		block_codes.DEBUG_SANITY_CHECK = 1121;                              %A special block acting as a sanity check, only used in cases of debugging
@@ -385,6 +386,8 @@ switch ver
 		block_codes.MOTOTRAK_V3P0_OUTCOME = 2500;                           %MotoTrak version 3.0 trial outcome data.
 		block_codes.MOTOTRAK_V3P0_SIGNAL = 2501;                            %MotoTrak version 3.0 trial stream signal.
 
+		block_codes.POKE_BITMASK = 2560;                                    %Nosepoke status bitmask, typically written only when it changes.
+
 		block_codes.OUTPUT_TRIGGER_NAME = 2600;                             %Name/description of the output trigger type for the given index.
 
 		block_codes.VIBRATION_TASK_TRIAL_OUTCOME = 2700;                    %Vibration task trial outcome data.
@@ -404,6 +407,7 @@ switch ver
 		block_codes.STAP_2AFC_TRIAL_OUTCOME = 2740;                         %SensiTrak proprioception discrimination task trial outcome data.
 
 		block_codes.FR_TASK_TRIAL = 2800;                                   %Fixed reinforcement task trial data.
+		block_codes.STOP_TASK_TRIAL = 2801;                                 %Stop task trial data.
 
 end
 
@@ -471,7 +475,7 @@ function data = OmniTrakFileRead_ReadBlock(fid,block,data,verbose)
 %
 %	https://github.com/Vulintus/OmniTrak_File_Format
 %
-%	This file was programmatically generated: 2024-04-24, 03:26:50 (UTC).
+%	This file was programmatically generated: 2024-11-05, 03:36:07 (UTC).
 %
 
 block_codes = Load_OmniTrak_File_Block_Codes(data.file_version);
@@ -746,6 +750,9 @@ switch data.file_version
 			case block_codes.HTPA32X32_PIXELS_INT12_C                       %The current HTPA32x32 pixel readings represented as 12-bit signed integers (2 pixels for every 3 bytes) in units of deciCelsius (dC, or Celsius * 10), with values under-range set to the minimum  (2048 dC) and values over-range set to the maximum (2047 dC).
 				data = OmniTrakFileRead_ReadBlock_V1_HTPA32X32_PIXELS_INT12_C(fid,data);
 
+			case block_codes.HTPA32X32_HOTTEST_PIXEL_FP62                   %The location and temperature of the hottest pixel in the HTPA32x32 image. This may not be the raw hottest pixel. It may have gone through some processing and filtering to determine the true hottest pixel. The temperature will be in FP62 formatted Celsius.
+				data = OmniTrakFileRead_ReadBlock_V1_HTPA32X32_HOTTEST_PIXEL_FP62(fid,data);
+
 			case block_codes.BH1749_RGB                                     %The current red, green, blue, IR, and green2 sensor readings from the BH1749 sensor
 				data = OmniTrakFileRead_ReadBlock_V1_BH1749_RGB(fid,data);
 
@@ -971,6 +978,9 @@ switch data.file_version
 			case block_codes.MOTOTRAK_V3P0_SIGNAL                           %MotoTrak version 3.0 trial stream signal.
 				data = OmniTrakFileRead_ReadBlock_V1_MOTOTRAK_V3P0_SIGNAL(fid,data);
 
+			case block_codes.POKE_BITMASK                                   %Nosepoke status bitmask, typically written only when it changes.
+				data = OmniTrakFileRead_ReadBlock_V1_POKE_BITMASK(fid,data);
+
 			case block_codes.OUTPUT_TRIGGER_NAME                            %Name/description of the output trigger type for the given index.
 				data = OmniTrakFileRead_ReadBlock_V1_OUTPUT_TRIGGER_NAME(fid,data);
 
@@ -1009,6 +1019,9 @@ switch data.file_version
 
 			case block_codes.FR_TASK_TRIAL                                  %Fixed reinforcement task trial data.
 				data = OmniTrakFileRead_ReadBlock_V1_FR_TASK_TRIAL(fid,data);
+
+			case block_codes.STOP_TASK_TRIAL                                %Stop task trial data.
+				data = OmniTrakFileRead_ReadBlock_V1_STOP_TASK_TRIAL(fid,data);
 
 			otherwise                                                       %No matching block.
 				data = OmniTrakFileRead_Unrecognized_Block(fid,data);
@@ -1507,7 +1520,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_CLOCK_FILE_STOP(fid,data)
 %		7
 %		CLOCK_FILE_STOP
 
-data = OmniTrakFileRead_Check_Field_Name(data,'file_stop');                 %Call the subfunction to check for existing fieldnames.   
+data = OmniTrakFileRead_Check_Field_Name(data,'file_stop','datenum');       %Call the subfunction to check for existing fieldnames.
 data.file_stop.datenum = fread(fid,1,'float64');                            %Save the file stop 32-bit millisecond clock timestamp.
 
 
@@ -1799,7 +1812,30 @@ function data = OmniTrakFileRead_ReadBlock_V1_FR_TASK_TRIAL(fid,data)
 %		DEFINITION:		FR_TASK_TRIAL
 %		DESCRIPTION:	Fixed reinforcement task trial data.
 
-fprintf(1,'Need to finish coding for Block 2800: FR_TASK_TRIAL\n');
+
+data = OmniTrakFileRead_Check_Field_Name(data,'trial');                     %Call the subfunction to check for existing fieldnames.
+
+ver = fread(fid,1,'uint16');                                                %Read in the FR_TASK_TRIAL data block version
+
+switch ver                                                                  %Switch between the different data block versions.
+
+    case 1                                                                  %Version 1.
+        t = fread(fid,1,'uint16');                                          %Read in the trial index.
+        data.trial(t).datenum = fread(fid,1,'float64');                     %Read in the serial date number timestamp.
+        data.trial(t).outcome = fread(fid,1,'*char');                       %Read in the outcome code.
+        data.trial(t).target_poke = fread(fid,1,'uint8');                   %Read in the target nosepoke index.
+        data.trial(t).thresh = fread(fid,1,'uint8');                        %Read in the required number of pokes.
+        data.trial(t).poke_count = fread(fid,1,'uint16');                   %Read in the number of completed pokes.
+        data.trial(t).hit_time = fread(fid,1,'float32');                    %Read in the hit (first reward) time (0 for no reward).
+        data.trial(t).reward_dur = fread(fid,1,'float32');                  %Read in the reward window duration (lick availability), in seconds.
+        data.trial(t).num_licks = fread(fid,1,'uint16');                    %Read in the number of licks.
+        data.trial(t).num_feedings = fread(fid,1,'uint16');                 %Read in the number of feedings/dispensings.
+
+    otherwise                                                               %Unrecognized data block version.
+        error(['ERROR IN %s: Data block version #%1.0f is not '...
+            'recognized!'], upper(mfilename), ver);                         %Show an error.
+        
+end
 
 
 function data = OmniTrakFileRead_ReadBlock_V1_FW_OPERANT_FEED(fid,data)
@@ -1880,6 +1916,16 @@ data.temp(i).src = 'HTPA32x32';                                             %Sav
 data.temp(i).id = fread(fid,1,'uint8');                                     %Read in the HTPA sensor index (there may be multiple sensors).
 data.temp(i).timestamp = fread(fid,1,'uint32');                             %Save the microcontroller millisecond clock timestamp for the reading.
 data.temp(i).celsius = fread(fid,1,'float32');                              %Save the temperature reading as a float32 value.
+
+
+function data = OmniTrakFileRead_ReadBlock_V1_HTPA32X32_HOTTEST_PIXEL_FP62(fid,data)
+
+%	OmniTrak File Block Code (OFBC):
+%		BLOCK VALUE:	1117
+%		DEFINITION:		HTPA32X32_HOTTEST_PIXEL_FP62
+%		DESCRIPTION:	The location and temperature of the hottest pixel in the HTPA32x32 image. This may not be the raw hottest pixel. It may have gone through some processing and filtering to determine the true hottest pixel. The temperature will be in FP62 formatted Celsius.
+
+fprintf(1,'Need to finish coding for Block 1117: HTPA32X32_HOTTEST_PIXEL_FP62\n');
 
 
 function data = OmniTrakFileRead_ReadBlock_V1_HTPA32X32_PIXELS_FP62(fid,data)
@@ -2496,6 +2542,39 @@ else                                                                        %Oth
 end       
 
 
+function data = OmniTrakFileRead_ReadBlock_V1_POKE_BITMASK(fid,data)
+
+%	OmniTrak File Block Code (OFBC):
+%		BLOCK VALUE:	2560
+%		DEFINITION:		POKE_BITMASK
+%		DESCRIPTION:	Nosepoke status bitmask, typically written only when it changes.
+
+ver = fread(fid,1,'uint8');                                                 %#ok<NASGU> %Data block version.
+
+data = OmniTrakFileRead_Check_Field_Name(data,'poke',...
+    {'datenum','micros','status'});                                         %Call the subfunction to check for existing fieldnames.         
+j = size(data.poke.datenum,1) + 1;                                          %Find the next index for the pellet timestamp for this dispenser.
+if isempty(data.poke.datenum)                                               %If the serial date number timestamp field is empty...
+    data.poke.datenum = NaN;                                                %Initialize the field with a NaN.
+end
+data.poke.datenum(j,1) = fread(fid,1,'float64');                            %Save the serial date number timestamp.
+if isempty(data.poke.micros)                                                %If the microcontroller microsecond timestamp field is empty...
+    data.poke.micros = NaN;                                                 %Initialize the field with a NaN.
+end
+data.poke.micros(j,1) = fread(fid,1,'float32');                             %Save the microcontroller microsecond timestamp.
+num_pokes = fread(fid,1,'uint8');                                           %Read in the number of nosepokes.
+poke_mask = fread(fid,1,'uint8');                                           %Read in the nosepoke bitmask.
+poke_status = zeros(1,num_pokes);                                           %Create a matrix to hold the nosepoke status.
+for i = 1:num_pokes                                                         %Step through each nosepoke.
+    poke_status(i) = bitget(poke_mask,i);                                   %Grab the status for each nosepoke.
+end
+if j == 1                                                                   %If this is the first nosepoke event...
+    data.poke.status = poke_status;                                         %Create the status matrix.
+else                                                                        %Otherwise...
+    data.poke.status(j,:) = poke_status;                                    %Add the new status to the matrix.
+end
+
+
 function data = OmniTrakFileRead_ReadBlock_V1_POSITION_MOVE_X(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
@@ -2842,6 +2921,16 @@ end
 catch
     disp(spot);
 end
+
+
+function data = OmniTrakFileRead_ReadBlock_V1_STOP_TASK_TRIAL(fid,data)
+
+%	OmniTrak File Block Code (OFBC):
+%		BLOCK VALUE:	2801
+%		DEFINITION:		STOP_TASK_TRIAL
+%		DESCRIPTION:	Stop task trial data.
+
+fprintf(1,'Need to finish coding for Block 2801: STOP_TASK_TRIAL\n');
 
 
 function data = OmniTrakFileRead_ReadBlock_V1_STREAM_INPUT_NAME(fid,data)

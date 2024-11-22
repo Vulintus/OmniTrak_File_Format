@@ -8,7 +8,7 @@ function data = OmniTrakFileRead_ReadBlock(fid,block,data,verbose)
 %
 %	https://github.com/Vulintus/OmniTrak_File_Format
 %
-%	This file was programmatically generated: 2024-04-24, 03:26:50 (UTC).
+%	This file was programmatically generated: 2024-11-05, 03:36:07 (UTC).
 %
 
 block_codes = Load_OmniTrak_File_Block_Codes(data.file_version);
@@ -283,6 +283,9 @@ switch data.file_version
 			case block_codes.HTPA32X32_PIXELS_INT12_C                       %The current HTPA32x32 pixel readings represented as 12-bit signed integers (2 pixels for every 3 bytes) in units of deciCelsius (dC, or Celsius * 10), with values under-range set to the minimum  (2048 dC) and values over-range set to the maximum (2047 dC).
 				data = OmniTrakFileRead_ReadBlock_V1_HTPA32X32_PIXELS_INT12_C(fid,data);
 
+			case block_codes.HTPA32X32_HOTTEST_PIXEL_FP62                   %The location and temperature of the hottest pixel in the HTPA32x32 image. This may not be the raw hottest pixel. It may have gone through some processing and filtering to determine the true hottest pixel. The temperature will be in FP62 formatted Celsius.
+				data = OmniTrakFileRead_ReadBlock_V1_HTPA32X32_HOTTEST_PIXEL_FP62(fid,data);
+
 			case block_codes.BH1749_RGB                                     %The current red, green, blue, IR, and green2 sensor readings from the BH1749 sensor
 				data = OmniTrakFileRead_ReadBlock_V1_BH1749_RGB(fid,data);
 
@@ -508,6 +511,9 @@ switch data.file_version
 			case block_codes.MOTOTRAK_V3P0_SIGNAL                           %MotoTrak version 3.0 trial stream signal.
 				data = OmniTrakFileRead_ReadBlock_V1_MOTOTRAK_V3P0_SIGNAL(fid,data);
 
+			case block_codes.POKE_BITMASK                                   %Nosepoke status bitmask, typically written only when it changes.
+				data = OmniTrakFileRead_ReadBlock_V1_POKE_BITMASK(fid,data);
+
 			case block_codes.OUTPUT_TRIGGER_NAME                            %Name/description of the output trigger type for the given index.
 				data = OmniTrakFileRead_ReadBlock_V1_OUTPUT_TRIGGER_NAME(fid,data);
 
@@ -546,6 +552,9 @@ switch data.file_version
 
 			case block_codes.FR_TASK_TRIAL                                  %Fixed reinforcement task trial data.
 				data = OmniTrakFileRead_ReadBlock_V1_FR_TASK_TRIAL(fid,data);
+
+			case block_codes.STOP_TASK_TRIAL                                %Stop task trial data.
+				data = OmniTrakFileRead_ReadBlock_V1_STOP_TASK_TRIAL(fid,data);
 
 			otherwise                                                       %No matching block.
 				data = OmniTrakFileRead_Unrecognized_Block(fid,data);
