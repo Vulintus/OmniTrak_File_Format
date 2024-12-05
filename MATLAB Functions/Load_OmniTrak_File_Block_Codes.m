@@ -8,7 +8,7 @@ function block_codes = Load_OmniTrak_File_Block_Codes(varargin)
 %
 %	https://github.com/Vulintus/OmniTrak_File_Format
 %
-%	This file was programmatically generated: 2024-11-05, 03:36:07 (UTC).
+%	This file was programmatically generated: 2024-12-05, 05:26:31 (UTC).
 %
 
 if nargin > 0
@@ -242,6 +242,7 @@ switch ver
 		block_codes.OUTPUT_TRIGGER_NAME = 2600;                             %Name/description of the output trigger type for the given index.
 
 		block_codes.VIBRATION_TASK_TRIAL_OUTCOME = 2700;                    %Vibration task trial outcome data.
+		block_codes.VIBROTACTILE_DETECTION_TASK_TRIAL = 2701;               %Vibrotactile detection task trial data.
 
 		block_codes.LED_DETECTION_TASK_TRIAL_OUTCOME = 2710;                %LED detection task trial outcome data.
 		block_codes.LIGHT_SRC_MODEL = 2711;                                 %Light source model name.

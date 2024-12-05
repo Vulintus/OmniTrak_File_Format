@@ -8,7 +8,7 @@ function data = OmniTrakFileRead_ReadBlock(fid,block,data,verbose)
 %
 %	https://github.com/Vulintus/OmniTrak_File_Format
 %
-%	This file was programmatically generated: 2024-11-05, 03:36:07 (UTC).
+%	This file was programmatically generated: 2024-12-05, 05:26:31 (UTC).
 %
 
 block_codes = Load_OmniTrak_File_Block_Codes(data.file_version);
@@ -519,6 +519,9 @@ switch data.file_version
 
 			case block_codes.VIBRATION_TASK_TRIAL_OUTCOME                   %Vibration task trial outcome data.
 				data = OmniTrakFileRead_ReadBlock_V1_VIBRATION_TASK_TRIAL_OUTCOME(fid,data);
+
+			case block_codes.VIBROTACTILE_DETECTION_TASK_TRIAL              %Vibrotactile detection task trial data.
+				data = OmniTrakFileRead_ReadBlock_V1_VIBROTACTILE_DETECTION_TASK_TRIAL(fid,data);
 
 			case block_codes.LED_DETECTION_TASK_TRIAL_OUTCOME               %LED detection task trial outcome data.
 				data = OmniTrakFileRead_ReadBlock_V1_LED_DETECTION_TASK_TRIAL_OUTCOME(fid,data);

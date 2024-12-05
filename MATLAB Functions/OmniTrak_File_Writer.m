@@ -132,7 +132,6 @@ file_writer.exp_name = @(str)OmniTrakFileWrite_WriteBlock_V1_Long_Character_Bloc
 % Block code: STAGE_NAME = 400.
 file_writer.stage_name = @(str)OmniTrakFileWrite_WriteBlock_V1_Long_Character_Block(fid, ofbc.STAGE_NAME, str);
 
-
 % Block code: STAGE_DESCRIPTION = 401.
 file_writer.stage_description = @(str)OmniTrakFileWrite_WriteBlock_V1_Long_Character_Block(fid, ofbc.STAGE_DESCRIPTION, str);
 
@@ -238,6 +237,11 @@ file_writer.poke_bitmask = @(micros, num_pokes, bitmask)OmniTrakFileWrite_WriteB
 
 % OUTPUT_TRIGGER_NAME: 2600
 % VIBRATION_TASK_TRIAL_OUTCOME: 2700
+
+% Block code:VIBROTACTILE_DETECTION_TASK_TRIAL = 2701
+file_writer.vibrotactile_detection_task_trial = @(varargin)OmniTrakFileWrite_WriteBlock_VIBROTACTILE_DETECTION_TASK_TRIAL(fid, ofbc.VIBROTACTILE_DETECTION_TASK_TRIAL, varargin{:});
+% 
+
 % LED_DETECTION_TASK_TRIAL_OUTCOME: 2710
 % LIGHT_SRC_MODEL: 2711
 % LIGHT_SRC_TYPE: 2712
