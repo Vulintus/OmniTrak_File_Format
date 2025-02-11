@@ -7,7 +7,7 @@
 
 	https://github.com/Vulintus/OmniTrak_File_Format
 
-	This file was programmatically generated: 2025-02-11, 02:42:21 (UTC).
+	This file was programmatically generated: 2025-02-11, 05:44:45 (UTC).
 */
 
 
@@ -208,6 +208,7 @@
 #define	OFBC_HARD_PAUSE_START                      2011      // Timestamped event marker for the stop of a session pause, with no events recorded during the pause.
 #define	OFBC_SOFT_PAUSE_START                      2012      // Timestamped event marker for the start of a session pause, with non-operant events recorded during the pause.
 #define	OFBC_SOFT_PAUSE_START                      2013      // Timestamped event marker for the stop of a session pause, with non-operant events recorded during the pause.
+#define	OFBC_TRIAL_START_SERIAL_DATE               2014      // Timestamped event marker for the start of a trial, with accompanying microsecond clock reading
 
 #define	OFBC_POSITION_START_X                      2020      // Starting position of an autopositioner in just the x-direction, with distance in millimeters.
 #define	OFBC_POSITION_MOVE_X                       2021      // Timestamped movement of an autopositioner in just the x-direction, with distance in millimeters.

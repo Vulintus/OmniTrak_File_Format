@@ -209,6 +209,11 @@ file_writer.locomotion_xy_theta = ...
 % PELLET_FAILURE: 2001
 % HARD_PAUSE_START: 2011
 % SOFT_PAUSE_START: 2013
+
+%Block code: TRIAL_START_SERIAL_DATE = 2014.
+file_writer.trial_start_serial_date = ...
+    @(trial_num)OmniTrakFileWrite_WriteBlock_V1_Timestamped_uint16(fid, ofbc.TRIAL_START_SERIAL_DATE, trial_num);
+
 % POSITION_START_X: 2020
 % POSITION_MOVE_X: 2021
 % POSITION_START_XY: 2022

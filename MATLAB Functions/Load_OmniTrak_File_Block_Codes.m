@@ -8,7 +8,7 @@ function block_codes = Load_OmniTrak_File_Block_Codes(varargin)
 %
 %	https://github.com/Vulintus/OmniTrak_File_Format
 %
-%	This file was programmatically generated: 2025-02-11, 02:42:21 (UTC).
+%	This file was programmatically generated: 2025-02-11, 05:44:45 (UTC).
 %
 
 if nargin > 0
@@ -206,6 +206,7 @@ switch ver
 		block_codes.HARD_PAUSE_START = 2011;                                %Timestamped event marker for the stop of a session pause, with no events recorded during the pause.
 		block_codes.SOFT_PAUSE_START = 2012;                                %Timestamped event marker for the start of a session pause, with non-operant events recorded during the pause.
 		block_codes.SOFT_PAUSE_START = 2013;                                %Timestamped event marker for the stop of a session pause, with non-operant events recorded during the pause.
+		block_codes.TRIAL_START_SERIAL_DATE = 2014;                         %Timestamped event marker for the start of a trial, with accompanying microsecond clock reading
 
 		block_codes.POSITION_START_X = 2020;                                %Starting position of an autopositioner in just the x-direction, with distance in millimeters.
 		block_codes.POSITION_MOVE_X = 2021;                                 %Timestamped movement of an autopositioner in just the x-direction, with distance in millimeters.
