@@ -1,7 +1,7 @@
 function data = OmniTrakFileRead_Beta(file,varargin)
 
 %
-%OmniTrakFileRead.m - Vulintus, Inc., 2018.
+% OmniTrakFileRead.m - Vulintus, Inc., 2018.
 %
 %   OMNITRAKFILEREAD reads in behavioral data from Vulintus' *.OmniTrak
 %   file format and returns data organized in the fields of the output

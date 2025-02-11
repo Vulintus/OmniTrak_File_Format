@@ -8,7 +8,7 @@ function data = OmniTrakFileRead_ReadBlock(fid,block,data,verbose)
 %
 %	https://github.com/Vulintus/OmniTrak_File_Format
 %
-%	This file was programmatically generated: 2024-12-05, 05:26:31 (UTC).
+%	This file was programmatically generated: 2025-02-11, 02:42:21 (UTC).
 %
 
 block_codes = Load_OmniTrak_File_Block_Codes(data.file_version);
@@ -253,6 +253,9 @@ switch data.file_version
 			case block_codes.ZMOD4410_ENABLED                               %Indicates that an ZMOD4410 VOC/eC02 sensor is present in the system.
 				data = OmniTrakFileRead_ReadBlock_V1_ZMOD4410_ENABLED(fid,data);
 
+			case block_codes.LOCOMOTION_XY_THETA                            %A point in a tracked locomotion path, with absolute x- and y-coordinates in millimeters, with facing direction theta, in degrees.
+				data = OmniTrakFileRead_ReadBlock_V1_LOCOMOTION_XY_THETA(fid,data);
+
 			case block_codes.AMG8833_THERM_CONV                             %The conversion factor, in degrees Celsius, for converting 16-bit integer AMG8833 pixel readings to temperature.
 				data = OmniTrakFileRead_ReadBlock_V1_AMG8833_THERM_CONV(fid,data);
 
@@ -456,6 +459,9 @@ switch data.file_version
 
 			case block_codes.POSITION_MOVE_XYZ                              %Timestamped movement of an autopositioner in the x-, y-, and z- directions, with distance in millimeters.
 				data = OmniTrakFileRead_ReadBlock_V1_POSITION_MOVE_XYZ(fid,data);
+
+			case block_codes.TTL_PULSE                                      %Timestamped event for a TTL pulse output, with channel number, voltage, and duration.
+				data = OmniTrakFileRead_ReadBlock_V1_TTL_PULSE(fid,data);
 
 			case block_codes.STREAM_INPUT_NAME                              %Stream input name for the specified input index.
 				data = OmniTrakFileRead_ReadBlock_V1_STREAM_INPUT_NAME(fid,data);

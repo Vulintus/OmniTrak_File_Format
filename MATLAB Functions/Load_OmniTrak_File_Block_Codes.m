@@ -8,7 +8,7 @@ function block_codes = Load_OmniTrak_File_Block_Codes(varargin)
 %
 %	https://github.com/Vulintus/OmniTrak_File_Format
 %
-%	This file was programmatically generated: 2024-12-05, 05:26:31 (UTC).
+%	This file was programmatically generated: 2025-02-11, 02:42:21 (UTC).
 %
 
 if nargin > 0
@@ -122,6 +122,8 @@ switch ver
 		block_codes.MLX90640_ENABLED = 1008;                                %Indicates that an MLX90640 thermopile array sensor is present in the system.
 		block_codes.ZMOD4410_ENABLED = 1009;                                %Indicates that an ZMOD4410 VOC/eC02 sensor is present in the system.
 
+		block_codes.LOCOMOTION_XY_THETA = 1024;                             %A point in a tracked locomotion path, with absolute x- and y-coordinates in millimeters, with facing direction theta, in degrees.
+
 		block_codes.AMG8833_THERM_CONV = 1100;                              %The conversion factor, in degrees Celsius, for converting 16-bit integer AMG8833 pixel readings to temperature.
 		block_codes.AMG8833_THERM_FL = 1101;                                %The current AMG8833 thermistor reading as a converted float32 value, in Celsius.
 		block_codes.AMG8833_THERM_INT = 1102;                               %The current AMG8833 thermistor reading as a raw, signed 16-bit integer.
@@ -211,6 +213,8 @@ switch ver
 		block_codes.POSITION_MOVE_XY = 2023;                                %Timestamped movement of an autopositioner in just the x- and y-directions, with distance in millimeters.
 		block_codes.POSITION_START_XYZ = 2024;                              %Starting position of an autopositioner in the x-, y-, and z- directions, with distance in millimeters.
 		block_codes.POSITION_MOVE_XYZ = 2025;                               %Timestamped movement of an autopositioner in the x-, y-, and z- directions, with distance in millimeters.
+
+		block_codes.TTL_PULSE = 2048;                                       %Timestamped event for a TTL pulse output, with channel number, voltage, and duration.
 
 		block_codes.STREAM_INPUT_NAME = 2100;                               %Stream input name for the specified input index.
 

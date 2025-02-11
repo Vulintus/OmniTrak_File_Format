@@ -145,6 +145,11 @@ file_writer.stage_description = @(str)OmniTrakFileWrite_WriteBlock_V1_Long_Chara
 % ALSPT19_ENABLED: 1007
 % MLX90640_ENABLED: 1008
 % ZMOD4410_ENABLED: 1009
+
+%Block code: LOCOMOTION_XY_THETA = 1024.
+file_writer.locomotion_xy_theta = ...
+    @(timestamp, xy, angle)OmniTrakFileWrite_WriteBlock_V1_LOCOMOTION_XY_THETA(fid, ofbc.STAGE_DESCRIPTION, timestamp, xy, angle);
+
 % AMG8833_THERM_CONV: 1100
 % AMG8833_THERM_FL: 1101
 % AMG8833_THERM_INT: 1102
@@ -210,6 +215,11 @@ file_writer.stage_description = @(str)OmniTrakFileWrite_WriteBlock_V1_Long_Chara
 % POSITION_MOVE_XY: 2023
 % POSITION_START_XYZ: 2024
 % POSITION_MOVE_XYZ: 2025
+
+%Block code: TTL_PULSE = 2048.
+file_writer.ttl_pulse = ...
+    @(timestamp, volts, dur)OmniTrakFileWrite_WriteBlock_V1_TTL_PULSE(fid, ofbc.TTL_PULSE, timestamp, volts, dur);
+
 % STREAM_INPUT_NAME: 2100
 % CALIBRATION_BASELINE: 2200
 % CALIBRATION_SLOPE: 2201

@@ -7,7 +7,7 @@
 
 	https://github.com/Vulintus/OmniTrak_File_Format
 
-	This file was programmatically generated: 2024-12-05, 05:26:31 (UTC).
+	This file was programmatically generated: 2025-02-11, 02:42:21 (UTC).
 */
 
 
@@ -123,6 +123,8 @@
 #define	OFBC_MLX90640_ENABLED                      1008      // Indicates that an MLX90640 thermopile array sensor is present in the system.
 #define	OFBC_ZMOD4410_ENABLED                      1009      // Indicates that an ZMOD4410 VOC/eC02 sensor is present in the system.
 
+#define	OFBC_LOCOMOTION_XY_THETA                   1024      // A point in a tracked locomotion path, with absolute x- and y-coordinates in millimeters, with facing direction theta, in degrees.
+
 #define	OFBC_AMG8833_THERM_CONV                    1100      // The conversion factor, in degrees Celsius, for converting 16-bit integer AMG8833 pixel readings to temperature.
 #define	OFBC_AMG8833_THERM_FL                      1101      // The current AMG8833 thermistor reading as a converted float32 value, in Celsius.
 #define	OFBC_AMG8833_THERM_INT                     1102      // The current AMG8833 thermistor reading as a raw, signed 16-bit integer.
@@ -213,6 +215,8 @@
 #define	OFBC_POSITION_MOVE_XY                      2023      // Timestamped movement of an autopositioner in just the x- and y-directions, with distance in millimeters.
 #define	OFBC_POSITION_START_XYZ                    2024      // Starting position of an autopositioner in the x-, y-, and z- directions, with distance in millimeters.
 #define	OFBC_POSITION_MOVE_XYZ                     2025      // Timestamped movement of an autopositioner in the x-, y-, and z- directions, with distance in millimeters.
+
+#define	OFBC_TTL_PULSE                             2048      // Timestamped event for a TTL pulse output, with channel number, voltage, and duration.
 
 #define	OFBC_STREAM_INPUT_NAME                     2100      // Stream input name for the specified input index.
 
