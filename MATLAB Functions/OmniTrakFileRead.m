@@ -1,10 +1,10 @@
 function data = OmniTrakFileRead(file,varargin)
 
-%Collated: 11/21/2024, 18:56:07
+%Collated: 02/11/2025, 22:51:01
 
 
 %
-%OmniTrakFileRead.m - Vulintus, Inc., 2018.
+% OmniTrakFileRead.m - Vulintus, Inc., 2018.
 %
 %   OMNITRAKFILEREAD reads in behavioral data from Vulintus' *.OmniTrak
 %   file format and returns data organized in the fields of the output
@@ -157,7 +157,7 @@ function block_codes = Load_OmniTrak_File_Block_Codes(varargin)
 %
 %	https://github.com/Vulintus/OmniTrak_File_Format
 %
-%	This file was programmatically generated: 2024-11-05, 03:36:07 (UTC).
+%	This file was programmatically generated: 2025-02-11, 11:58:55 (UTC).
 %
 
 if nargin > 0
@@ -271,6 +271,8 @@ switch ver
 		block_codes.MLX90640_ENABLED = 1008;                                %Indicates that an MLX90640 thermopile array sensor is present in the system.
 		block_codes.ZMOD4410_ENABLED = 1009;                                %Indicates that an ZMOD4410 VOC/eC02 sensor is present in the system.
 
+		block_codes.AMBULATION_XY_THETA = 1024;                             %A point in a tracked ambulation path, with absolute x- and y-coordinates in millimeters, with facing direction theta, in degrees.
+
 		block_codes.AMG8833_THERM_CONV = 1100;                              %The conversion factor, in degrees Celsius, for converting 16-bit integer AMG8833 pixel readings to temperature.
 		block_codes.AMG8833_THERM_FL = 1101;                                %The current AMG8833 thermistor reading as a converted float32 value, in Celsius.
 		block_codes.AMG8833_THERM_INT = 1102;                               %The current AMG8833 thermistor reading as a raw, signed 16-bit integer.
@@ -353,6 +355,7 @@ switch ver
 		block_codes.HARD_PAUSE_START = 2011;                                %Timestamped event marker for the stop of a session pause, with no events recorded during the pause.
 		block_codes.SOFT_PAUSE_START = 2012;                                %Timestamped event marker for the start of a session pause, with non-operant events recorded during the pause.
 		block_codes.SOFT_PAUSE_START = 2013;                                %Timestamped event marker for the stop of a session pause, with non-operant events recorded during the pause.
+		block_codes.TRIAL_START_SERIAL_DATE = 2014;                         %Timestamped event marker for the start of a trial, with accompanying microsecond clock reading
 
 		block_codes.POSITION_START_X = 2020;                                %Starting position of an autopositioner in just the x-direction, with distance in millimeters.
 		block_codes.POSITION_MOVE_X = 2021;                                 %Timestamped movement of an autopositioner in just the x-direction, with distance in millimeters.
@@ -360,6 +363,8 @@ switch ver
 		block_codes.POSITION_MOVE_XY = 2023;                                %Timestamped movement of an autopositioner in just the x- and y-directions, with distance in millimeters.
 		block_codes.POSITION_START_XYZ = 2024;                              %Starting position of an autopositioner in the x-, y-, and z- directions, with distance in millimeters.
 		block_codes.POSITION_MOVE_XYZ = 2025;                               %Timestamped movement of an autopositioner in the x-, y-, and z- directions, with distance in millimeters.
+
+		block_codes.TTL_PULSE = 2048;                                       %Timestamped event for a TTL pulse output, with channel number, voltage, and duration.
 
 		block_codes.STREAM_INPUT_NAME = 2100;                               %Stream input name for the specified input index.
 
@@ -391,6 +396,7 @@ switch ver
 		block_codes.OUTPUT_TRIGGER_NAME = 2600;                             %Name/description of the output trigger type for the given index.
 
 		block_codes.VIBRATION_TASK_TRIAL_OUTCOME = 2700;                    %Vibration task trial outcome data.
+		block_codes.VIBROTACTILE_DETECTION_TASK_TRIAL = 2701;               %Vibrotactile detection task trial data.
 
 		block_codes.LED_DETECTION_TASK_TRIAL_OUTCOME = 2710;                %LED detection task trial outcome data.
 		block_codes.LIGHT_SRC_MODEL = 2711;                                 %Light source model name.
@@ -475,7 +481,7 @@ function data = OmniTrakFileRead_ReadBlock(fid,block,data,verbose)
 %
 %	https://github.com/Vulintus/OmniTrak_File_Format
 %
-%	This file was programmatically generated: 2024-11-05, 03:36:07 (UTC).
+%	This file was programmatically generated: 2025-02-11, 11:58:55 (UTC).
 %
 
 block_codes = Load_OmniTrak_File_Block_Codes(data.file_version);
@@ -720,6 +726,9 @@ switch data.file_version
 			case block_codes.ZMOD4410_ENABLED                               %Indicates that an ZMOD4410 VOC/eC02 sensor is present in the system.
 				data = OmniTrakFileRead_ReadBlock_V1_ZMOD4410_ENABLED(fid,data);
 
+			case block_codes.AMBULATION_XY_THETA                            %A point in a tracked ambulation path, with absolute x- and y-coordinates in millimeters, with facing direction theta, in degrees.
+				data = OmniTrakFileRead_ReadBlock_V1_AMBULATION_XY_THETA(fid,data);
+
 			case block_codes.AMG8833_THERM_CONV                             %The conversion factor, in degrees Celsius, for converting 16-bit integer AMG8833 pixel readings to temperature.
 				data = OmniTrakFileRead_ReadBlock_V1_AMG8833_THERM_CONV(fid,data);
 
@@ -906,6 +915,9 @@ switch data.file_version
 			case block_codes.SOFT_PAUSE_START                               %Timestamped event marker for the stop of a session pause, with non-operant events recorded during the pause.
 				data = OmniTrakFileRead_ReadBlock_V1_SOFT_PAUSE_START(fid,data);
 
+			case block_codes.TRIAL_START_SERIAL_DATE                        %Timestamped event marker for the start of a trial, with accompanying microsecond clock reading
+				data = OmniTrakFileRead_ReadBlock_V1_TRIAL_START_SERIAL_DATE(fid,data);
+
 			case block_codes.POSITION_START_X                               %Starting position of an autopositioner in just the x-direction, with distance in millimeters.
 				data = OmniTrakFileRead_ReadBlock_V1_POSITION_START_X(fid,data);
 
@@ -923,6 +935,9 @@ switch data.file_version
 
 			case block_codes.POSITION_MOVE_XYZ                              %Timestamped movement of an autopositioner in the x-, y-, and z- directions, with distance in millimeters.
 				data = OmniTrakFileRead_ReadBlock_V1_POSITION_MOVE_XYZ(fid,data);
+
+			case block_codes.TTL_PULSE                                      %Timestamped event for a TTL pulse output, with channel number, voltage, and duration.
+				data = OmniTrakFileRead_ReadBlock_V1_TTL_PULSE(fid,data);
 
 			case block_codes.STREAM_INPUT_NAME                              %Stream input name for the specified input index.
 				data = OmniTrakFileRead_ReadBlock_V1_STREAM_INPUT_NAME(fid,data);
@@ -986,6 +1001,9 @@ switch data.file_version
 
 			case block_codes.VIBRATION_TASK_TRIAL_OUTCOME                   %Vibration task trial outcome data.
 				data = OmniTrakFileRead_ReadBlock_V1_VIBRATION_TASK_TRIAL_OUTCOME(fid,data);
+
+			case block_codes.VIBROTACTILE_DETECTION_TASK_TRIAL              %Vibrotactile detection task trial data.
+				data = OmniTrakFileRead_ReadBlock_V1_VIBROTACTILE_DETECTION_TASK_TRIAL(fid,data);
 
 			case block_codes.LED_DETECTION_TASK_TRIAL_OUTCOME               %LED detection task trial outcome data.
 				data = OmniTrakFileRead_ReadBlock_V1_LED_DETECTION_TASK_TRIAL_OUTCOME(fid,data);
@@ -1053,6 +1071,39 @@ data.amb(i).src = 'ALSPT19';                                                %Sav
 data.amb(i).id = fread(fid,1,'uint8');                                      %Read in the ambient light sensor index (there may be multiple sensors).
 data.amb(i).time = fread(fid,1,'uint32');                                   %Save the millisecond clock timestamp for the reading.
 data.amb(i).int = fread(fid,1,'uint16');                                    %Save the ambient light reading as an unsigned 16-bit value.
+
+
+function data = OmniTrakFileRead_ReadBlock_V1_AMBULATION_XY_THETA(fid,data)
+
+%	OmniTrak File Block Code (OFBC):
+%		BLOCK VALUE:	1024
+%		DEFINITION:		AMBULATION_XY_THETA
+%		DESCRIPTION:	A point in a tracked ambulation path, with absolute x- and y-coordinates in millimeters, with facing direction theta, in degrees.
+
+data = OmniTrakFileRead_Check_Field_Name(data,'ambulation',...
+    {'path_xy','orientation','micros'});                                    %Call the subfunction to check for existing fieldnames.
+
+ver = fread(fid,1,'uint8');                                                 %Read in the AMBULATION_XY_THETA data block version.
+
+switch ver                                                                  %Switch between the different data block versions.
+
+    case 1                                                                  %Version 1.
+        if isempty(data.ambulation.micros)                                  %If this is the first sample...
+            data.ambulation.micros = fread(fid,1,'uint32');                 %Microcontroller microsecond clock timestamp.
+            data.ambulation.path_xy = fread(fid,2,'float32')';              %x- and y-coordinates, in millimeters.
+            data.ambulation.orientation = fread(fid,1,'float32');           %Animal overhead orientation, in degrees.
+        else
+            i = size(data.ambulation.micros,1) + 1;                         %Grab a new ambulation path sample index.
+            data.ambulation.micros(i,1) = fread(fid,1,'uint32');            %Microcontroller microsecond clock timestamp.
+            data.ambulation.path_xy(i,1:2) = fread(fid,2,'float32');        %x- and y-coordinates, in millimeters.
+            data.ambulation.orientation(i,1) = fread(fid,1,'float32');      %Animal overhead orientation, in degrees.
+        end
+
+    otherwise                                                               %Unrecognized data block version.
+        error(['ERROR IN %s: Data block version #%1.0f is not '...
+            'recognized!'], upper(mfilename), ver);                         %Show an error.
+        
+end
 
 
 function data = OmniTrakFileRead_ReadBlock_V1_AMG8833_ENABLED(fid,data)
@@ -3216,6 +3267,47 @@ else                                                                        %Oth
 end
 
 
+function data = OmniTrakFileRead_ReadBlock_V1_TRIAL_START_SERIAL_DATE(fid,data)
+
+%	OmniTrak File Block Code (OFBC):
+%		BLOCK VALUE:	2014
+%		DEFINITION:		TRIAL_START_SERIAL_DATE
+%		DESCRIPTION:	Timestamped event marker for the start of a trial, with accompanying microsecond clock reading
+
+data = OmniTrakFileRead_Check_Field_Name(data,'trial','start','datenum');   %Call the subfunction to check for existing fieldnames.
+
+timestamp = fread(fid,1,'float64');                                         %Read in the serial date number timestamp.
+t = fread(fid,1,'uint16');                                                  %Read in the trial index.
+data.trial(t).start.datenum = timestamp;                                    %Save the serial date number timestamp for the trial.
+
+
+function data = OmniTrakFileRead_ReadBlock_V1_TTL_PULSE(fid,data)
+
+%	OmniTrak File Block Code (OFBC):
+%		BLOCK VALUE:	2048
+%		DEFINITION:		TTL_PULSE
+%		DESCRIPTION:	Timestamped event for a TTL pulse output, with channel number, voltage, and duration.
+
+data = OmniTrakFileRead_Check_Field_Name(data,'ttl');                       %Call the subfunction to check for existing fieldnames.
+
+ver = fread(fid,1,'uint8');                                                 %Read in the AMBULATION_XY_THETA data block version.
+
+switch ver                                                                  %Switch between the different data block versions.
+
+    case 1                                                                  %Version 1.
+        i = length(data.ttl) + 1;                                           %Increment the TTL pulse index.
+        data.ttl(i).datenum = fread(fid,1,'float64');                       %Serial date number.
+        data.ttl(i).chan = fread(fid,1,'uint8')';                           %Output channel.
+        data.ttl(i).volts = fread(fid,1,'float32')';                        %Output voltage.
+        data.ttl(i).dur = fread(fid,1,'uint32');                            %Pulse duration, in milliseconds.
+
+    otherwise                                                               %Unrecognized data block version.
+        error(['ERROR IN %s: Data block version #%1.0f is not '...
+            'recognized!'], upper(mfilename), ver);                         %Show an error.
+        
+end
+
+
 function data = OmniTrakFileRead_ReadBlock_V1_USER_SYSTEM_NAME(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
@@ -3299,6 +3391,16 @@ data.trial(t).signal = nan(N,num_signals);                                  %Cre
 for i = 1:num_signals                                                       %Step through the signals.
     data.trial(t).signal(:,i) = fread(fid,N,'float32');                     %Read in each signal.
 end
+
+
+function data = OmniTrakFileRead_ReadBlock_V1_VIBROTACTILE_DETECTION_TASK_TRIAL(fid,data)
+
+%	OmniTrak File Block Code (OFBC):
+%		BLOCK VALUE:	2701
+%		DEFINITION:		VIBROTACTILE_DETECTION_TASK_TRIAL
+%		DESCRIPTION:	Vibrotactile detection task trial data.
+
+fprintf(1,'Need to finish coding for Block 2701: VIBROTACTILE_DETECTION_TASK_TRIAL\n');
 
 
 function data = OmniTrakFileRead_ReadBlock_V1_VL53L0X_DIST(fid,data)

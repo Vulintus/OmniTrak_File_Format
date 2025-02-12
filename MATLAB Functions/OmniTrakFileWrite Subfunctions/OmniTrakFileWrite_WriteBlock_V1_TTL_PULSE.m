@@ -1,4 +1,4 @@
-function OmniTrakFileWrite_WriteBlock_V1_TTL_PULSE(fid, block_code, timestamp, volts, dur)
+function OmniTrakFileWrite_WriteBlock_V1_TTL_PULSE(fid, block_code, timestamp, chan, volts, dur)
 
 %
 % OmniTrakFileWrite_WriteBlock_V1_TTL_PULSE.m
@@ -21,5 +21,6 @@ fwrite(fid,block_code,'uint16');                                            %Omn
 fwrite(fid,data_block_version,'uint8');                                     %Write the TTL_PULSE block version.
 
 fwrite(fid, timestamp, 'float64');                                          %TTL pulse onset timestamp (serial date number).
+fwrite(fid, chan, 'uint8');                                                 %Stimulation channel.
 fwrite(fid, volts, 'float32');                                              %Output pulse voltage.
 fwrite(fid, dur, 'uint32');                                                 %Duration of the output pulse, in milliseconds.

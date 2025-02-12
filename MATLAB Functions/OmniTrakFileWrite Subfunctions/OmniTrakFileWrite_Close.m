@@ -11,4 +11,4 @@ function OmniTrakFileWrite_Close(fid, ofbc_clock_file_stop)
 %
 
 fwrite(fid,ofbc_clock_file_stop,'uint16');                                  %-CLOCK_FILE_STOP- block code.
-fwrite(fid,now,'float64');                                                  %Serial date number written as a 64-bit floating point.
+fwrite(fid,convertTo(datetime('now'),'datenum'),'float64');                 %Serial date number written as a 64-bit floating point.

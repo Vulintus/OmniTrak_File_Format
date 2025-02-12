@@ -8,7 +8,7 @@ function data = OmniTrakFileRead_ReadBlock(fid,block,data,verbose)
 %
 %	https://github.com/Vulintus/OmniTrak_File_Format
 %
-%	This file was programmatically generated: 2025-02-11, 05:44:45 (UTC).
+%	This file was programmatically generated: 2025-02-11, 11:58:55 (UTC).
 %
 
 block_codes = Load_OmniTrak_File_Block_Codes(data.file_version);
@@ -253,8 +253,8 @@ switch data.file_version
 			case block_codes.ZMOD4410_ENABLED                               %Indicates that an ZMOD4410 VOC/eC02 sensor is present in the system.
 				data = OmniTrakFileRead_ReadBlock_V1_ZMOD4410_ENABLED(fid,data);
 
-			case block_codes.LOCOMOTION_XY_THETA                            %A point in a tracked locomotion path, with absolute x- and y-coordinates in millimeters, with facing direction theta, in degrees.
-				data = OmniTrakFileRead_ReadBlock_V1_LOCOMOTION_XY_THETA(fid,data);
+			case block_codes.AMBULATION_XY_THETA                            %A point in a tracked ambulation path, with absolute x- and y-coordinates in millimeters, with facing direction theta, in degrees.
+				data = OmniTrakFileRead_ReadBlock_V1_AMBULATION_XY_THETA(fid,data);
 
 			case block_codes.AMG8833_THERM_CONV                             %The conversion factor, in degrees Celsius, for converting 16-bit integer AMG8833 pixel readings to temperature.
 				data = OmniTrakFileRead_ReadBlock_V1_AMG8833_THERM_CONV(fid,data);

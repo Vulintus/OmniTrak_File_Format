@@ -5,4 +5,8 @@ function data = OmniTrakFileRead_ReadBlock_V1_TRIAL_START_SERIAL_DATE(fid,data)
 %		DEFINITION:		TRIAL_START_SERIAL_DATE
 %		DESCRIPTION:	Timestamped event marker for the start of a trial, with accompanying microsecond clock reading
 
-fprintf(1,'Need to finish coding for Block 2014: TRIAL_START_SERIAL_DATE\n');
+data = OmniTrakFileRead_Check_Field_Name(data,'trial','start','datenum');   %Call the subfunction to check for existing fieldnames.
+
+timestamp = fread(fid,1,'float64');                                         %Read in the serial date number timestamp.
+t = fread(fid,1,'uint16');                                                  %Read in the trial index.
+data.trial(t).start.datenum = timestamp;                                    %Save the serial date number timestamp for the trial.

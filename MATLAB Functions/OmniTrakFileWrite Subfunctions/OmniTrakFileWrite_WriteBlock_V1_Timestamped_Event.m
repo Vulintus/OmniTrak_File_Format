@@ -1,16 +1,16 @@
-function OmniTrakFileWrite_WriteBlock_V1_Timestamped_uint16(fid, block_code, uint16_val, varargin)
+function OmniTrakFileWrite_WriteBlock_V1_Timestamped_Event(fid, block_code, varargin)
 
 %
-% OmniTrakFileWrite_WriteBlock_V1_Timestamped_uint16.m
+% OmniTrakFileWrite_WriteBlock_V1_Timestamped_Event.m
 % 
 %   copyright 2025, Vulintus, Inc.
 %
-%   OMNITRAKFILEWRITE_WRITEBLOCK_V1_TIMESTAMPED_UINT16 write a block with a
-%   uint16 value, preceded by a float64 serial date number, to an
-%   *.OmniTram file.
+%   OMNITRAKFILEWRITE_WRITEBLOCK_V1_TIMESTAMPED_EVENT writes a block with a
+%   only a float64 serial date number, as an event timing marker, to an
+%   *.OmniTrak file.
 %   
 %   UPDATE LOG:
-%   2025-02-10 - Drew Sloan - Function first created.
+%   2025-02-11 - Drew Sloan - Function first created.
 %
 
 if isempty(varargin)                                                        %If there's no input arguments...
@@ -18,7 +18,6 @@ if isempty(varargin)                                                        %If 
 else                                                                        %Otherwise...
     timestamp = varargin{1};                                                %Grab the specified serial date number.
 end
-
 fwrite(fid,block_code,'uint16');                                            %OmniTrak file format block code.
 fwrite(fid,timestamp,'float64');                                            %Serial date number.
 fwrite(fid,uint16_val,'uint16');                                            %uint16 value.

@@ -28,7 +28,7 @@ fwrite(fid,ofbc.CUR_DEF_VERSION,'uint16');                                  %Wri
 
 %File creation start time.
 fwrite(fid,ofbc.CLOCK_FILE_START,'uint16');                                 %Write the file start serial date number block code.
-fwrite(fid,now,'float64');                                                  %Write the current serial date number.
+fwrite(fid,convertTo(datetime('now'),'datenum'),'float64');                 %Write the current serial date number.
 
 file_writer = struct('fid',fid,'filename',filename);                        %Initialize an OFBC file-writing structure.
 file_writer.close = @()OmniTrakFileWrite_Close(fid, ofbc.CLOCK_FILE_STOP);  %Add the file-closing function.
@@ -41,7 +41,11 @@ file_writer.close = @()OmniTrakFileWrite_Close(fid, ofbc.CLOCK_FILE_STOP);  %Add
 % MS_FILE_STOP: 3
 % SUBJECT_DEPRECATED: 4
 % CLOCK_FILE_START: 6
-% CLOCK_FILE_STOP: 7
+
+% Block code: CLOCK_FILE_STOP = 7;
+file_writer.clock_file_stop = ...
+    @(varargin)OmniTrakFileWrite_WriteBlock_V1_Timestamped_Event(fid, ofbc.CLOCK_FILE_STOP,varargin{:});
+
 % DEVICE_FILE_INDEX: 10
 % NTP_SYNC: 20
 % NTP_SYNC_FAIL: 21
@@ -146,9 +150,9 @@ file_writer.stage_description = @(str)OmniTrakFileWrite_WriteBlock_V1_Long_Chara
 % MLX90640_ENABLED: 1008
 % ZMOD4410_ENABLED: 1009
 
-%Block code: LOCOMOTION_XY_THETA = 1024.
-file_writer.locomotion_xy_theta = ...
-    @(timestamp, xy, angle)OmniTrakFileWrite_WriteBlock_V1_LOCOMOTION_XY_THETA(fid, ofbc.STAGE_DESCRIPTION, timestamp, xy, angle);
+%Block code: AMBULATION_XY_THETA = 1024.
+file_writer.ambulation_xy_theta = ...
+    @(timestamp, xy, angle)OmniTrakFileWrite_WriteBlock_V1_AMBULATION_XY_THETA(fid, ofbc.AMBULATION_XY_THETA, timestamp, xy, angle);
 
 % AMG8833_THERM_CONV: 1100
 % AMG8833_THERM_FL: 1101
@@ -212,7 +216,7 @@ file_writer.locomotion_xy_theta = ...
 
 %Block code: TRIAL_START_SERIAL_DATE = 2014.
 file_writer.trial_start_serial_date = ...
-    @(trial_num)OmniTrakFileWrite_WriteBlock_V1_Timestamped_uint16(fid, ofbc.TRIAL_START_SERIAL_DATE, trial_num);
+    @(trial_num, varargin)OmniTrakFileWrite_WriteBlock_V1_Timestamped_uint16(fid, ofbc.TRIAL_START_SERIAL_DATE, trial_num, varargin{:});
 
 % POSITION_START_X: 2020
 % POSITION_MOVE_X: 2021
@@ -223,7 +227,7 @@ file_writer.trial_start_serial_date = ...
 
 %Block code: TTL_PULSE = 2048.
 file_writer.ttl_pulse = ...
-    @(timestamp, volts, dur)OmniTrakFileWrite_WriteBlock_V1_TTL_PULSE(fid, ofbc.TTL_PULSE, timestamp, volts, dur);
+    @(timestamp, chan, volts, dur)OmniTrakFileWrite_WriteBlock_V1_TTL_PULSE(fid, ofbc.TTL_PULSE, timestamp, chan, volts, dur);
 
 % STREAM_INPUT_NAME: 2100
 % CALIBRATION_BASELINE: 2200
