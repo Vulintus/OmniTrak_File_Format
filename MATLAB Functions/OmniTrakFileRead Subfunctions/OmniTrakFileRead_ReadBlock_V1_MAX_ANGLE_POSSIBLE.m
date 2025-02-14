@@ -1,4 +1,4 @@
-function data = OmniTrakFileRead_ReadBlock_V1_MAX_ANGLE_POSSIBLE(fid,data)
+function data = OmniTrakFileRead_ReadBlock_MAX_ANGLE_POSSIBLE(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		BLOCK VALUE:	2800

@@ -1,10 +1,10 @@
 function data = OmniTrakFileRead(file,varargin)
 
-%Collated: 11/21/2024, 18:56:07
+%Collated: 02/11/2025, 22:51:01
 
 
 %
-%OmniTrakFileRead.m - Vulintus, Inc., 2018.
+% OmniTrakFileRead.m - Vulintus, Inc., 2018.
 %
 %   OMNITRAKFILEREAD reads in behavioral data from Vulintus' *.OmniTrak
 %   file format and returns data organized in the fields of the output
@@ -85,7 +85,16 @@ try                                                                         %Att
             continue                                                        %Skip the rest of the loop.
         end
         
-        data = OmniTrakFileRead_ReadBlock(fid, block, data, verbose);       %Call the subfunction to read the block.
+        if verbose == 1
+            block_names = fieldnames(block_codes)';
+            for f = block_names
+                if block_codes.(f{1}) == block
+                    fprintf(1,'b%1.0f\t>>\t%1.0f: %s\n',ftell(fid)-2,block,f{1});
+                end
+            end
+        end
+
+        data = block_read_fcn{block}(fid, data);                            %Call the subfunction to read the block.
         
         if isfield(data,'unrecognized_block')                               %If the last block was unrecognized...
             fprintf(1,'UNRECOGNIZED BLOCK CODE: %1.0f!\n',block);           %Print the block code.
@@ -157,7 +166,7 @@ function block_codes = Load_OmniTrak_File_Block_Codes(varargin)
 %
 %	https://github.com/Vulintus/OmniTrak_File_Format
 %
-%	This file was programmatically generated: 2024-11-05, 03:36:07 (UTC).
+%	This file was programmatically generated: 2025-02-11, 11:58:55 (UTC).
 %
 
 if nargin > 0
@@ -188,7 +197,7 @@ switch ver
 
 		block_codes.NTP_SYNC = 20;                                          %A fetched NTP time (seconds since January 1, 1900) at the specified SoC millisecond clock time.
 		block_codes.NTP_SYNC_FAIL = 21;                                     %Indicates the an NTP synchonization attempt failed.
-		block_codes.MS_US_CLOCK_SYNC = 22;                                  %The current SoC microsecond clock time at the specified SoC millisecond clock time.
+		block_codes.CLOCK_SYNC = 22;                                  %The current SoC microsecond clock time at the specified SoC millisecond clock time.
 		block_codes.MS_TIMER_ROLLOVER = 23;                                 %Indicates that the millisecond timer rolled over since the last loop.
 		block_codes.US_TIMER_ROLLOVER = 24;                                 %Indicates that the microsecond timer rolled over since the last loop.
 		block_codes.TIME_ZONE_OFFSET = 25;                                  %Computer clock time zone offset from UTC.
@@ -270,6 +279,8 @@ switch ver
 		block_codes.ALSPT19_ENABLED = 1007;                                 %Indicates that an ALS-PT19 ambient light sensor is present in the system.
 		block_codes.MLX90640_ENABLED = 1008;                                %Indicates that an MLX90640 thermopile array sensor is present in the system.
 		block_codes.ZMOD4410_ENABLED = 1009;                                %Indicates that an ZMOD4410 VOC/eC02 sensor is present in the system.
+
+		block_codes.AMBULATION_XY_THETA = 1024;                             %A point in a tracked ambulation path, with absolute x- and y-coordinates in millimeters, with facing direction theta, in degrees.
 
 		block_codes.AMG8833_THERM_CONV = 1100;                              %The conversion factor, in degrees Celsius, for converting 16-bit integer AMG8833 pixel readings to temperature.
 		block_codes.AMG8833_THERM_FL = 1101;                                %The current AMG8833 thermistor reading as a converted float32 value, in Celsius.
@@ -353,6 +364,7 @@ switch ver
 		block_codes.HARD_PAUSE_START = 2011;                                %Timestamped event marker for the stop of a session pause, with no events recorded during the pause.
 		block_codes.SOFT_PAUSE_START = 2012;                                %Timestamped event marker for the start of a session pause, with non-operant events recorded during the pause.
 		block_codes.SOFT_PAUSE_START = 2013;                                %Timestamped event marker for the stop of a session pause, with non-operant events recorded during the pause.
+		block_codes.TRIAL_START_SERIAL_DATE = 2014;                         %Timestamped event marker for the start of a trial, with accompanying microsecond clock reading
 
 		block_codes.POSITION_START_X = 2020;                                %Starting position of an autopositioner in just the x-direction, with distance in millimeters.
 		block_codes.POSITION_MOVE_X = 2021;                                 %Timestamped movement of an autopositioner in just the x-direction, with distance in millimeters.
@@ -360,6 +372,8 @@ switch ver
 		block_codes.POSITION_MOVE_XY = 2023;                                %Timestamped movement of an autopositioner in just the x- and y-directions, with distance in millimeters.
 		block_codes.POSITION_START_XYZ = 2024;                              %Starting position of an autopositioner in the x-, y-, and z- directions, with distance in millimeters.
 		block_codes.POSITION_MOVE_XYZ = 2025;                               %Timestamped movement of an autopositioner in the x-, y-, and z- directions, with distance in millimeters.
+
+		block_codes.TTL_PULSE = 2048;                                       %Timestamped event for a TTL pulse output, with channel number, voltage, and duration.
 
 		block_codes.STREAM_INPUT_NAME = 2100;                               %Stream input name for the specified input index.
 
@@ -391,6 +405,7 @@ switch ver
 		block_codes.OUTPUT_TRIGGER_NAME = 2600;                             %Name/description of the output trigger type for the given index.
 
 		block_codes.VIBRATION_TASK_TRIAL_OUTCOME = 2700;                    %Vibration task trial outcome data.
+		block_codes.VIBROTACTILE_DETECTION_TASK_TRIAL = 2701;               %Vibrotactile detection task trial data.
 
 		block_codes.LED_DETECTION_TASK_TRIAL_OUTCOME = 2710;                %LED detection task trial outcome data.
 		block_codes.LIGHT_SRC_MODEL = 2711;                                 %Light source model name.
@@ -475,7 +490,7 @@ function data = OmniTrakFileRead_ReadBlock(fid,block,data,verbose)
 %
 %	https://github.com/Vulintus/OmniTrak_File_Format
 %
-%	This file was programmatically generated: 2024-11-05, 03:36:07 (UTC).
+%	This file was programmatically generated: 2025-02-11, 11:58:55 (UTC).
 %
 
 block_codes = Load_OmniTrak_File_Block_Codes(data.file_version);
@@ -496,532 +511,544 @@ switch data.file_version
 		switch block
 
 			case block_codes.FILE_VERSION                                   %The version of the file format used.
-				data = OmniTrakFileRead_ReadBlock_V1_FILE_VERSION(fid,data);
+				data = OmniTrakFileRead_ReadBlock_FILE_VERSION(fid,data);
 
 			case block_codes.MS_FILE_START                                  %Value of the SoC millisecond clock at file creation.
-				data = OmniTrakFileRead_ReadBlock_V1_MS_FILE_START(fid,data);
+				data = OmniTrakFileRead_ReadBlock_MS_FILE_START(fid,data);
 
 			case block_codes.MS_FILE_STOP                                   %Value of the SoC millisecond clock when the file is closed.
-				data = OmniTrakFileRead_ReadBlock_V1_MS_FILE_STOP(fid,data);
+				data = OmniTrakFileRead_ReadBlock_MS_FILE_STOP(fid,data);
 
 			case block_codes.SUBJECT_DEPRECATED                             %A single subject's name.
-				data = OmniTrakFileRead_ReadBlock_V1_SUBJECT_DEPRECATED(fid,data);
+				data = OmniTrakFileRead_ReadBlock_SUBJECT_DEPRECATED(fid,data);
 
 			case block_codes.CLOCK_FILE_START                               %Computer clock serial date number at file creation (local time).
-				data = OmniTrakFileRead_ReadBlock_V1_CLOCK_FILE_START(fid,data);
+				data = OmniTrakFileRead_ReadBlock_CLOCK_FILE_START(fid,data);
 
 			case block_codes.CLOCK_FILE_STOP                                %Computer clock serial date number when the file is closed (local time).
-				data = OmniTrakFileRead_ReadBlock_V1_CLOCK_FILE_STOP(fid,data);
+				data = OmniTrakFileRead_ReadBlock_CLOCK_FILE_STOP(fid,data);
 
 			case block_codes.DEVICE_FILE_INDEX                              %The device's current file index.
-				data = OmniTrakFileRead_ReadBlock_V1_DEVICE_FILE_INDEX(fid,data);
+				data = OmniTrakFileRead_ReadBlock_DEVICE_FILE_INDEX(fid,data);
 
 			case block_codes.NTP_SYNC                                       %A fetched NTP time (seconds since January 1, 1900) at the specified SoC millisecond clock time.
-				data = OmniTrakFileRead_ReadBlock_V1_NTP_SYNC(fid,data);
+				data = OmniTrakFileRead_ReadBlock_NTP_SYNC(fid,data);
 
 			case block_codes.NTP_SYNC_FAIL                                  %Indicates the an NTP synchonization attempt failed.
-				data = OmniTrakFileRead_ReadBlock_V1_NTP_SYNC_FAIL(fid,data);
+				data = OmniTrakFileRead_ReadBlock_NTP_SYNC_FAIL(fid,data);
 
-			case block_codes.MS_US_CLOCK_SYNC                               %The current SoC microsecond clock time at the specified SoC millisecond clock time.
-				data = OmniTrakFileRead_ReadBlock_V1_MS_US_CLOCK_SYNC(fid,data);
+			case block_codes.CLOCK_SYNC                               %The current SoC microsecond clock time at the specified SoC millisecond clock time.
+				data = OmniTrakFileRead_ReadBlock_CLOCK_SYNC(fid,data);
 
 			case block_codes.MS_TIMER_ROLLOVER                              %Indicates that the millisecond timer rolled over since the last loop.
-				data = OmniTrakFileRead_ReadBlock_V1_MS_TIMER_ROLLOVER(fid,data);
+				data = OmniTrakFileRead_ReadBlock_MS_TIMER_ROLLOVER(fid,data);
 
 			case block_codes.US_TIMER_ROLLOVER                              %Indicates that the microsecond timer rolled over since the last loop.
-				data = OmniTrakFileRead_ReadBlock_V1_US_TIMER_ROLLOVER(fid,data);
+				data = OmniTrakFileRead_ReadBlock_US_TIMER_ROLLOVER(fid,data);
 
 			case block_codes.TIME_ZONE_OFFSET                               %Computer clock time zone offset from UTC.
-				data = OmniTrakFileRead_ReadBlock_V1_TIME_ZONE_OFFSET(fid,data);
+				data = OmniTrakFileRead_ReadBlock_TIME_ZONE_OFFSET(fid,data);
 
 			case block_codes.TIME_ZONE_OFFSET_HHMM                          %Computer clock time zone offset from UTC as two integers, one for hours, and the other for minutes
-				data = OmniTrakFileRead_ReadBlock_V1_TIME_ZONE_OFFSET_HHMM(fid,data);
+				data = OmniTrakFileRead_ReadBlock_TIME_ZONE_OFFSET_HHMM(fid,data);
 
 			case block_codes.RTC_STRING_DEPRECATED                          %Current date/time string from the real-time clock.
-				data = OmniTrakFileRead_ReadBlock_V1_RTC_STRING_DEPRECATED(fid,data);
+				data = OmniTrakFileRead_ReadBlock_RTC_STRING_DEPRECATED(fid,data);
 
 			case block_codes.RTC_STRING                                     %Current date/time string from the real-time clock.
-				data = OmniTrakFileRead_ReadBlock_V1_RTC_STRING(fid,data);
+				data = OmniTrakFileRead_ReadBlock_RTC_STRING(fid,data);
 
 			case block_codes.RTC_VALUES                                     %Current date/time values from the real-time clock.
-				data = OmniTrakFileRead_ReadBlock_V1_RTC_VALUES(fid,data);
+				data = OmniTrakFileRead_ReadBlock_RTC_VALUES(fid,data);
 
 			case block_codes.ORIGINAL_FILENAME                              %The original filename for the data file.
-				data = OmniTrakFileRead_ReadBlock_V1_ORIGINAL_FILENAME(fid,data);
+				data = OmniTrakFileRead_ReadBlock_ORIGINAL_FILENAME(fid,data);
 
 			case block_codes.RENAMED_FILE                                   %A timestamped event to indicate when a file has been renamed by one of Vulintus' automatic data organizing programs.
-				data = OmniTrakFileRead_ReadBlock_V1_RENAMED_FILE(fid,data);
+				data = OmniTrakFileRead_ReadBlock_RENAMED_FILE(fid,data);
 
 			case block_codes.DOWNLOAD_TIME                                  %A timestamp indicating when the data file was downloaded from the OmniTrak device to a computer.
-				data = OmniTrakFileRead_ReadBlock_V1_DOWNLOAD_TIME(fid,data);
+				data = OmniTrakFileRead_ReadBlock_DOWNLOAD_TIME(fid,data);
 
 			case block_codes.DOWNLOAD_SYSTEM                                %The computer system name and the COM port used to download the data file form the OmniTrak device.
-				data = OmniTrakFileRead_ReadBlock_V1_DOWNLOAD_SYSTEM(fid,data);
+				data = OmniTrakFileRead_ReadBlock_DOWNLOAD_SYSTEM(fid,data);
 
 			case block_codes.INCOMPLETE_BLOCK                               %Indicates that the file will end in an incomplete block.
-				data = OmniTrakFileRead_ReadBlock_V1_INCOMPLETE_BLOCK(fid,data);
+				data = OmniTrakFileRead_ReadBlock_INCOMPLETE_BLOCK(fid,data);
 
 			case block_codes.USER_TIME                                      %Date/time values from a user-set timestamp.
-				data = OmniTrakFileRead_ReadBlock_V1_USER_TIME(fid,data);
+				data = OmniTrakFileRead_ReadBlock_USER_TIME(fid,data);
 
 			case block_codes.SYSTEM_TYPE                                    %Vulintus system ID code (1 = MotoTrak, 2 = OmniTrak, 3 = HabiTrak, 4 = OmniHome, 5 = SensiTrak, 6 = Prototype).
-				data = OmniTrakFileRead_ReadBlock_V1_SYSTEM_TYPE(fid,data);
+				data = OmniTrakFileRead_ReadBlock_SYSTEM_TYPE(fid,data);
 
 			case block_codes.SYSTEM_NAME                                    %Vulintus system name.
-				data = OmniTrakFileRead_ReadBlock_V1_SYSTEM_NAME(fid,data);
+				data = OmniTrakFileRead_ReadBlock_SYSTEM_NAME(fid,data);
 
 			case block_codes.SYSTEM_HW_VER                                  %Vulintus system hardware version.
-				data = OmniTrakFileRead_ReadBlock_V1_SYSTEM_HW_VER(fid,data);
+				data = OmniTrakFileRead_ReadBlock_SYSTEM_HW_VER(fid,data);
 
 			case block_codes.SYSTEM_FW_VER                                  %System firmware version, written as characters.
-				data = OmniTrakFileRead_ReadBlock_V1_SYSTEM_FW_VER(fid,data);
+				data = OmniTrakFileRead_ReadBlock_SYSTEM_FW_VER(fid,data);
 
 			case block_codes.SYSTEM_SN                                      %System serial number, written as characters.
-				data = OmniTrakFileRead_ReadBlock_V1_SYSTEM_SN(fid,data);
+				data = OmniTrakFileRead_ReadBlock_SYSTEM_SN(fid,data);
 
 			case block_codes.SYSTEM_MFR                                     %Manufacturer name for non-Vulintus systems.
-				data = OmniTrakFileRead_ReadBlock_V1_SYSTEM_MFR(fid,data);
+				data = OmniTrakFileRead_ReadBlock_SYSTEM_MFR(fid,data);
 
 			case block_codes.COMPUTER_NAME                                  %Windows PC computer name.
-				data = OmniTrakFileRead_ReadBlock_V1_COMPUTER_NAME(fid,data);
+				data = OmniTrakFileRead_ReadBlock_COMPUTER_NAME(fid,data);
 
 			case block_codes.COM_PORT                                       %The COM port of a computer-connected system.
-				data = OmniTrakFileRead_ReadBlock_V1_COM_PORT(fid,data);
+				data = OmniTrakFileRead_ReadBlock_COM_PORT(fid,data);
 
 			case block_codes.DEVICE_ALIAS                                   %Human-readable Adjective + Noun alias/name for the device, assigned by Vulintus during manufacturing
-				data = OmniTrakFileRead_ReadBlock_V1_DEVICE_ALIAS(fid,data);
+				data = OmniTrakFileRead_ReadBlock_DEVICE_ALIAS(fid,data);
 
 			case block_codes.PRIMARY_MODULE                                 %Primary module name, for systems with interchangeable modules.
-				data = OmniTrakFileRead_ReadBlock_V1_PRIMARY_MODULE(fid,data);
+				data = OmniTrakFileRead_ReadBlock_PRIMARY_MODULE(fid,data);
 
 			case block_codes.PRIMARY_INPUT                                  %Primary input name, for modules with multiple input signals.
-				data = OmniTrakFileRead_ReadBlock_V1_PRIMARY_INPUT(fid,data);
+				data = OmniTrakFileRead_ReadBlock_PRIMARY_INPUT(fid,data);
 
 			case block_codes.SAMD_CHIP_ID                                   %The SAMD manufacturer's unique chip identifier.
-				data = OmniTrakFileRead_ReadBlock_V1_SAMD_CHIP_ID(fid,data);
+				data = OmniTrakFileRead_ReadBlock_SAMD_CHIP_ID(fid,data);
 
 			case block_codes.ESP8266_MAC_ADDR                               %The MAC address of the device's ESP8266 module.
-				data = OmniTrakFileRead_ReadBlock_V1_ESP8266_MAC_ADDR(fid,data);
+				data = OmniTrakFileRead_ReadBlock_ESP8266_MAC_ADDR(fid,data);
 
 			case block_codes.ESP8266_IP4_ADDR                               %The local IPv4 address of the device's ESP8266 module.
-				data = OmniTrakFileRead_ReadBlock_V1_ESP8266_IP4_ADDR(fid,data);
+				data = OmniTrakFileRead_ReadBlock_ESP8266_IP4_ADDR(fid,data);
 
 			case block_codes.ESP8266_CHIP_ID                                %The ESP8266 manufacturer's unique chip identifier
-				data = OmniTrakFileRead_ReadBlock_V1_ESP8266_CHIP_ID(fid,data);
+				data = OmniTrakFileRead_ReadBlock_ESP8266_CHIP_ID(fid,data);
 
 			case block_codes.ESP8266_FLASH_ID                               %The ESP8266 flash chip's unique chip identifier
-				data = OmniTrakFileRead_ReadBlock_V1_ESP8266_FLASH_ID(fid,data);
+				data = OmniTrakFileRead_ReadBlock_ESP8266_FLASH_ID(fid,data);
 
 			case block_codes.USER_SYSTEM_NAME                               %The user's name for the system, i.e. booth number.
-				data = OmniTrakFileRead_ReadBlock_V1_USER_SYSTEM_NAME(fid,data);
+				data = OmniTrakFileRead_ReadBlock_USER_SYSTEM_NAME(fid,data);
 
 			case block_codes.DEVICE_RESET_COUNT                             %The current reboot count saved in EEPROM or flash memory.
-				data = OmniTrakFileRead_ReadBlock_V1_DEVICE_RESET_COUNT(fid,data);
+				data = OmniTrakFileRead_ReadBlock_DEVICE_RESET_COUNT(fid,data);
 
 			case block_codes.CTRL_FW_FILENAME                               %Controller firmware filename, copied from the macro, written as characters.
-				data = OmniTrakFileRead_ReadBlock_V1_CTRL_FW_FILENAME(fid,data);
+				data = OmniTrakFileRead_ReadBlock_CTRL_FW_FILENAME(fid,data);
 
 			case block_codes.CTRL_FW_DATE                                   %Controller firmware upload date, copied from the macro, written as characters.
-				data = OmniTrakFileRead_ReadBlock_V1_CTRL_FW_DATE(fid,data);
+				data = OmniTrakFileRead_ReadBlock_CTRL_FW_DATE(fid,data);
 
 			case block_codes.CTRL_FW_TIME                                   %Controller firmware upload time, copied from the macro, written as characters.
-				data = OmniTrakFileRead_ReadBlock_V1_CTRL_FW_TIME(fid,data);
+				data = OmniTrakFileRead_ReadBlock_CTRL_FW_TIME(fid,data);
 
 			case block_codes.MODULE_FW_FILENAME                             %OTMP Module firmware filename, copied from the macro, written as characters.
-				data = OmniTrakFileRead_ReadBlock_V1_MODULE_FW_FILENAME(fid,data);
+				data = OmniTrakFileRead_ReadBlock_MODULE_FW_FILENAME(fid,data);
 
 			case block_codes.MODULE_FW_DATE                                 %OTMP Module firmware upload date, copied from the macro, written as characters.
-				data = OmniTrakFileRead_ReadBlock_V1_MODULE_FW_DATE(fid,data);
+				data = OmniTrakFileRead_ReadBlock_MODULE_FW_DATE(fid,data);
 
 			case block_codes.MODULE_FW_TIME                                 %OTMP Module firmware upload time, copied from the macro, written as characters.
-				data = OmniTrakFileRead_ReadBlock_V1_MODULE_FW_TIME(fid,data);
+				data = OmniTrakFileRead_ReadBlock_MODULE_FW_TIME(fid,data);
 
 			case block_codes.WINC1500_MAC_ADDR                              %The MAC address of the device's ATWINC1500 module.
-				data = OmniTrakFileRead_ReadBlock_V1_WINC1500_MAC_ADDR(fid,data);
+				data = OmniTrakFileRead_ReadBlock_WINC1500_MAC_ADDR(fid,data);
 
 			case block_codes.WINC1500_IP4_ADDR                              %The local IPv4 address of the device's ATWINC1500 module.
-				data = OmniTrakFileRead_ReadBlock_V1_WINC1500_IP4_ADDR(fid,data);
+				data = OmniTrakFileRead_ReadBlock_WINC1500_IP4_ADDR(fid,data);
 
 			case block_codes.BATTERY_SOC                                    %Current battery state-of charge, in percent, measured the BQ27441
-				data = OmniTrakFileRead_ReadBlock_V1_BATTERY_SOC(fid,data);
+				data = OmniTrakFileRead_ReadBlock_BATTERY_SOC(fid,data);
 
 			case block_codes.BATTERY_VOLTS                                  %Current battery voltage, in millivolts, measured by the BQ27441
-				data = OmniTrakFileRead_ReadBlock_V1_BATTERY_VOLTS(fid,data);
+				data = OmniTrakFileRead_ReadBlock_BATTERY_VOLTS(fid,data);
 
 			case block_codes.BATTERY_CURRENT                                %Average current draw from the battery, in milli-amps, measured by the BQ27441
-				data = OmniTrakFileRead_ReadBlock_V1_BATTERY_CURRENT(fid,data);
+				data = OmniTrakFileRead_ReadBlock_BATTERY_CURRENT(fid,data);
 
 			case block_codes.BATTERY_FULL                                   %Full capacity of the battery, in milli-amp hours, measured by the BQ27441
-				data = OmniTrakFileRead_ReadBlock_V1_BATTERY_FULL(fid,data);
+				data = OmniTrakFileRead_ReadBlock_BATTERY_FULL(fid,data);
 
 			case block_codes.BATTERY_REMAIN                                 %Remaining capacity of the battery, in milli-amp hours, measured by the BQ27441
-				data = OmniTrakFileRead_ReadBlock_V1_BATTERY_REMAIN(fid,data);
+				data = OmniTrakFileRead_ReadBlock_BATTERY_REMAIN(fid,data);
 
 			case block_codes.BATTERY_POWER                                  %Average power draw, in milliWatts, measured by the BQ27441
-				data = OmniTrakFileRead_ReadBlock_V1_BATTERY_POWER(fid,data);
+				data = OmniTrakFileRead_ReadBlock_BATTERY_POWER(fid,data);
 
 			case block_codes.BATTERY_SOH                                    %Battery state-of-health, in percent, measured by the BQ27441
-				data = OmniTrakFileRead_ReadBlock_V1_BATTERY_SOH(fid,data);
+				data = OmniTrakFileRead_ReadBlock_BATTERY_SOH(fid,data);
 
 			case block_codes.BATTERY_STATUS                                 %Combined battery state-of-charge, voltage, current, capacity, power, and state-of-health, measured by the BQ27441
-				data = OmniTrakFileRead_ReadBlock_V1_BATTERY_STATUS(fid,data);
+				data = OmniTrakFileRead_ReadBlock_BATTERY_STATUS(fid,data);
 
 			case block_codes.FEED_SERVO_MAX_RPM                             %Actual rotation rate, in RPM, of the feeder servo (OmniHome) when set to 180 speed.
-				data = OmniTrakFileRead_ReadBlock_V1_FEED_SERVO_MAX_RPM(fid,data);
+				data = OmniTrakFileRead_ReadBlock_FEED_SERVO_MAX_RPM(fid,data);
 
 			case block_codes.FEED_SERVO_SPEED                               %Current speed setting (0-180) for the feeder servo (OmniHome).
-				data = OmniTrakFileRead_ReadBlock_V1_FEED_SERVO_SPEED(fid,data);
+				data = OmniTrakFileRead_ReadBlock_FEED_SERVO_SPEED(fid,data);
 
 			case block_codes.SUBJECT_NAME                                   %A single subject's name.
-				data = OmniTrakFileRead_ReadBlock_V1_SUBJECT_NAME(fid,data);
+				data = OmniTrakFileRead_ReadBlock_SUBJECT_NAME(fid,data);
 
 			case block_codes.GROUP_NAME                                     %The subject's or subjects' experimental group name.
-				data = OmniTrakFileRead_ReadBlock_V1_GROUP_NAME(fid,data);
+				data = OmniTrakFileRead_ReadBlock_GROUP_NAME(fid,data);
 
 			case block_codes.EXP_NAME                                       %The user's name for the current experiment.
-				data = OmniTrakFileRead_ReadBlock_V1_EXP_NAME(fid,data);
+				data = OmniTrakFileRead_ReadBlock_EXP_NAME(fid,data);
 
 			case block_codes.TASK_TYPE                                      %The user's name for task type, which can be a variant of the overall experiment type.
-				data = OmniTrakFileRead_ReadBlock_V1_TASK_TYPE(fid,data);
+				data = OmniTrakFileRead_ReadBlock_TASK_TYPE(fid,data);
 
 			case block_codes.STAGE_NAME                                     %The stage name for a behavioral session.
-				data = OmniTrakFileRead_ReadBlock_V1_STAGE_NAME(fid,data);
+				data = OmniTrakFileRead_ReadBlock_STAGE_NAME(fid,data);
 
 			case block_codes.STAGE_DESCRIPTION                              %The stage description for a behavioral session.
-				data = OmniTrakFileRead_ReadBlock_V1_STAGE_DESCRIPTION(fid,data);
+				data = OmniTrakFileRead_ReadBlock_STAGE_DESCRIPTION(fid,data);
 
 			case block_codes.AMG8833_ENABLED                                %Indicates that an AMG8833 thermopile array sensor is present in the system.
-				data = OmniTrakFileRead_ReadBlock_V1_AMG8833_ENABLED(fid,data);
+				data = OmniTrakFileRead_ReadBlock_AMG8833_ENABLED(fid,data);
 
 			case block_codes.BMP280_ENABLED                                 %Indicates that an BMP280 temperature/pressure sensor is present in the system.
-				data = OmniTrakFileRead_ReadBlock_V1_BMP280_ENABLED(fid,data);
+				data = OmniTrakFileRead_ReadBlock_BMP280_ENABLED(fid,data);
 
 			case block_codes.BME280_ENABLED                                 %Indicates that an BME280 temperature/pressure/humidty sensor is present in the system.
-				data = OmniTrakFileRead_ReadBlock_V1_BME280_ENABLED(fid,data);
+				data = OmniTrakFileRead_ReadBlock_BME280_ENABLED(fid,data);
 
 			case block_codes.BME680_ENABLED                                 %Indicates that an BME680 temperature/pressure/humidy/VOC sensor is present in the system.
-				data = OmniTrakFileRead_ReadBlock_V1_BME680_ENABLED(fid,data);
+				data = OmniTrakFileRead_ReadBlock_BME680_ENABLED(fid,data);
 
 			case block_codes.CCS811_ENABLED                                 %Indicates that an CCS811 VOC/eC02 sensor is present in the system.
-				data = OmniTrakFileRead_ReadBlock_V1_CCS811_ENABLED(fid,data);
+				data = OmniTrakFileRead_ReadBlock_CCS811_ENABLED(fid,data);
 
 			case block_codes.SGP30_ENABLED                                  %Indicates that an SGP30 VOC/eC02 sensor is present in the system.
-				data = OmniTrakFileRead_ReadBlock_V1_SGP30_ENABLED(fid,data);
+				data = OmniTrakFileRead_ReadBlock_SGP30_ENABLED(fid,data);
 
 			case block_codes.VL53L0X_ENABLED                                %Indicates that an VL53L0X time-of-flight distance sensor is present in the system.
-				data = OmniTrakFileRead_ReadBlock_V1_VL53L0X_ENABLED(fid,data);
+				data = OmniTrakFileRead_ReadBlock_VL53L0X_ENABLED(fid,data);
 
 			case block_codes.ALSPT19_ENABLED                                %Indicates that an ALS-PT19 ambient light sensor is present in the system.
-				data = OmniTrakFileRead_ReadBlock_V1_ALSPT19_ENABLED(fid,data);
+				data = OmniTrakFileRead_ReadBlock_ALSPT19_ENABLED(fid,data);
 
 			case block_codes.MLX90640_ENABLED                               %Indicates that an MLX90640 thermopile array sensor is present in the system.
-				data = OmniTrakFileRead_ReadBlock_V1_MLX90640_ENABLED(fid,data);
+				data = OmniTrakFileRead_ReadBlock_MLX90640_ENABLED(fid,data);
 
 			case block_codes.ZMOD4410_ENABLED                               %Indicates that an ZMOD4410 VOC/eC02 sensor is present in the system.
-				data = OmniTrakFileRead_ReadBlock_V1_ZMOD4410_ENABLED(fid,data);
+				data = OmniTrakFileRead_ReadBlock_ZMOD4410_ENABLED(fid,data);
+
+			case block_codes.AMBULATION_XY_THETA                            %A point in a tracked ambulation path, with absolute x- and y-coordinates in millimeters, with facing direction theta, in degrees.
+				data = OmniTrakFileRead_ReadBlock_AMBULATION_XY_THETA(fid,data);
 
 			case block_codes.AMG8833_THERM_CONV                             %The conversion factor, in degrees Celsius, for converting 16-bit integer AMG8833 pixel readings to temperature.
-				data = OmniTrakFileRead_ReadBlock_V1_AMG8833_THERM_CONV(fid,data);
+				data = OmniTrakFileRead_ReadBlock_AMG8833_THERM_CONV(fid,data);
 
 			case block_codes.AMG8833_THERM_FL                               %The current AMG8833 thermistor reading as a converted float32 value, in Celsius.
-				data = OmniTrakFileRead_ReadBlock_V1_AMG8833_THERM_FL(fid,data);
+				data = OmniTrakFileRead_ReadBlock_AMG8833_THERM_FL(fid,data);
 
 			case block_codes.AMG8833_THERM_INT                              %The current AMG8833 thermistor reading as a raw, signed 16-bit integer.
-				data = OmniTrakFileRead_ReadBlock_V1_AMG8833_THERM_INT(fid,data);
+				data = OmniTrakFileRead_ReadBlock_AMG8833_THERM_INT(fid,data);
 
 			case block_codes.AMG8833_PIXELS_CONV                            %The conversion factor, in degrees Celsius, for converting 16-bit integer AMG8833 pixel readings to temperature.
-				data = OmniTrakFileRead_ReadBlock_V1_AMG8833_PIXELS_CONV(fid,data);
+				data = OmniTrakFileRead_ReadBlock_AMG8833_PIXELS_CONV(fid,data);
 
 			case block_codes.AMG8833_PIXELS_FL                              %The current AMG8833 pixel readings as converted float32 values, in Celsius.
-				data = OmniTrakFileRead_ReadBlock_V1_AMG8833_PIXELS_FL(fid,data);
+				data = OmniTrakFileRead_ReadBlock_AMG8833_PIXELS_FL(fid,data);
 
 			case block_codes.AMG8833_PIXELS_INT                             %The current AMG8833 pixel readings as a raw, signed 16-bit integers.
-				data = OmniTrakFileRead_ReadBlock_V1_AMG8833_PIXELS_INT(fid,data);
+				data = OmniTrakFileRead_ReadBlock_AMG8833_PIXELS_INT(fid,data);
 
 			case block_codes.HTPA32X32_PIXELS_FP62                          %The current HTPA32x32 pixel readings as a fixed-point 6/2 type (6 bits for the unsigned integer part, 2 bits for the decimal part), in units of Celcius. This allows temperatures from 0 to 63.75 C.
-				data = OmniTrakFileRead_ReadBlock_V1_HTPA32X32_PIXELS_FP62(fid,data);
+				data = OmniTrakFileRead_ReadBlock_HTPA32X32_PIXELS_FP62(fid,data);
 
 			case block_codes.HTPA32X32_PIXELS_INT_K                         %The current HTPA32x32 pixel readings represented as 16-bit unsigned integers in units of deciKelvin (dK, or Kelvin * 10).
-				data = OmniTrakFileRead_ReadBlock_V1_HTPA32X32_PIXELS_INT_K(fid,data);
+				data = OmniTrakFileRead_ReadBlock_HTPA32X32_PIXELS_INT_K(fid,data);
 
 			case block_codes.HTPA32X32_AMBIENT_TEMP                         %The current ambient temperature measured by the HTPA32x32, represented as a 32-bit float, in units of Celcius.
-				data = OmniTrakFileRead_ReadBlock_V1_HTPA32X32_AMBIENT_TEMP(fid,data);
+				data = OmniTrakFileRead_ReadBlock_HTPA32X32_AMBIENT_TEMP(fid,data);
 
 			case block_codes.HTPA32X32_PIXELS_INT12_C                       %The current HTPA32x32 pixel readings represented as 12-bit signed integers (2 pixels for every 3 bytes) in units of deciCelsius (dC, or Celsius * 10), with values under-range set to the minimum  (2048 dC) and values over-range set to the maximum (2047 dC).
-				data = OmniTrakFileRead_ReadBlock_V1_HTPA32X32_PIXELS_INT12_C(fid,data);
+				data = OmniTrakFileRead_ReadBlock_HTPA32X32_PIXELS_INT12_C(fid,data);
 
 			case block_codes.HTPA32X32_HOTTEST_PIXEL_FP62                   %The location and temperature of the hottest pixel in the HTPA32x32 image. This may not be the raw hottest pixel. It may have gone through some processing and filtering to determine the true hottest pixel. The temperature will be in FP62 formatted Celsius.
-				data = OmniTrakFileRead_ReadBlock_V1_HTPA32X32_HOTTEST_PIXEL_FP62(fid,data);
+				data = OmniTrakFileRead_ReadBlock_HTPA32X32_HOTTEST_PIXEL_FP62(fid,data);
 
 			case block_codes.BH1749_RGB                                     %The current red, green, blue, IR, and green2 sensor readings from the BH1749 sensor
-				data = OmniTrakFileRead_ReadBlock_V1_BH1749_RGB(fid,data);
+				data = OmniTrakFileRead_ReadBlock_BH1749_RGB(fid,data);
 
 			case block_codes.DEBUG_SANITY_CHECK                             %A special block acting as a sanity check, only used in cases of debugging
-				data = OmniTrakFileRead_ReadBlock_V1_DEBUG_SANITY_CHECK(fid,data);
+				data = OmniTrakFileRead_ReadBlock_DEBUG_SANITY_CHECK(fid,data);
 
 			case block_codes.BME280_TEMP_FL                                 %The current BME280 temperature reading as a converted float32 value, in Celsius.
-				data = OmniTrakFileRead_ReadBlock_V1_BME280_TEMP_FL(fid,data);
+				data = OmniTrakFileRead_ReadBlock_BME280_TEMP_FL(fid,data);
 
 			case block_codes.BMP280_TEMP_FL                                 %The current BMP280 temperature reading as a converted float32 value, in Celsius.
-				data = OmniTrakFileRead_ReadBlock_V1_BMP280_TEMP_FL(fid,data);
+				data = OmniTrakFileRead_ReadBlock_BMP280_TEMP_FL(fid,data);
 
 			case block_codes.BME680_TEMP_FL                                 %The current BME680 temperature reading as a converted float32 value, in Celsius.
-				data = OmniTrakFileRead_ReadBlock_V1_BME680_TEMP_FL(fid,data);
+				data = OmniTrakFileRead_ReadBlock_BME680_TEMP_FL(fid,data);
 
 			case block_codes.BME280_PRES_FL                                 %The current BME280 pressure reading as a converted float32 value, in Pascals (Pa).
-				data = OmniTrakFileRead_ReadBlock_V1_BME280_PRES_FL(fid,data);
+				data = OmniTrakFileRead_ReadBlock_BME280_PRES_FL(fid,data);
 
 			case block_codes.BMP280_PRES_FL                                 %The current BMP280 pressure reading as a converted float32 value, in Pascals (Pa).
-				data = OmniTrakFileRead_ReadBlock_V1_BMP280_PRES_FL(fid,data);
+				data = OmniTrakFileRead_ReadBlock_BMP280_PRES_FL(fid,data);
 
 			case block_codes.BME680_PRES_FL                                 %The current BME680 pressure reading as a converted float32 value, in Pascals (Pa).
-				data = OmniTrakFileRead_ReadBlock_V1_BME680_PRES_FL(fid,data);
+				data = OmniTrakFileRead_ReadBlock_BME680_PRES_FL(fid,data);
 
 			case block_codes.BME280_HUM_FL                                  %The current BM280 humidity reading as a converted float32 value, in percent (%).
-				data = OmniTrakFileRead_ReadBlock_V1_BME280_HUM_FL(fid,data);
+				data = OmniTrakFileRead_ReadBlock_BME280_HUM_FL(fid,data);
 
 			case block_codes.BME680_HUM_FL                                  %The current BME680 humidity reading as a converted float32 value, in percent (%).
-				data = OmniTrakFileRead_ReadBlock_V1_BME680_HUM_FL(fid,data);
+				data = OmniTrakFileRead_ReadBlock_BME680_HUM_FL(fid,data);
 
 			case block_codes.BME680_GAS_FL                                  %The current BME680 gas resistance reading as a converted float32 value, in units of kOhms
-				data = OmniTrakFileRead_ReadBlock_V1_BME680_GAS_FL(fid,data);
+				data = OmniTrakFileRead_ReadBlock_BME680_GAS_FL(fid,data);
 
 			case block_codes.VL53L0X_DIST                                   %The current VL53L0X distance reading as a 16-bit integer, in millimeters (-1 indicates out-of-range).
-				data = OmniTrakFileRead_ReadBlock_V1_VL53L0X_DIST(fid,data);
+				data = OmniTrakFileRead_ReadBlock_VL53L0X_DIST(fid,data);
 
 			case block_codes.VL53L0X_FAIL                                   %Indicates the VL53L0X sensor experienced a range failure.
-				data = OmniTrakFileRead_ReadBlock_V1_VL53L0X_FAIL(fid,data);
+				data = OmniTrakFileRead_ReadBlock_VL53L0X_FAIL(fid,data);
 
 			case block_codes.SGP30_SN                                       %The serial number of the SGP30.
-				data = OmniTrakFileRead_ReadBlock_V1_SGP30_SN(fid,data);
+				data = OmniTrakFileRead_ReadBlock_SGP30_SN(fid,data);
 
 			case block_codes.SGP30_EC02                                     %The current SGp30 eCO2 reading distance reading as a 16-bit integer, in parts per million (ppm).
-				data = OmniTrakFileRead_ReadBlock_V1_SGP30_EC02(fid,data);
+				data = OmniTrakFileRead_ReadBlock_SGP30_EC02(fid,data);
 
 			case block_codes.SGP30_TVOC                                     %The current SGp30 TVOC reading distance reading as a 16-bit integer, in parts per million (ppm).
-				data = OmniTrakFileRead_ReadBlock_V1_SGP30_TVOC(fid,data);
+				data = OmniTrakFileRead_ReadBlock_SGP30_TVOC(fid,data);
 
 			case block_codes.MLX90640_DEVICE_ID                             %The MLX90640 unique device ID saved in the device's EEPROM.
-				data = OmniTrakFileRead_ReadBlock_V1_MLX90640_DEVICE_ID(fid,data);
+				data = OmniTrakFileRead_ReadBlock_MLX90640_DEVICE_ID(fid,data);
 
 			case block_codes.MLX90640_EEPROM_DUMP                           %Raw download of the entire MLX90640 EEPROM, as unsigned 16-bit integers.
-				data = OmniTrakFileRead_ReadBlock_V1_MLX90640_EEPROM_DUMP(fid,data);
+				data = OmniTrakFileRead_ReadBlock_MLX90640_EEPROM_DUMP(fid,data);
 
 			case block_codes.MLX90640_ADC_RES                               %ADC resolution setting on the MLX90640 (16-, 17-, 18-, or 19-bit).
-				data = OmniTrakFileRead_ReadBlock_V1_MLX90640_ADC_RES(fid,data);
+				data = OmniTrakFileRead_ReadBlock_MLX90640_ADC_RES(fid,data);
 
 			case block_codes.MLX90640_REFRESH_RATE                          %Current refresh rate on the MLX90640 (0.25, 0.5, 1, 2, 4, 8, 16, or 32 Hz).
-				data = OmniTrakFileRead_ReadBlock_V1_MLX90640_REFRESH_RATE(fid,data);
+				data = OmniTrakFileRead_ReadBlock_MLX90640_REFRESH_RATE(fid,data);
 
 			case block_codes.MLX90640_I2C_CLOCKRATE                         %Current I2C clock freqency used with the MLX90640 (100, 400, or 1000 kHz).
-				data = OmniTrakFileRead_ReadBlock_V1_MLX90640_I2C_CLOCKRATE(fid,data);
+				data = OmniTrakFileRead_ReadBlock_MLX90640_I2C_CLOCKRATE(fid,data);
 
 			case block_codes.MLX90640_PIXELS_TO                             %The current MLX90640 pixel readings as converted float32 values, in Celsius.
-				data = OmniTrakFileRead_ReadBlock_V1_MLX90640_PIXELS_TO(fid,data);
+				data = OmniTrakFileRead_ReadBlock_MLX90640_PIXELS_TO(fid,data);
 
 			case block_codes.MLX90640_PIXELS_IM                             %The current MLX90640 pixel readings as converted, but uncalibrationed, float32 values.
-				data = OmniTrakFileRead_ReadBlock_V1_MLX90640_PIXELS_IM(fid,data);
+				data = OmniTrakFileRead_ReadBlock_MLX90640_PIXELS_IM(fid,data);
 
 			case block_codes.MLX90640_PIXELS_INT                            %The current MLX90640 pixel readings as a raw, unsigned 16-bit integers.
-				data = OmniTrakFileRead_ReadBlock_V1_MLX90640_PIXELS_INT(fid,data);
+				data = OmniTrakFileRead_ReadBlock_MLX90640_PIXELS_INT(fid,data);
 
 			case block_codes.MLX90640_I2C_TIME                              %The I2C transfer time of the frame data from the MLX90640 to the microcontroller, in milliseconds.
-				data = OmniTrakFileRead_ReadBlock_V1_MLX90640_I2C_TIME(fid,data);
+				data = OmniTrakFileRead_ReadBlock_MLX90640_I2C_TIME(fid,data);
 
 			case block_codes.MLX90640_CALC_TIME                             %The calculation time for the uncalibrated or calibrated image captured by the MLX90640.
-				data = OmniTrakFileRead_ReadBlock_V1_MLX90640_CALC_TIME(fid,data);
+				data = OmniTrakFileRead_ReadBlock_MLX90640_CALC_TIME(fid,data);
 
 			case block_codes.MLX90640_IM_WRITE_TIME                         %The SD card write time for the MLX90640 float32 image data.
-				data = OmniTrakFileRead_ReadBlock_V1_MLX90640_IM_WRITE_TIME(fid,data);
+				data = OmniTrakFileRead_ReadBlock_MLX90640_IM_WRITE_TIME(fid,data);
 
 			case block_codes.MLX90640_INT_WRITE_TIME                        %The SD card write time for the MLX90640 raw uint16 data.
-				data = OmniTrakFileRead_ReadBlock_V1_MLX90640_INT_WRITE_TIME(fid,data);
+				data = OmniTrakFileRead_ReadBlock_MLX90640_INT_WRITE_TIME(fid,data);
 
 			case block_codes.ALSPT19_LIGHT                                  %The current analog value of the ALS-PT19 ambient light sensor, as an unsigned integer ADC value.
-				data = OmniTrakFileRead_ReadBlock_V1_ALSPT19_LIGHT(fid,data);
+				data = OmniTrakFileRead_ReadBlock_ALSPT19_LIGHT(fid,data);
 
 			case block_codes.ZMOD4410_MOX_BOUND                             %The current lower and upper bounds for the ZMOD4410 ADC reading used in calculations.
-				data = OmniTrakFileRead_ReadBlock_V1_ZMOD4410_MOX_BOUND(fid,data);
+				data = OmniTrakFileRead_ReadBlock_ZMOD4410_MOX_BOUND(fid,data);
 
 			case block_codes.ZMOD4410_CONFIG_PARAMS                         %Current configuration values for the ZMOD4410.
-				data = OmniTrakFileRead_ReadBlock_V1_ZMOD4410_CONFIG_PARAMS(fid,data);
+				data = OmniTrakFileRead_ReadBlock_ZMOD4410_CONFIG_PARAMS(fid,data);
 
 			case block_codes.ZMOD4410_ERROR                                 %Timestamped ZMOD4410 error event.
-				data = OmniTrakFileRead_ReadBlock_V1_ZMOD4410_ERROR(fid,data);
+				data = OmniTrakFileRead_ReadBlock_ZMOD4410_ERROR(fid,data);
 
 			case block_codes.ZMOD4410_READING_FL                            %Timestamped ZMOD4410 reading calibrated and converted to float32.
-				data = OmniTrakFileRead_ReadBlock_V1_ZMOD4410_READING_FL(fid,data);
+				data = OmniTrakFileRead_ReadBlock_ZMOD4410_READING_FL(fid,data);
 
 			case block_codes.ZMOD4410_READING_INT                           %Timestamped ZMOD4410 reading saved as the raw uint16 ADC value.
-				data = OmniTrakFileRead_ReadBlock_V1_ZMOD4410_READING_INT(fid,data);
+				data = OmniTrakFileRead_ReadBlock_ZMOD4410_READING_INT(fid,data);
 
 			case block_codes.ZMOD4410_ECO2                                  %Timestamped ZMOD4410 eCO2 reading.
-				data = OmniTrakFileRead_ReadBlock_V1_ZMOD4410_ECO2(fid,data);
+				data = OmniTrakFileRead_ReadBlock_ZMOD4410_ECO2(fid,data);
 
 			case block_codes.ZMOD4410_IAQ                                   %Timestamped ZMOD4410 indoor air quality reading.
-				data = OmniTrakFileRead_ReadBlock_V1_ZMOD4410_IAQ(fid,data);
+				data = OmniTrakFileRead_ReadBlock_ZMOD4410_IAQ(fid,data);
 
 			case block_codes.ZMOD4410_TVOC                                  %Timestamped ZMOD4410 total volatile organic compound reading.
-				data = OmniTrakFileRead_ReadBlock_V1_ZMOD4410_TVOC(fid,data);
+				data = OmniTrakFileRead_ReadBlock_ZMOD4410_TVOC(fid,data);
 
 			case block_codes.ZMOD4410_R_CDA                                 %Timestamped ZMOD4410 total volatile organic compound reading.
-				data = OmniTrakFileRead_ReadBlock_V1_ZMOD4410_R_CDA(fid,data);
+				data = OmniTrakFileRead_ReadBlock_ZMOD4410_R_CDA(fid,data);
 
 			case block_codes.LSM303_ACC_SETTINGS                            %Current accelerometer reading settings on any enabled LSM303.
-				data = OmniTrakFileRead_ReadBlock_V1_LSM303_ACC_SETTINGS(fid,data);
+				data = OmniTrakFileRead_ReadBlock_LSM303_ACC_SETTINGS(fid,data);
 
 			case block_codes.LSM303_MAG_SETTINGS                            %Current magnetometer reading settings on any enabled LSM303.
-				data = OmniTrakFileRead_ReadBlock_V1_LSM303_MAG_SETTINGS(fid,data);
+				data = OmniTrakFileRead_ReadBlock_LSM303_MAG_SETTINGS(fid,data);
 
 			case block_codes.LSM303_ACC_FL                                  %Current readings from the LSM303 accelerometer, as float values in m/s^2.
-				data = OmniTrakFileRead_ReadBlock_V1_LSM303_ACC_FL(fid,data);
+				data = OmniTrakFileRead_ReadBlock_LSM303_ACC_FL(fid,data);
 
 			case block_codes.LSM303_MAG_FL                                  %Current readings from the LSM303 magnetometer, as float values in uT.
-				data = OmniTrakFileRead_ReadBlock_V1_LSM303_MAG_FL(fid,data);
+				data = OmniTrakFileRead_ReadBlock_LSM303_MAG_FL(fid,data);
 
 			case block_codes.LSM303_TEMP_FL                                 %Current readings from the LSM303 temperature sensor, as float value in degrees Celcius
-				data = OmniTrakFileRead_ReadBlock_V1_LSM303_TEMP_FL(fid,data);
+				data = OmniTrakFileRead_ReadBlock_LSM303_TEMP_FL(fid,data);
 
 			case block_codes.SPECTRO_WAVELEN                                %Spectrometer wavelengths, in nanometers.
-				data = OmniTrakFileRead_ReadBlock_V1_SPECTRO_WAVELEN(fid,data);
+				data = OmniTrakFileRead_ReadBlock_SPECTRO_WAVELEN(fid,data);
 
 			case block_codes.SPECTRO_TRACE                                  %Spectrometer measurement trace.
-				data = OmniTrakFileRead_ReadBlock_V1_SPECTRO_TRACE(fid,data);
+				data = OmniTrakFileRead_ReadBlock_SPECTRO_TRACE(fid,data);
 
 			case block_codes.PELLET_DISPENSE                                %Timestamped event for feeding/pellet dispensing.
-				data = OmniTrakFileRead_ReadBlock_V1_PELLET_DISPENSE(fid,data);
+				data = OmniTrakFileRead_ReadBlock_PELLET_DISPENSE(fid,data);
 
 			case block_codes.PELLET_FAILURE                                 %Timestamped event for feeding/pellet dispensing in which no pellet was detected.
-				data = OmniTrakFileRead_ReadBlock_V1_PELLET_FAILURE(fid,data);
+				data = OmniTrakFileRead_ReadBlock_PELLET_FAILURE(fid,data);
 
 			case block_codes.HARD_PAUSE_START                               %Timestamped event marker for the start of a session pause, with no events recorded during the pause.
-				data = OmniTrakFileRead_ReadBlock_V1_HARD_PAUSE_START(fid,data);
+				data = OmniTrakFileRead_ReadBlock_HARD_PAUSE_START(fid,data);
 
 			case block_codes.HARD_PAUSE_START                               %Timestamped event marker for the stop of a session pause, with no events recorded during the pause.
-				data = OmniTrakFileRead_ReadBlock_V1_HARD_PAUSE_START(fid,data);
+				data = OmniTrakFileRead_ReadBlock_HARD_PAUSE_START(fid,data);
 
 			case block_codes.SOFT_PAUSE_START                               %Timestamped event marker for the start of a session pause, with non-operant events recorded during the pause.
-				data = OmniTrakFileRead_ReadBlock_V1_SOFT_PAUSE_START(fid,data);
+				data = OmniTrakFileRead_ReadBlock_SOFT_PAUSE_START(fid,data);
 
 			case block_codes.SOFT_PAUSE_START                               %Timestamped event marker for the stop of a session pause, with non-operant events recorded during the pause.
-				data = OmniTrakFileRead_ReadBlock_V1_SOFT_PAUSE_START(fid,data);
+				data = OmniTrakFileRead_ReadBlock_SOFT_PAUSE_START(fid,data);
+
+			case block_codes.TRIAL_START_SERIAL_DATE                        %Timestamped event marker for the start of a trial, with accompanying microsecond clock reading
+				data = OmniTrakFileRead_ReadBlock_TRIAL_START_SERIAL_DATE(fid,data);
 
 			case block_codes.POSITION_START_X                               %Starting position of an autopositioner in just the x-direction, with distance in millimeters.
-				data = OmniTrakFileRead_ReadBlock_V1_POSITION_START_X(fid,data);
+				data = OmniTrakFileRead_ReadBlock_POSITION_START_X(fid,data);
 
 			case block_codes.POSITION_MOVE_X                                %Timestamped movement of an autopositioner in just the x-direction, with distance in millimeters.
-				data = OmniTrakFileRead_ReadBlock_V1_POSITION_MOVE_X(fid,data);
+				data = OmniTrakFileRead_ReadBlock_POSITION_MOVE_X(fid,data);
 
 			case block_codes.POSITION_START_XY                              %Starting position of an autopositioner in just the x- and y-directions, with distance in millimeters.
-				data = OmniTrakFileRead_ReadBlock_V1_POSITION_START_XY(fid,data);
+				data = OmniTrakFileRead_ReadBlock_POSITION_START_XY(fid,data);
 
 			case block_codes.POSITION_MOVE_XY                               %Timestamped movement of an autopositioner in just the x- and y-directions, with distance in millimeters.
-				data = OmniTrakFileRead_ReadBlock_V1_POSITION_MOVE_XY(fid,data);
+				data = OmniTrakFileRead_ReadBlock_POSITION_MOVE_XY(fid,data);
 
 			case block_codes.POSITION_START_XYZ                             %Starting position of an autopositioner in the x-, y-, and z- directions, with distance in millimeters.
-				data = OmniTrakFileRead_ReadBlock_V1_POSITION_START_XYZ(fid,data);
+				data = OmniTrakFileRead_ReadBlock_POSITION_START_XYZ(fid,data);
 
 			case block_codes.POSITION_MOVE_XYZ                              %Timestamped movement of an autopositioner in the x-, y-, and z- directions, with distance in millimeters.
-				data = OmniTrakFileRead_ReadBlock_V1_POSITION_MOVE_XYZ(fid,data);
+				data = OmniTrakFileRead_ReadBlock_POSITION_MOVE_XYZ(fid,data);
+
+			case block_codes.TTL_PULSE                                      %Timestamped event for a TTL pulse output, with channel number, voltage, and duration.
+				data = OmniTrakFileRead_ReadBlock_TTL_PULSE(fid,data);
 
 			case block_codes.STREAM_INPUT_NAME                              %Stream input name for the specified input index.
-				data = OmniTrakFileRead_ReadBlock_V1_STREAM_INPUT_NAME(fid,data);
+				data = OmniTrakFileRead_ReadBlock_STREAM_INPUT_NAME(fid,data);
 
 			case block_codes.CALIBRATION_BASELINE                           %Starting calibration baseline coefficient, for the specified module index.
-				data = OmniTrakFileRead_ReadBlock_V1_CALIBRATION_BASELINE(fid,data);
+				data = OmniTrakFileRead_ReadBlock_CALIBRATION_BASELINE(fid,data);
 
 			case block_codes.CALIBRATION_SLOPE                              %Starting calibration slope coefficient, for the specified module index.
-				data = OmniTrakFileRead_ReadBlock_V1_CALIBRATION_SLOPE(fid,data);
+				data = OmniTrakFileRead_ReadBlock_CALIBRATION_SLOPE(fid,data);
 
 			case block_codes.CALIBRATION_BASELINE_ADJUST                    %Timestamped in-session calibration baseline coefficient adjustment, for the specified module index.
-				data = OmniTrakFileRead_ReadBlock_V1_CALIBRATION_BASELINE_ADJUST(fid,data);
+				data = OmniTrakFileRead_ReadBlock_CALIBRATION_BASELINE_ADJUST(fid,data);
 
 			case block_codes.CALIBRATION_SLOPE_ADJUST                       %Timestamped in-session calibration slope coefficient adjustment, for the specified module index.
-				data = OmniTrakFileRead_ReadBlock_V1_CALIBRATION_SLOPE_ADJUST(fid,data);
+				data = OmniTrakFileRead_ReadBlock_CALIBRATION_SLOPE_ADJUST(fid,data);
 
 			case block_codes.HIT_THRESH_TYPE                                %Type of hit threshold (i.e. peak force), for the specified input.
-				data = OmniTrakFileRead_ReadBlock_V1_HIT_THRESH_TYPE(fid,data);
+				data = OmniTrakFileRead_ReadBlock_HIT_THRESH_TYPE(fid,data);
 
 			case block_codes.SECONDARY_THRESH_NAME                          %A name/description of secondary thresholds used in the behavior.
-				data = OmniTrakFileRead_ReadBlock_V1_SECONDARY_THRESH_NAME(fid,data);
+				data = OmniTrakFileRead_ReadBlock_SECONDARY_THRESH_NAME(fid,data);
 
 			case block_codes.INIT_THRESH_TYPE                               %Type of initation threshold (i.e. force or touch), for the specified input.
-				data = OmniTrakFileRead_ReadBlock_V1_INIT_THRESH_TYPE(fid,data);
+				data = OmniTrakFileRead_ReadBlock_INIT_THRESH_TYPE(fid,data);
 
 			case block_codes.REMOTE_MANUAL_FEED                             %A timestamped manual feed event, triggered remotely.
-				data = OmniTrakFileRead_ReadBlock_V1_REMOTE_MANUAL_FEED(fid,data);
+				data = OmniTrakFileRead_ReadBlock_REMOTE_MANUAL_FEED(fid,data);
 
 			case block_codes.HWUI_MANUAL_FEED                               %A timestamped manual feed event, triggered from the hardware user interface.
-				data = OmniTrakFileRead_ReadBlock_V1_HWUI_MANUAL_FEED(fid,data);
+				data = OmniTrakFileRead_ReadBlock_HWUI_MANUAL_FEED(fid,data);
 
 			case block_codes.FW_RANDOM_FEED                                 %A timestamped manual feed event, triggered randomly by the firmware.
-				data = OmniTrakFileRead_ReadBlock_V1_FW_RANDOM_FEED(fid,data);
+				data = OmniTrakFileRead_ReadBlock_FW_RANDOM_FEED(fid,data);
 
 			case block_codes.SWUI_MANUAL_FEED_DEPRECATED                    %A timestamped manual feed event, triggered from a computer software user interface.
-				data = OmniTrakFileRead_ReadBlock_V1_SWUI_MANUAL_FEED_DEPRECATED(fid,data);
+				data = OmniTrakFileRead_ReadBlock_SWUI_MANUAL_FEED_DEPRECATED(fid,data);
 
 			case block_codes.FW_OPERANT_FEED                                %A timestamped operant-rewarded feed event, trigged by the OmniHome firmware, with the possibility of multiple feedings.
-				data = OmniTrakFileRead_ReadBlock_V1_FW_OPERANT_FEED(fid,data);
+				data = OmniTrakFileRead_ReadBlock_FW_OPERANT_FEED(fid,data);
 
 			case block_codes.SWUI_MANUAL_FEED                               %A timestamped manual feed event, triggered from a computer software user interface.
-				data = OmniTrakFileRead_ReadBlock_V1_SWUI_MANUAL_FEED(fid,data);
+				data = OmniTrakFileRead_ReadBlock_SWUI_MANUAL_FEED(fid,data);
 
 			case block_codes.SW_RANDOM_FEED                                 %A timestamped manual feed event, triggered randomly by computer software.
-				data = OmniTrakFileRead_ReadBlock_V1_SW_RANDOM_FEED(fid,data);
+				data = OmniTrakFileRead_ReadBlock_SW_RANDOM_FEED(fid,data);
 
 			case block_codes.SW_OPERANT_FEED                                %A timestamped operant-rewarded feed event, trigged by the PC-based behavioral software, with the possibility of multiple feedings.
-				data = OmniTrakFileRead_ReadBlock_V1_SW_OPERANT_FEED(fid,data);
+				data = OmniTrakFileRead_ReadBlock_SW_OPERANT_FEED(fid,data);
 
 			case block_codes.MOTOTRAK_V3P0_OUTCOME                          %MotoTrak version 3.0 trial outcome data.
-				data = OmniTrakFileRead_ReadBlock_V1_MOTOTRAK_V3P0_OUTCOME(fid,data);
+				data = OmniTrakFileRead_ReadBlock_MOTOTRAK_V3P0_OUTCOME(fid,data);
 
 			case block_codes.MOTOTRAK_V3P0_SIGNAL                           %MotoTrak version 3.0 trial stream signal.
-				data = OmniTrakFileRead_ReadBlock_V1_MOTOTRAK_V3P0_SIGNAL(fid,data);
+				data = OmniTrakFileRead_ReadBlock_MOTOTRAK_V3P0_SIGNAL(fid,data);
 
 			case block_codes.POKE_BITMASK                                   %Nosepoke status bitmask, typically written only when it changes.
-				data = OmniTrakFileRead_ReadBlock_V1_POKE_BITMASK(fid,data);
+				data = OmniTrakFileRead_ReadBlock_POKE_BITMASK(fid,data);
 
 			case block_codes.OUTPUT_TRIGGER_NAME                            %Name/description of the output trigger type for the given index.
-				data = OmniTrakFileRead_ReadBlock_V1_OUTPUT_TRIGGER_NAME(fid,data);
+				data = OmniTrakFileRead_ReadBlock_OUTPUT_TRIGGER_NAME(fid,data);
 
 			case block_codes.VIBRATION_TASK_TRIAL_OUTCOME                   %Vibration task trial outcome data.
-				data = OmniTrakFileRead_ReadBlock_V1_VIBRATION_TASK_TRIAL_OUTCOME(fid,data);
+				data = OmniTrakFileRead_ReadBlock_VIBRATION_TASK_TRIAL_OUTCOME(fid,data);
+
+			case block_codes.VIBROTACTILE_DETECTION_TASK_TRIAL              %Vibrotactile detection task trial data.
+				data = OmniTrakFileRead_ReadBlock_VIBROTACTILE_DETECTION_TASK_TRIAL(fid,data);
 
 			case block_codes.LED_DETECTION_TASK_TRIAL_OUTCOME               %LED detection task trial outcome data.
-				data = OmniTrakFileRead_ReadBlock_V1_LED_DETECTION_TASK_TRIAL_OUTCOME(fid,data);
+				data = OmniTrakFileRead_ReadBlock_LED_DETECTION_TASK_TRIAL_OUTCOME(fid,data);
 
 			case block_codes.LIGHT_SRC_MODEL                                %Light source model name.
-				data = OmniTrakFileRead_ReadBlock_V1_LIGHT_SRC_MODEL(fid,data);
+				data = OmniTrakFileRead_ReadBlock_LIGHT_SRC_MODEL(fid,data);
 
 			case block_codes.LIGHT_SRC_TYPE                                 %Light source type (i.e. LED, LASER, etc).
-				data = OmniTrakFileRead_ReadBlock_V1_LIGHT_SRC_TYPE(fid,data);
+				data = OmniTrakFileRead_ReadBlock_LIGHT_SRC_TYPE(fid,data);
 
 			case block_codes.STTC_2AFC_TRIAL_OUTCOME                        %SensiTrak tactile discrimination task trial outcome data.
-				data = OmniTrakFileRead_ReadBlock_V1_STTC_2AFC_TRIAL_OUTCOME(fid,data);
+				data = OmniTrakFileRead_ReadBlock_STTC_2AFC_TRIAL_OUTCOME(fid,data);
 
 			case block_codes.STTC_NUM_PADS                                  %Number of pads on the SensiTrak Tactile Carousel module.
-				data = OmniTrakFileRead_ReadBlock_V1_STTC_NUM_PADS(fid,data);
+				data = OmniTrakFileRead_ReadBlock_STTC_NUM_PADS(fid,data);
 
 			case block_codes.MODULE_MICROSTEP                               %Microstep setting on the specified OTMP module.
-				data = OmniTrakFileRead_ReadBlock_V1_MODULE_MICROSTEP(fid,data);
+				data = OmniTrakFileRead_ReadBlock_MODULE_MICROSTEP(fid,data);
 
 			case block_codes.MODULE_STEPS_PER_ROT                           %Steps per rotation on the specified OTMP module.
-				data = OmniTrakFileRead_ReadBlock_V1_MODULE_STEPS_PER_ROT(fid,data);
+				data = OmniTrakFileRead_ReadBlock_MODULE_STEPS_PER_ROT(fid,data);
 
 			case block_codes.MODULE_PITCH_CIRC                              %Pitch circumference, in millimeters, of the driving gear on the specified OTMP module.
-				data = OmniTrakFileRead_ReadBlock_V1_MODULE_PITCH_CIRC(fid,data);
+				data = OmniTrakFileRead_ReadBlock_MODULE_PITCH_CIRC(fid,data);
 
 			case block_codes.MODULE_CENTER_OFFSET                           %Center offset, in millimeters, for the specified OTMP module.
-				data = OmniTrakFileRead_ReadBlock_V1_MODULE_CENTER_OFFSET(fid,data);
+				data = OmniTrakFileRead_ReadBlock_MODULE_CENTER_OFFSET(fid,data);
 
 			case block_codes.STAP_2AFC_TRIAL_OUTCOME                        %SensiTrak proprioception discrimination task trial outcome data.
-				data = OmniTrakFileRead_ReadBlock_V1_STAP_2AFC_TRIAL_OUTCOME(fid,data);
+				data = OmniTrakFileRead_ReadBlock_STAP_2AFC_TRIAL_OUTCOME(fid,data);
 
 			case block_codes.FR_TASK_TRIAL                                  %Fixed reinforcement task trial data.
-				data = OmniTrakFileRead_ReadBlock_V1_FR_TASK_TRIAL(fid,data);
+				data = OmniTrakFileRead_ReadBlock_FR_TASK_TRIAL(fid,data);
 
 			case block_codes.STOP_TASK_TRIAL                                %Stop task trial data.
-				data = OmniTrakFileRead_ReadBlock_V1_STOP_TASK_TRIAL(fid,data);
+				data = OmniTrakFileRead_ReadBlock_STOP_TASK_TRIAL(fid,data);
 
 			otherwise                                                       %No matching block.
 				data = OmniTrakFileRead_Unrecognized_Block(fid,data);
@@ -1030,7 +1057,7 @@ switch data.file_version
 end
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_ALSPT19_ENABLED(fid,data)
+function data = OmniTrakFileRead_ReadBlock_ALSPT19_ENABLED(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		1007
@@ -1039,7 +1066,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_ALSPT19_ENABLED(fid,data)
 fprintf(1,'Need to finish coding for Block 1007: ALSPT19_ENABLED');
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_ALSPT19_LIGHT(fid,data)
+function data = OmniTrakFileRead_ReadBlock_ALSPT19_LIGHT(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		1600
@@ -1055,7 +1082,40 @@ data.amb(i).time = fread(fid,1,'uint32');                                   %Sav
 data.amb(i).int = fread(fid,1,'uint16');                                    %Save the ambient light reading as an unsigned 16-bit value.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_AMG8833_ENABLED(fid,data)
+function data = OmniTrakFileRead_ReadBlock_AMBULATION_XY_THETA(fid,data)
+
+%	OmniTrak File Block Code (OFBC):
+%		BLOCK VALUE:	1024
+%		DEFINITION:		AMBULATION_XY_THETA
+%		DESCRIPTION:	A point in a tracked ambulation path, with absolute x- and y-coordinates in millimeters, with facing direction theta, in degrees.
+
+data = OmniTrakFileRead_Check_Field_Name(data,'ambulation',...
+    {'path_xy','orientation','micros'});                                    %Call the subfunction to check for existing fieldnames.
+
+ver = fread(fid,1,'uint8');                                                 %Read in the AMBULATION_XY_THETA data block version.
+
+switch ver                                                                  %Switch between the different data block versions.
+
+    case 1                                                                  %Version 1.
+        if isempty(data.ambulation.micros)                                  %If this is the first sample...
+            data.ambulation.micros = fread(fid,1,'uint32');                 %Microcontroller microsecond clock timestamp.
+            data.ambulation.path_xy = fread(fid,2,'float32')';              %x- and y-coordinates, in millimeters.
+            data.ambulation.orientation = fread(fid,1,'float32');           %Animal overhead orientation, in degrees.
+        else
+            i = size(data.ambulation.micros,1) + 1;                         %Grab a new ambulation path sample index.
+            data.ambulation.micros(i,1) = fread(fid,1,'uint32');            %Microcontroller microsecond clock timestamp.
+            data.ambulation.path_xy(i,1:2) = fread(fid,2,'float32');        %x- and y-coordinates, in millimeters.
+            data.ambulation.orientation(i,1) = fread(fid,1,'float32');      %Animal overhead orientation, in degrees.
+        end
+
+    otherwise                                                               %Unrecognized data block version.
+        error(['ERROR IN %s: Data block version #%1.0f is not '...
+            'recognized!'], upper(mfilename), ver);                         %Show an error.
+        
+end
+
+
+function data = OmniTrakFileRead_ReadBlock_AMG8833_ENABLED(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		1000
@@ -1079,7 +1139,7 @@ for k = 8:-1:1                                                              %Ste
 end
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_AMG8833_PIXELS_CONV(fid,data)
+function data = OmniTrakFileRead_ReadBlock_AMG8833_PIXELS_CONV(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		1110
@@ -1088,7 +1148,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_AMG8833_PIXELS_CONV(fid,data)
 fprintf(1,'Need to finish coding for Block 1110: AMG8833_PIXELS_CONV');
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_AMG8833_PIXELS_FL(fid,data)
+function data = OmniTrakFileRead_ReadBlock_AMG8833_PIXELS_FL(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		1111
@@ -1112,7 +1172,7 @@ for k = 8:-1:1                                                              %Ste
 end
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_AMG8833_PIXELS_INT(fid,data)
+function data = OmniTrakFileRead_ReadBlock_AMG8833_PIXELS_INT(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		1112
@@ -1121,7 +1181,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_AMG8833_PIXELS_INT(fid,data)
 fprintf(1,'Need to finish coding for Block 1112: AMG8833_PIXELS_INT');
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_AMG8833_THERM_CONV(fid,data)
+function data = OmniTrakFileRead_ReadBlock_AMG8833_THERM_CONV(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		1100
@@ -1130,7 +1190,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_AMG8833_THERM_CONV(fid,data)
 fprintf(1,'Need to finish coding for Block 1100: AMG8833_THERM_CONV');
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_AMG8833_THERM_FL(fid,data)
+function data = OmniTrakFileRead_ReadBlock_AMG8833_THERM_FL(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		1101
@@ -1144,7 +1204,7 @@ data.temp(i).time = fread(fid,1,'uint32');                                  %Sav
 data.temp(i).float = fread(fid,1,'float32');                                %Save the temperature reading as a float32 value.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_AMG8833_THERM_INT(fid,data)
+function data = OmniTrakFileRead_ReadBlock_AMG8833_THERM_INT(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		1102
@@ -1153,7 +1213,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_AMG8833_THERM_INT(fid,data)
 fprintf(1,'Need to finish coding for Block 1102: AMG8833_THERM_INT');
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_BATTERY_CURRENT(fid,data)
+function data = OmniTrakFileRead_ReadBlock_BATTERY_CURRENT(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		172
@@ -1165,7 +1225,7 @@ data.bat.cur(j).timestamp = readtime;                                       %Sav
 data.bat.cur(j).reading = double(fread(fid,1,'int16'))/1000;                %Save the average current draw, in amps.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_BATTERY_FULL(fid,data)
+function data = OmniTrakFileRead_ReadBlock_BATTERY_FULL(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		173
@@ -1177,7 +1237,7 @@ data.bat.full(j).timestamp = readtime;                                      %Sav
 data.bat.full(j).reading = double(fread(fid,1,'uint16'))/1000;              %Save the battery's full capacity, in amp-hours.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_BATTERY_POWER(fid,data)
+function data = OmniTrakFileRead_ReadBlock_BATTERY_POWER(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		175
@@ -1189,7 +1249,7 @@ data.bat.pwr(j).timestamp = readtime;                                       %Sav
 data.bat.pwr(j).reading = double(fread(fid,1,'int16'))/1000;                %Save the average power draw, in Watts.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_BATTERY_REMAIN(fid,data)
+function data = OmniTrakFileRead_ReadBlock_BATTERY_REMAIN(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		174
@@ -1201,7 +1261,7 @@ data.bat.rem(j).timestamp = readtime;                                       %Sav
 data.bat.rem(j).reading = double(fread(fid,1,'uint16'))/1000;               %Save the battery's remaining capacity, in amp-hours.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_BATTERY_SOC(fid,data)
+function data = OmniTrakFileRead_ReadBlock_BATTERY_SOC(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		170
@@ -1213,7 +1273,7 @@ data.bat.soc(j).timestamp = fread(fid,1,'uint32');                          %Sav
 data.bat.soc(j).percent = fread(fid,1,'uint16');                            %Save the state-of-charge reading, in percent.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_BATTERY_SOH(fid,data)
+function data = OmniTrakFileRead_ReadBlock_BATTERY_SOH(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		176
@@ -1225,7 +1285,7 @@ data.bat.soh(j).timestamp = readtime;                                       %Sav
 data.bat.soh(j).reading = fread(fid,1,'int16');                             %Save the state-of-health reading, in percent.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_BATTERY_STATUS(fid,data)
+function data = OmniTrakFileRead_ReadBlock_BATTERY_STATUS(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		177
@@ -1262,7 +1322,7 @@ data.bat.soh(j).timestamp = readtime;                                       %Sav
 data.bat.soh(j).reading = fread(fid,1,'int16');                             %Save the state-of-health reading, in percent.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_BATTERY_VOLTS(fid,data)
+function data = OmniTrakFileRead_ReadBlock_BATTERY_VOLTS(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		171
@@ -1274,7 +1334,7 @@ data.bat.volt(j).timestamp = readtime;                                      %Sav
 data.bat.volt(j).reading = double(fread(fid,1,'uint16'))/1000;              %Save the battery voltage, in volts.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_BH1749_RGB(fid,data)
+function data = OmniTrakFileRead_ReadBlock_BH1749_RGB(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		1120
@@ -1290,7 +1350,7 @@ data.light(i).nir = fread(fid,1,'uint16');                                  %Sav
 data.light(i).grn2 = fread(fid,1,'uint16');                                 %Save the secondary Green-2 ADC reading as a uint16 value.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_BME280_ENABLED(fid,data)
+function data = OmniTrakFileRead_ReadBlock_BME280_ENABLED(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		1002
@@ -1299,7 +1359,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_BME280_ENABLED(fid,data)
 fprintf(1,'Need to finish coding for Block 1002: BME280_ENABLED');
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_BME280_HUM_FL(fid,data)
+function data = OmniTrakFileRead_ReadBlock_BME280_HUM_FL(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		1220
@@ -1315,7 +1375,7 @@ data.hum(i).time = fread(fid,1,'uint32');                                   %Sav
 data.hum(i).float = fread(fid,1,'float32');                                 %Save the pressure reading as a float32 value.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_BME280_PRES_FL(fid,data)
+function data = OmniTrakFileRead_ReadBlock_BME280_PRES_FL(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		1210
@@ -1331,7 +1391,7 @@ data.pres(i).time = fread(fid,1,'uint32');                                  %Sav
 data.pres(i).float = fread(fid,1,'float32');                                %Save the pressure reading as a float32 value.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_BME280_TEMP_FL(fid,data)
+function data = OmniTrakFileRead_ReadBlock_BME280_TEMP_FL(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		1200
@@ -1347,7 +1407,7 @@ data.temp(i).time = fread(fid,1,'uint32');                                  %Sav
 data.temp(i).float = fread(fid,1,'float32');                                %Save the temperature reading as a float32 value.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_BME680_ENABLED(fid,data)
+function data = OmniTrakFileRead_ReadBlock_BME680_ENABLED(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		1003
@@ -1356,7 +1416,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_BME680_ENABLED(fid,data)
 fprintf(1,'Need to finish coding for Block 1003: BME680_ENABLED');
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_BME680_GAS_FL(fid,data)
+function data = OmniTrakFileRead_ReadBlock_BME680_GAS_FL(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		BLOCK VALUE:	1230
@@ -1371,7 +1431,7 @@ data.gas(i).timestamp = fread(fid,1,'uint32');                              %Sav
 data.gas(i).kohms = fread(fid,1,'float32');                                 %Save the gas resistance reading as a float32 value.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_BME680_HUM_FL(fid,data)
+function data = OmniTrakFileRead_ReadBlock_BME680_HUM_FL(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		BLOCK VALUE:	1221
@@ -1386,7 +1446,7 @@ data.hum(i).timestamp = fread(fid,1,'uint32');                              %Sav
 data.hum(i).percent = fread(fid,1,'float32');                               %Save the ambient humidity reading as a float32 value.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_BME680_PRES_FL(fid,data)
+function data = OmniTrakFileRead_ReadBlock_BME680_PRES_FL(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		1212
@@ -1400,7 +1460,7 @@ data.pres(i).timestamp = fread(fid,1,'uint32');                             %Sav
 data.pres(i).pascals = fread(fid,1,'float32');                              %Save the ambient pressure reading as a float32 value.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_BME680_TEMP_FL(fid,data)
+function data = OmniTrakFileRead_ReadBlock_BME680_TEMP_FL(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		1202
@@ -1414,7 +1474,7 @@ data.temp(i).timestamp = fread(fid,1,'uint32');                             %Sav
 data.temp(i).celsius = fread(fid,1,'float32');                              %Save the temperature reading as a float32 value.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_BMP280_ENABLED(fid,data)
+function data = OmniTrakFileRead_ReadBlock_BMP280_ENABLED(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		1001
@@ -1423,7 +1483,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_BMP280_ENABLED(fid,data)
 fprintf(1,'Need to finish coding for Block 1001: BMP280_ENABLED');
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_BMP280_PRES_FL(fid,data)
+function data = OmniTrakFileRead_ReadBlock_BMP280_PRES_FL(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		1211
@@ -1439,7 +1499,7 @@ data.pres(i).time = fread(fid,1,'uint32');                                  %Sav
 data.pres(i).float = fread(fid,1,'float32');                                %Save the pressure reading as a float32 value.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_BMP280_TEMP_FL(fid,data)
+function data = OmniTrakFileRead_ReadBlock_BMP280_TEMP_FL(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		1201
@@ -1455,7 +1515,7 @@ data.temp(i).time = fread(fid,1,'uint32');                                  %Sav
 data.temp(i).float = fread(fid,1,'float32');                                %Save the temperature reading as a float32 value.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_CALIBRATION_BASELINE(fid,data)
+function data = OmniTrakFileRead_ReadBlock_CALIBRATION_BASELINE(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		2200
@@ -1466,7 +1526,7 @@ i = fread(fid,1,'uint8');                                                   %Rea
 data.calibration(i).baseline = fread(fid,1,'float32');                      %Save the calibration baseline coefficient.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_CALIBRATION_BASELINE_ADJUST(fid,data)
+function data = OmniTrakFileRead_ReadBlock_CALIBRATION_BASELINE_ADJUST(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		2202
@@ -1475,7 +1535,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_CALIBRATION_BASELINE_ADJUST(fid,da
 fprintf(1,'Need to finish coding for Block 2202: CALIBRATION_BASELINE_ADJUST');
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_CALIBRATION_SLOPE(fid,data)
+function data = OmniTrakFileRead_ReadBlock_CALIBRATION_SLOPE(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		2201
@@ -1486,7 +1546,7 @@ i = fread(fid,1,'uint8');                                                   %Rea
 data.calibration(i).slope = fread(fid,1,'float32');                         %Save the calibration baseline coefficient.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_CALIBRATION_SLOPE_ADJUST(fid,data)
+function data = OmniTrakFileRead_ReadBlock_CALIBRATION_SLOPE_ADJUST(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		2203
@@ -1495,7 +1555,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_CALIBRATION_SLOPE_ADJUST(fid,data)
 fprintf(1,'Need to finish coding for Block 2203: CALIBRATION_SLOPE_ADJUST');
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_CCS811_ENABLED(fid,data)
+function data = OmniTrakFileRead_ReadBlock_CCS811_ENABLED(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		1004
@@ -1504,7 +1564,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_CCS811_ENABLED(fid,data)
 fprintf(1,'Need to finish coding for Block 1004: CCS811_ENABLED');
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_CLOCK_FILE_START(fid,data)
+function data = OmniTrakFileRead_ReadBlock_CLOCK_FILE_START(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		6
@@ -1514,7 +1574,7 @@ data = OmniTrakFileRead_Check_Field_Name(data,'file_start','datenum');      %Cal
 data.file_start.datenum = fread(fid,1,'float64');                           %Save the file start 32-bit millisecond clock timestamp.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_CLOCK_FILE_STOP(fid,data)
+function data = OmniTrakFileRead_ReadBlock_CLOCK_FILE_STOP(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		7
@@ -1524,7 +1584,7 @@ data = OmniTrakFileRead_Check_Field_Name(data,'file_stop','datenum');       %Cal
 data.file_stop.datenum = fread(fid,1,'float64');                            %Save the file stop 32-bit millisecond clock timestamp.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_COMPUTER_NAME(fid,data)
+function data = OmniTrakFileRead_ReadBlock_COMPUTER_NAME(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		106
@@ -1535,7 +1595,7 @@ N = fread(fid,1,'uint8');                                                   %Rea
 data.device.computer = char(fread(fid,N,'uchar')');                         %Read in the computer name.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_COM_PORT(fid,data)
+function data = OmniTrakFileRead_ReadBlock_COM_PORT(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		107
@@ -1546,7 +1606,7 @@ N = fread(fid,1,'uint8');                                                   %Rea
 data.device.com_port = char(fread(fid,N,'uchar')');                         %Read in the port name.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_CTRL_FW_DATE(fid,data)
+function data = OmniTrakFileRead_ReadBlock_CTRL_FW_DATE(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		BLOCK VALUE:	142
@@ -1584,7 +1644,7 @@ end
 data.device.controller.firmware.upload_time = date_val + time_val;          %Save the date with any existing fractional time.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_CTRL_FW_FILENAME(fid,data)
+function data = OmniTrakFileRead_ReadBlock_CTRL_FW_FILENAME(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		BLOCK VALUE:	141
@@ -1610,7 +1670,7 @@ if ~endsWith(data.device.controller.firmware.filename,'ino')                %If 
 end
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_CTRL_FW_TIME(fid,data)
+function data = OmniTrakFileRead_ReadBlock_CTRL_FW_TIME(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		BLOCK VALUE:	143
@@ -1649,7 +1709,7 @@ end
 data.device.controller.firmware.upload_time = date_val + time_val;          %Save the date with any existing fractional time.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_DEBUG_SANITY_CHECK(fid,data)
+function data = OmniTrakFileRead_ReadBlock_DEBUG_SANITY_CHECK(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		BLOCK VALUE:	1121
@@ -1659,7 +1719,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_DEBUG_SANITY_CHECK(fid,data)
 fprintf(1,'Need to finish coding for Block 1121: DEBUG_SANITY_CHECK\n');
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_DEVICE_ALIAS(fid,data)
+function data = OmniTrakFileRead_ReadBlock_DEVICE_ALIAS(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		BLOCK VALUE:	108
@@ -1671,7 +1731,7 @@ nchar = fread(fid,1,'uint8');                                               %Rea
 data.device.alias = char(fread(fid,nchar,'uchar')');                        %Save the 32-bit SAMD chip ID.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_DEVICE_FILE_INDEX(fid,data)
+function data = OmniTrakFileRead_ReadBlock_DEVICE_FILE_INDEX(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		10
@@ -1683,7 +1743,7 @@ end
 data.device.file_index = fread(fid,1,'uint32');                             %Save the 32-bit integer file index.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_DEVICE_RESET_COUNT(fid,data)
+function data = OmniTrakFileRead_ReadBlock_DEVICE_RESET_COUNT(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		140
@@ -1695,7 +1755,7 @@ end
 data.device.reset_count = fread(fid,1,'uint16');                            %Save the device's reset count for the file.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_DOWNLOAD_SYSTEM(fid,data)
+function data = OmniTrakFileRead_ReadBlock_DOWNLOAD_SYSTEM(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		43
@@ -1709,7 +1769,7 @@ N = fread(fid,1,'uint8');                                                   %Rea
 data.file_info.download.port = char(fread(fid,N,'uchar')');                 %Read in the port name.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_DOWNLOAD_TIME(fid,data)
+function data = OmniTrakFileRead_ReadBlock_DOWNLOAD_TIME(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		42
@@ -1720,7 +1780,7 @@ data = OmniTrakFileRead_Check_Field_Name(data,'file_info','download',...
 data.file_info.download.time = fread(fid,1,'float64');                      %Read in the timestamp for the download.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_ESP8266_CHIP_ID(fid,data)
+function data = OmniTrakFileRead_ReadBlock_ESP8266_CHIP_ID(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		122
@@ -1732,7 +1792,7 @@ end
 data.device.chip_id = fread(fid,1,'uint32');                                %Save the device's unique chip ID.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_ESP8266_FLASH_ID(fid,data)
+function data = OmniTrakFileRead_ReadBlock_ESP8266_FLASH_ID(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		123
@@ -1744,7 +1804,7 @@ end
 data.device.flash_id = fread(fid,1,'uint32');                               %Save the device's unique flash chip ID.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_ESP8266_IP4_ADDR(fid,data)
+function data = OmniTrakFileRead_ReadBlock_ESP8266_IP4_ADDR(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		BLOCK VALUE:	121
@@ -1754,7 +1814,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_ESP8266_IP4_ADDR(fid,data)
 fprintf(1,'Need to finish coding for Block 121: ESP8266_IP4_ADDR\n');
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_ESP8266_MAC_ADDR(fid,data)
+function data = OmniTrakFileRead_ReadBlock_ESP8266_MAC_ADDR(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		BLOCK VALUE:	120
@@ -1764,7 +1824,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_ESP8266_MAC_ADDR(fid,data)
 fprintf(1,'Need to finish coding for Block 120: ESP8266_MAC_ADDR\n');
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_EXP_NAME(fid,data)
+function data = OmniTrakFileRead_ReadBlock_EXP_NAME(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		300
@@ -1774,7 +1834,7 @@ N = fread(fid,1,'uint16');                                                  %Rea
 data.exp_name = fread(fid,N,'*char')';                                      %Read in the characters of the user's experiment name.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_FEED_SERVO_MAX_RPM(fid,data)
+function data = OmniTrakFileRead_ReadBlock_FEED_SERVO_MAX_RPM(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		190
@@ -1785,7 +1845,7 @@ i = fread(fid,1,'uint8');                                                   %Rea
 data.device.feeder(i).max_rpm = fread(fid,1,'float32');                     %Read in the maximum measure speed, in RPM.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_FEED_SERVO_SPEED(fid,data)
+function data = OmniTrakFileRead_ReadBlock_FEED_SERVO_SPEED(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		191
@@ -1796,7 +1856,7 @@ i = fread(fid,1,'uint8');                                                   %Rea
 data.device.feeder(i).servo_speed = fread(fid,1,'uint8');                   %Read in the current speed setting (0-180).
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_FILE_VERSION(fid,data)
+function data = OmniTrakFileRead_ReadBlock_FILE_VERSION(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		1
@@ -1805,7 +1865,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_FILE_VERSION(fid,data)
 fprintf(1,'Need to finish coding for Block 1: FILE_VERSION');
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_FR_TASK_TRIAL(fid,data)
+function data = OmniTrakFileRead_ReadBlock_FR_TASK_TRIAL(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		BLOCK VALUE:	2800
@@ -1838,7 +1898,7 @@ switch ver                                                                  %Swi
 end
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_FW_OPERANT_FEED(fid,data)
+function data = OmniTrakFileRead_ReadBlock_FW_OPERANT_FEED(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		2404
@@ -1853,7 +1913,7 @@ data.pellet(i).num(j,1) = fread(fid,1,'uint16');                            %Sav
 data.pellet(i).source{j,1} = 'operant_firmware';                            %Save the feed trigger source.  
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_FW_RANDOM_FEED(fid,data)
+function data = OmniTrakFileRead_ReadBlock_FW_RANDOM_FEED(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		2402
@@ -1868,7 +1928,7 @@ data.pellet(i).num(j,1) = fread(fid,1,'uint16');                            %Sav
 data.pellet(i).source{j,1} = 'random_firmware';                             %Save the feed trigger source.     
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_GROUP_NAME(fid,data)
+function data = OmniTrakFileRead_ReadBlock_GROUP_NAME(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		201
@@ -1878,7 +1938,7 @@ N = fread(fid,1,'uint16');                                                  %Rea
 data.group = fread(fid,N,'*char')';                                         %Read in the characters of the group name.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_HARD_PAUSE_START(fid,data)
+function data = OmniTrakFileRead_ReadBlock_HARD_PAUSE_START(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		2010
@@ -1887,7 +1947,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_HARD_PAUSE_START(fid,data)
 fprintf(1,'Need to finish coding for Block 2010: HARD_PAUSE_START');
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_HIT_THRESH_TYPE(fid,data)
+function data = OmniTrakFileRead_ReadBlock_HIT_THRESH_TYPE(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		2300
@@ -1902,7 +1962,7 @@ N = fread(fid,1,'uint16');                                                  %Rea
 data.hit_thresh_type{i} = fread(fid,N,'*char')';                            %Read in the characters of the user's experiment name.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_HTPA32X32_AMBIENT_TEMP(fid,data)
+function data = OmniTrakFileRead_ReadBlock_HTPA32X32_AMBIENT_TEMP(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		BLOCK VALUE:	1115
@@ -1918,7 +1978,7 @@ data.temp(i).timestamp = fread(fid,1,'uint32');                             %Sav
 data.temp(i).celsius = fread(fid,1,'float32');                              %Save the temperature reading as a float32 value.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_HTPA32X32_HOTTEST_PIXEL_FP62(fid,data)
+function data = OmniTrakFileRead_ReadBlock_HTPA32X32_HOTTEST_PIXEL_FP62(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		BLOCK VALUE:	1117
@@ -1928,7 +1988,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_HTPA32X32_HOTTEST_PIXEL_FP62(fid,d
 fprintf(1,'Need to finish coding for Block 1117: HTPA32X32_HOTTEST_PIXEL_FP62\n');
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_HTPA32X32_PIXELS_FP62(fid,data)
+function data = OmniTrakFileRead_ReadBlock_HTPA32X32_PIXELS_FP62(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		BLOCK VALUE:	1113
@@ -1938,7 +1998,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_HTPA32X32_PIXELS_FP62(fid,data)
 fprintf(1,'Need to finish coding for Block 1113: HTPA32X32_PIXELS_FP62\n');
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_HTPA32X32_PIXELS_INT12_C(fid,data)
+function data = OmniTrakFileRead_ReadBlock_HTPA32X32_PIXELS_INT12_C(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		BLOCK VALUE:	1116
@@ -1948,7 +2008,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_HTPA32X32_PIXELS_INT12_C(fid,data)
 fprintf(1,'Need to finish coding for Block 1116: HTPA32X32_PIXELS_INT12_C\n');
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_HTPA32X32_PIXELS_INT_K(fid,data)
+function data = OmniTrakFileRead_ReadBlock_HTPA32X32_PIXELS_INT_K(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		BLOCK VALUE:	1114
@@ -1973,7 +2033,7 @@ temp = fread(fid,1024,'uint16');                                            %Rea
 data.htpa(sensor_i).pixels(reading_i).decikelvin = reshape(temp,32,32)';    %Reshape the values into a 32x32 matrix.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_HWUI_MANUAL_FEED(fid,data)
+function data = OmniTrakFileRead_ReadBlock_HWUI_MANUAL_FEED(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		2401
@@ -1994,7 +2054,7 @@ else                                                                        %Oth
 end
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_INCOMPLETE_BLOCK(fid,data)
+function data = OmniTrakFileRead_ReadBlock_INCOMPLETE_BLOCK(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		50
@@ -2003,7 +2063,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_INCOMPLETE_BLOCK(fid,data)
 fprintf(1,'Need to finish coding for Block 50: INCOMPLETE_BLOCK');
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_INIT_THRESH_TYPE(fid,data)
+function data = OmniTrakFileRead_ReadBlock_INIT_THRESH_TYPE(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		2320
@@ -2012,7 +2072,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_INIT_THRESH_TYPE(fid,data)
 fprintf(1,'Need to finish coding for Block 2320: INIT_THRESH_TYPE');
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_LED_DETECTION_TASK_TRIAL_OUTCOME(fid,data)
+function data = OmniTrakFileRead_ReadBlock_LED_DETECTION_TASK_TRIAL_OUTCOME(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		2710
@@ -2042,7 +2102,7 @@ for i = 2:num_signals                                                       %Ste
 end
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_LIGHT_SRC_MODEL(fid,data)
+function data = OmniTrakFileRead_ReadBlock_LIGHT_SRC_MODEL(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		2711
@@ -2055,7 +2115,7 @@ N = fread(fid,1,'uint8');                                                   %Rea
 data.light_src(module_i).chan(ls_i).model = fread(fid,N,'*char')';          %Read in the characters of the light source model.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_LIGHT_SRC_TYPE(fid,data)
+function data = OmniTrakFileRead_ReadBlock_LIGHT_SRC_TYPE(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		2712
@@ -2068,7 +2128,7 @@ N = fread(fid,1,'uint8');                                                   %Rea
 data.light_src(module_i).chan(ls_i).type = fread(fid,N,'*char')';           %Read in the characters of the light source type.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_LSM303_ACC_FL(fid,data)
+function data = OmniTrakFileRead_ReadBlock_LSM303_ACC_FL(fid,data)
 
 %   Block Code: 1802
 %   Block Definition: LSM303_ACC_FL
@@ -2088,7 +2148,7 @@ data.accel(i).time = fread(fid,1,'uint32');                                 %Sav
 data.accel(i).xyz = fread(fid,3,'float32');                                 %Save the accelerometer x-y-z readings as float-32 values.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_LSM303_ACC_SETTINGS(fid,data)
+function data = OmniTrakFileRead_ReadBlock_LSM303_ACC_SETTINGS(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		1800
@@ -2097,7 +2157,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_LSM303_ACC_SETTINGS(fid,data)
 fprintf(1,'Need to finish coding for Block 1800: LSM303_ACC_SETTINGS');
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_LSM303_MAG_FL(fid,data)
+function data = OmniTrakFileRead_ReadBlock_LSM303_MAG_FL(fid,data)
 
 %   Block Code: 1803
 %   Block Definition: LSM303_MAG_FL
@@ -2117,7 +2177,7 @@ data.mag(i).time = fread(fid,1,'uint32');                                   %Sav
 data.mag(i).xyz = fread(fid,3,'float32');                                   %Save the magnetometer x-y-z readings as float-32 values.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_LSM303_MAG_SETTINGS(fid,data)
+function data = OmniTrakFileRead_ReadBlock_LSM303_MAG_SETTINGS(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		1801
@@ -2126,7 +2186,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_LSM303_MAG_SETTINGS(fid,data)
 fprintf(1,'Need to finish coding for Block 1801: LSM303_MAG_SETTINGS');
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_LSM303_TEMP_FL(fid,data)
+function data = OmniTrakFileRead_ReadBlock_LSM303_TEMP_FL(fid,data)
 
 %   Block Code: 1804
 %   Block Definition: LSM303_TEMP_FL
@@ -2146,7 +2206,7 @@ data.temp(i).timestamp = fread(fid,1,'uint32');                             %Sav
 data.temp(i).celsius = fread(fid,1,'float32');                              %Save the temperature reading as a float32 value.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_MLX90640_ADC_RES(fid,data)
+function data = OmniTrakFileRead_ReadBlock_MLX90640_ADC_RES(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		1502
@@ -2155,7 +2215,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_MLX90640_ADC_RES(fid,data)
 fprintf(1,'Need to finish coding for Block 1502: MLX90640_ADC_RES');
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_MLX90640_CALC_TIME(fid,data)
+function data = OmniTrakFileRead_ReadBlock_MLX90640_CALC_TIME(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		1521
@@ -2164,7 +2224,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_MLX90640_CALC_TIME(fid,data)
 fprintf(1,'Need to finish coding for Block 1521: MLX90640_CALC_TIME');
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_MLX90640_DEVICE_ID(fid,data)
+function data = OmniTrakFileRead_ReadBlock_MLX90640_DEVICE_ID(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		1500
@@ -2173,7 +2233,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_MLX90640_DEVICE_ID(fid,data)
 fprintf(1,'Need to finish coding for Block 1500: MLX90640_DEVICE_ID');
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_MLX90640_EEPROM_DUMP(fid,data)
+function data = OmniTrakFileRead_ReadBlock_MLX90640_EEPROM_DUMP(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		1501
@@ -2182,7 +2242,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_MLX90640_EEPROM_DUMP(fid,data)
 fprintf(1,'Need to finish coding for Block 1501: MLX90640_EEPROM_DUMP');
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_MLX90640_ENABLED(fid,data)
+function data = OmniTrakFileRead_ReadBlock_MLX90640_ENABLED(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		1008
@@ -2191,7 +2251,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_MLX90640_ENABLED(fid,data)
 fprintf(1,'Need to finish coding for Block 1008: MLX90640_ENABLED');
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_MLX90640_I2C_CLOCKRATE(fid,data)
+function data = OmniTrakFileRead_ReadBlock_MLX90640_I2C_CLOCKRATE(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		1504
@@ -2200,7 +2260,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_MLX90640_I2C_CLOCKRATE(fid,data)
 fprintf(1,'Need to finish coding for Block 1504: MLX90640_I2C_CLOCKRATE');
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_MLX90640_I2C_TIME(fid,data)
+function data = OmniTrakFileRead_ReadBlock_MLX90640_I2C_TIME(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		1520
@@ -2209,7 +2269,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_MLX90640_I2C_TIME(fid,data)
 fprintf(1,'Need to finish coding for Block 1520: MLX90640_I2C_TIME');
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_MLX90640_IM_WRITE_TIME(fid,data)
+function data = OmniTrakFileRead_ReadBlock_MLX90640_IM_WRITE_TIME(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		1522
@@ -2218,7 +2278,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_MLX90640_IM_WRITE_TIME(fid,data)
 fprintf(1,'Need to finish coding for Block 1522: MLX90640_IM_WRITE_TIME');
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_MLX90640_INT_WRITE_TIME(fid,data)
+function data = OmniTrakFileRead_ReadBlock_MLX90640_INT_WRITE_TIME(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		1523
@@ -2227,7 +2287,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_MLX90640_INT_WRITE_TIME(fid,data)
 fprintf(1,'Need to finish coding for Block 1523: MLX90640_INT_WRITE_TIME');
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_MLX90640_PIXELS_IM(fid,data)
+function data = OmniTrakFileRead_ReadBlock_MLX90640_PIXELS_IM(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		1511
@@ -2236,7 +2296,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_MLX90640_PIXELS_IM(fid,data)
 fprintf(1,'Need to finish coding for Block 1511: MLX90640_PIXELS_IM');
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_MLX90640_PIXELS_INT(fid,data)
+function data = OmniTrakFileRead_ReadBlock_MLX90640_PIXELS_INT(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		1512
@@ -2245,7 +2305,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_MLX90640_PIXELS_INT(fid,data)
 fprintf(1,'Need to finish coding for Block 1512: MLX90640_PIXELS_INT');
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_MLX90640_PIXELS_TO(fid,data)
+function data = OmniTrakFileRead_ReadBlock_MLX90640_PIXELS_TO(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		1510
@@ -2269,7 +2329,7 @@ for k = 1:24                                                                %Ste
 end
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_MLX90640_REFRESH_RATE(fid,data)
+function data = OmniTrakFileRead_ReadBlock_MLX90640_REFRESH_RATE(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		1503
@@ -2278,7 +2338,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_MLX90640_REFRESH_RATE(fid,data)
 fprintf(1,'Need to finish coding for Block 1503: MLX90640_REFRESH_RATE');
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_MODULE_CENTER_OFFSET(fid,data)
+function data = OmniTrakFileRead_ReadBlock_MODULE_CENTER_OFFSET(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		BLOCK VALUE:	2731
@@ -2296,7 +2356,7 @@ module_i = fread(fid,1,'uint8');                                            %Rea
 data.module(module_i).center_offset = fread(fid,1,'single');                %Read in the handle's center offset, in millimeters.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_MODULE_FW_DATE(fid,data)
+function data = OmniTrakFileRead_ReadBlock_MODULE_FW_DATE(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		BLOCK VALUE:	145
@@ -2306,7 +2366,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_MODULE_FW_DATE(fid,data)
 fprintf(1,'Need to finish coding for Block 145: MODULE_FW_DATE\n');
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_MODULE_FW_FILENAME(fid,data)
+function data = OmniTrakFileRead_ReadBlock_MODULE_FW_FILENAME(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		BLOCK VALUE:	144
@@ -2316,7 +2376,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_MODULE_FW_FILENAME(fid,data)
 fprintf(1,'Need to finish coding for Block 144: MODULE_FW_FILENAME\n');
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_MODULE_FW_TIME(fid,data)
+function data = OmniTrakFileRead_ReadBlock_MODULE_FW_TIME(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		BLOCK VALUE:	146
@@ -2326,7 +2386,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_MODULE_FW_TIME(fid,data)
 fprintf(1,'Need to finish coding for Block 146: MODULE_FW_TIME\n');
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_MODULE_MICROSTEP(fid,data)
+function data = OmniTrakFileRead_ReadBlock_MODULE_MICROSTEP(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		BLOCK VALUE:	2722
@@ -2343,7 +2403,7 @@ module_i = fread(fid,1,'uint8');                                            %Rea
 data.module(module_i).microstep = fread(fid,1,'uint8');                     %Read in the microstop setting.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_MODULE_PITCH_CIRC(fid,data)
+function data = OmniTrakFileRead_ReadBlock_MODULE_PITCH_CIRC(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		BLOCK VALUE:	2730
@@ -2362,7 +2422,7 @@ module_i = fread(fid,1,'uint8');                                            %Rea
 data.module(module_i).pitch_circumference = fread(fid,1,'single');          %Read in the pitch circumference of the gear, in millimeters.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_MODULE_STEPS_PER_ROT(fid,data)
+function data = OmniTrakFileRead_ReadBlock_MODULE_STEPS_PER_ROT(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		BLOCK VALUE:	2723
@@ -2379,7 +2439,7 @@ module_i = fread(fid,1,'uint8');                                            %Rea
 data.module(module_i).steps_per_rot = fread(fid,1,'uint16');                %Read in the number of steps per rotation.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_MOTOTRAK_V3P0_OUTCOME(fid,data)
+function data = OmniTrakFileRead_ReadBlock_MOTOTRAK_V3P0_OUTCOME(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		BLOCK VALUE:	2500
@@ -2422,7 +2482,7 @@ for i = 1:pre_N                                                             %Ste
 end       
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_MOTOTRAK_V3P0_SIGNAL(fid,data)
+function data = OmniTrakFileRead_ReadBlock_MOTOTRAK_V3P0_SIGNAL(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		2501
@@ -2443,7 +2503,7 @@ for i = (pre_N + 1):(pre_N + hitwin_N + post_N)                             %Ste
 end
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_MS_FILE_START(fid,data)
+function data = OmniTrakFileRead_ReadBlock_MS_FILE_START(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		2
@@ -2453,7 +2513,7 @@ data = OmniTrakFileRead_Check_Field_Name(data,'file_start','ms');           %Cal
 data.file_start.ms = fread(fid,1,'uint32');                                 %Save the file start 32-bit millisecond clock timestamp.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_MS_FILE_STOP(fid,data)
+function data = OmniTrakFileRead_ReadBlock_MS_FILE_STOP(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		3
@@ -2463,7 +2523,7 @@ data = OmniTrakFileRead_Check_Field_Name(data,'file_stop',[]);              %Cal
 data.file_stop.ms = fread(fid,1,'uint32');                                  %Save the file stop 32-bit millisecond clock timestamp.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_MS_TIMER_ROLLOVER(fid,data)
+function data = OmniTrakFileRead_ReadBlock_MS_TIMER_ROLLOVER(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		23
@@ -2472,16 +2532,16 @@ function data = OmniTrakFileRead_ReadBlock_V1_MS_TIMER_ROLLOVER(fid,data)
 fprintf(1,'Need to finish coding for Block 23: MS_TIMER_ROLLOVER');
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_MS_US_CLOCK_SYNC(fid,data)
+function data = OmniTrakFileRead_ReadBlock_CLOCK_SYNC(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		22
-%		MS_US_CLOCK_SYNC
+%		CLOCK_SYNC
 
-fprintf(1,'Need to finish coding for Block 22: MS_US_CLOCK_SYNC');
+fprintf(1,'Need to finish coding for Block 22: CLOCK_SYNC');
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_NTP_SYNC(fid,data)
+function data = OmniTrakFileRead_ReadBlock_NTP_SYNC(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		20
@@ -2490,7 +2550,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_NTP_SYNC(fid,data)
 fprintf(1,'Need to finish coding for Block 20: NTP_SYNC');
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_NTP_SYNC_FAIL(fid,data)
+function data = OmniTrakFileRead_ReadBlock_NTP_SYNC_FAIL(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		21
@@ -2499,7 +2559,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_NTP_SYNC_FAIL(fid,data)
 fprintf(1,'Need to finish coding for Block 21: NTP_SYNC_FAIL');
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_ORIGINAL_FILENAME(fid,data)
+function data = OmniTrakFileRead_ReadBlock_ORIGINAL_FILENAME(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		40
@@ -2508,7 +2568,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_ORIGINAL_FILENAME(fid,data)
 fprintf(1,'Need to finish coding for Block 40: ORIGINAL_FILENAME');
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_OUTPUT_TRIGGER_NAME(fid,data)
+function data = OmniTrakFileRead_ReadBlock_OUTPUT_TRIGGER_NAME(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		2600
@@ -2517,7 +2577,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_OUTPUT_TRIGGER_NAME(fid,data)
 fprintf(1,'Need to finish coding for Block 2600: OUTPUT_TRIGGER_NAME');
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_PELLET_DISPENSE(fid,data)
+function data = OmniTrakFileRead_ReadBlock_PELLET_DISPENSE(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		2000
@@ -2526,7 +2586,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_PELLET_DISPENSE(fid,data)
 fprintf(1,'Need to finish coding for Block 2000: PELLET_DISPENSE');
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_PELLET_FAILURE(fid,data)
+function data = OmniTrakFileRead_ReadBlock_PELLET_FAILURE(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		2001
@@ -2542,7 +2602,7 @@ else                                                                        %Oth
 end       
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_POKE_BITMASK(fid,data)
+function data = OmniTrakFileRead_ReadBlock_POKE_BITMASK(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		BLOCK VALUE:	2560
@@ -2575,7 +2635,7 @@ else                                                                        %Oth
 end
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_POSITION_MOVE_X(fid,data)
+function data = OmniTrakFileRead_ReadBlock_POSITION_MOVE_X(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		2021
@@ -2589,7 +2649,7 @@ data.pos(i).move(j,1) = fread(fid,1,'uint32');                              %Sav
 data.pos(i).move(j,2) = fread(fid,1,'float32');                             %Save the new positioner x-value as a float32 value.     
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_POSITION_MOVE_XY(fid,data)
+function data = OmniTrakFileRead_ReadBlock_POSITION_MOVE_XY(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		2023
@@ -2598,7 +2658,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_POSITION_MOVE_XY(fid,data)
 fprintf(1,'Need to finish coding for Block 2023: POSITION_MOVE_XY');
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_POSITION_MOVE_XYZ(fid,data)
+function data = OmniTrakFileRead_ReadBlock_POSITION_MOVE_XYZ(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		2025
@@ -2607,7 +2667,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_POSITION_MOVE_XYZ(fid,data)
 fprintf(1,'Need to finish coding for Block 2025: POSITION_MOVE_XYZ');
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_POSITION_START_X(fid,data)
+function data = OmniTrakFileRead_ReadBlock_POSITION_START_X(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		2020
@@ -2618,7 +2678,7 @@ i = fread(fid,1,'uint8');                                                   %Rea
 data.pos(i).start = [fread(fid,1,'float32'), NaN, NaN];                     %Save the starting positioner x-value as a float32 value.   
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_POSITION_START_XY(fid,data)
+function data = OmniTrakFileRead_ReadBlock_POSITION_START_XY(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		2022
@@ -2629,7 +2689,7 @@ i = fread(fid,1,'uint8');                                                   %Rea
 data.pos(i).start = [fread(fid,2,'float32'), NaN];                          %Save the starting positioner x- and y-value as a float32 value.   
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_POSITION_START_XYZ(fid,data)
+function data = OmniTrakFileRead_ReadBlock_POSITION_START_XYZ(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		2024
@@ -2638,7 +2698,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_POSITION_START_XYZ(fid,data)
 fprintf(1,'Need to finish coding for Block 2024: POSITION_START_XYZ');
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_PRIMARY_INPUT(fid,data)
+function data = OmniTrakFileRead_ReadBlock_PRIMARY_INPUT(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		111
@@ -2649,7 +2709,7 @@ N = fread(fid,1,'uint16');                                                  %Rea
 data.input(1).primary = fread(fid,N,'*char')';                              %Read in the characters of the primary module name.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_PRIMARY_MODULE(fid,data)
+function data = OmniTrakFileRead_ReadBlock_PRIMARY_MODULE(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		BLOCK VALUE:	110
@@ -2672,7 +2732,7 @@ end
 data.module(1).name = temp_str;                                             %Save the primary module name.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_REMOTE_MANUAL_FEED(fid,data)
+function data = OmniTrakFileRead_ReadBlock_REMOTE_MANUAL_FEED(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		2400
@@ -2687,7 +2747,7 @@ data.pellet(i).num(j,1) = fread(fid,1,'uint16');                            %Sav
 data.pellet(i).source{j,1} = 'manual_remote';                               %Save the feed trigger source.  
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_RENAMED_FILE(fid,data)
+function data = OmniTrakFileRead_ReadBlock_RENAMED_FILE(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		41
@@ -2702,7 +2762,7 @@ N = fread(fid,1,'uint16');                                                  %Rea
 data.file_info.rename(i).new = char(fread(fid,N,'uchar')');                 %Read in the new filename.     
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_RTC_STRING(fid,data)
+function data = OmniTrakFileRead_ReadBlock_RTC_STRING(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		31
@@ -2711,7 +2771,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_RTC_STRING(fid,data)
 fprintf(1,'Need to finish coding for Block 31: RTC_STRING');
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_RTC_STRING_DEPRECATED(fid,data)
+function data = OmniTrakFileRead_ReadBlock_RTC_STRING_DEPRECATED(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		30
@@ -2720,7 +2780,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_RTC_STRING_DEPRECATED(fid,data)
 fprintf(1,'Need to finish coding for Block 30: RTC_STRING_DEPRECATED');
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_RTC_VALUES(fid,data)
+function data = OmniTrakFileRead_ReadBlock_RTC_VALUES(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		32
@@ -2739,7 +2799,7 @@ data.clock(i).datenum = datenum(yr, mo, dy, hr, mn, sc);                    %Sav
 data.clock(i).source = 'RTC';                                               %Indicate that the date/time source was a real-time clock.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_SAMD_CHIP_ID(fid,data)
+function data = OmniTrakFileRead_ReadBlock_SAMD_CHIP_ID(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		112
@@ -2749,7 +2809,7 @@ data = OmniTrakFileRead_Check_Field_Name(data,'device','samd_chip_id');     %Cal
 data.device.samd_chip_id = fread(fid,4,'uint32');                           %Save the 32-bit SAMD chip ID.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_SECONDARY_THRESH_NAME(fid,data)
+function data = OmniTrakFileRead_ReadBlock_SECONDARY_THRESH_NAME(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		2310
@@ -2758,7 +2818,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_SECONDARY_THRESH_NAME(fid,data)
 fprintf(1,'Need to finish coding for Block 2310: SECONDARY_THRESH_NAME');
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_SGP30_EC02(fid,data)
+function data = OmniTrakFileRead_ReadBlock_SGP30_EC02(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		1410
@@ -2774,7 +2834,7 @@ data.eco2(i).time = fread(fid,1,'uint32');                                  %Sav
 data.eco2(i).int = fread(fid,1,'uint16');                                   %Save the eCO2 reading as an unsigned 16-bit value.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_SGP30_ENABLED(fid,data)
+function data = OmniTrakFileRead_ReadBlock_SGP30_ENABLED(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		1005
@@ -2783,7 +2843,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_SGP30_ENABLED(fid,data)
 fprintf(1,'Need to finish coding for Block 1005: SGP30_ENABLED');
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_SGP30_SN(fid,data)
+function data = OmniTrakFileRead_ReadBlock_SGP30_SN(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		1400
@@ -2792,7 +2852,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_SGP30_SN(fid,data)
 fprintf(1,'Need to finish coding for Block 1400: SGP30_SN');
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_SGP30_TVOC(fid,data)
+function data = OmniTrakFileRead_ReadBlock_SGP30_TVOC(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		1420
@@ -2808,7 +2868,7 @@ data.tvoc(i).time = fread(fid,1,'uint32');                                  %Sav
 data.tvoc(i).int = fread(fid,1,'uint16');                                   %Save the TVOC reading as an unsigned 16-bit value.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_SOFT_PAUSE_START(fid,data)
+function data = OmniTrakFileRead_ReadBlock_SOFT_PAUSE_START(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		2012
@@ -2817,7 +2877,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_SOFT_PAUSE_START(fid,data)
 fprintf(1,'Need to finish coding for Block 2012: SOFT_PAUSE_START');
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_SPECTRO_TRACE(fid,data)
+function data = OmniTrakFileRead_ReadBlock_SPECTRO_TRACE(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		1901
@@ -2841,7 +2901,7 @@ for i = 1:reps                                                              %Ste
 end
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_SPECTRO_WAVELEN(fid,data)
+function data = OmniTrakFileRead_ReadBlock_SPECTRO_WAVELEN(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		1900
@@ -2853,7 +2913,7 @@ N = fread(fid,1,'uint32');                                                  %Rea
 data.spectro(spectro_i).wavelengths = fread(fid,N,'float32')';              %Read in the characters of the light source model.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_STAGE_DESCRIPTION(fid,data)
+function data = OmniTrakFileRead_ReadBlock_STAGE_DESCRIPTION(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		401
@@ -2863,7 +2923,7 @@ N = fread(fid,1,'uint16');                                                  %Rea
 data.stage_description = fread(fid,N,'*char')';                             %Read in the characters of the behavioral session stage description.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_STAGE_NAME(fid,data)
+function data = OmniTrakFileRead_ReadBlock_STAGE_NAME(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		400
@@ -2873,7 +2933,7 @@ N = fread(fid,1,'uint16');                                                  %Rea
 data.stage_name = fread(fid,N,'*char')';                                    %Read in the characters of the behavioral session stage name.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_STAP_2AFC_TRIAL_OUTCOME(fid,data)
+function data = OmniTrakFileRead_ReadBlock_STAP_2AFC_TRIAL_OUTCOME(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		BLOCK VALUE:	2740
@@ -2923,7 +2983,7 @@ catch
 end
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_STOP_TASK_TRIAL(fid,data)
+function data = OmniTrakFileRead_ReadBlock_STOP_TASK_TRIAL(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		BLOCK VALUE:	2801
@@ -2933,7 +2993,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_STOP_TASK_TRIAL(fid,data)
 fprintf(1,'Need to finish coding for Block 2801: STOP_TASK_TRIAL\n');
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_STREAM_INPUT_NAME(fid,data)
+function data = OmniTrakFileRead_ReadBlock_STREAM_INPUT_NAME(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		2100
@@ -2942,7 +3002,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_STREAM_INPUT_NAME(fid,data)
 fprintf(1,'Need to finish coding for Block 2100: STREAM_INPUT_NAME');
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_STTC_2AFC_TRIAL_OUTCOME(fid,data)
+function data = OmniTrakFileRead_ReadBlock_STTC_2AFC_TRIAL_OUTCOME(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		BLOCK VALUE:	2720
@@ -2979,7 +3039,7 @@ for i = 1:num_signals                                                       %Ste
 end
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_STTC_NUM_PADS(fid,data)
+function data = OmniTrakFileRead_ReadBlock_STTC_NUM_PADS(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		BLOCK VALUE:	2721
@@ -3005,7 +3065,7 @@ if data.module(module_i).num_pads > 10                                      %If 
 end
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_SUBJECT_DEPRECATED(fid,data)
+function data = OmniTrakFileRead_ReadBlock_SUBJECT_DEPRECATED(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		4
@@ -3015,7 +3075,7 @@ N = fread(fid,1,'uint16');                                                  %Rea
 data.subject = fread(fid,N,'*char')';                                       %Read in the characters of the subject's name.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_SUBJECT_NAME(fid,data)
+function data = OmniTrakFileRead_ReadBlock_SUBJECT_NAME(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		200
@@ -3025,7 +3085,7 @@ N = fread(fid,1,'uint16');                                                  %Rea
 data.subject = fread(fid,N,'*char')';                                       %Read in the characters of the subject's name.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_SWUI_MANUAL_FEED(fid,data)
+function data = OmniTrakFileRead_ReadBlock_SWUI_MANUAL_FEED(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		2405
@@ -3051,7 +3111,7 @@ else                                                                        %Oth
 end
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_SWUI_MANUAL_FEED_DEPRECATED(fid,data)
+function data = OmniTrakFileRead_ReadBlock_SWUI_MANUAL_FEED_DEPRECATED(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		2403
@@ -3066,7 +3126,7 @@ data.pellet(i).num(j,1) = fread(fid,1,'uint8');                             %Sav
 data.pellet(i).source{j,1} = 'manual_software';                             %Save the feed trigger source.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_SW_OPERANT_FEED(fid,data)
+function data = OmniTrakFileRead_ReadBlock_SW_OPERANT_FEED(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		2407
@@ -3081,7 +3141,7 @@ data.pellet(i).num(j,1) = fread(fid,1,'uint16');                            %Sav
 data.pellet(i).source{j,1} = 'operant_software';                            %Save the feed trigger source.   
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_SW_RANDOM_FEED(fid,data)
+function data = OmniTrakFileRead_ReadBlock_SW_RANDOM_FEED(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		2406
@@ -3096,7 +3156,7 @@ data.pellet(i).num(j,1) = fread(fid,1,'uint16');                            %Sav
 data.pellet(i).source{j,1} = 'random_software';                             %Save the feed trigger source.   
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_SYSTEM_FW_VER(fid,data)
+function data = OmniTrakFileRead_ReadBlock_SYSTEM_FW_VER(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		103
@@ -3109,7 +3169,7 @@ N = fread(fid,1,'uint8');                                                   %Rea
 data.device.fw_version = char(fread(fid,N,'uchar')');                       %Read in the firmware version.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_SYSTEM_HW_VER(fid,data)
+function data = OmniTrakFileRead_ReadBlock_SYSTEM_HW_VER(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		102
@@ -3119,7 +3179,7 @@ data = OmniTrakFileRead_Check_Field_Name(data,'device');                    %Cal
 data.device.hw_version = fread(fid,1,'float32');                            %Save the device hardware version.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_SYSTEM_MFR(fid,data)
+function data = OmniTrakFileRead_ReadBlock_SYSTEM_MFR(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		105
@@ -3132,7 +3192,7 @@ N = fread(fid,1,'uint8');                                                   %Rea
 data.device.manufacturer = char(fread(fid,N,'uchar')');                     %Read in the manufacturer.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_SYSTEM_NAME(fid,data)
+function data = OmniTrakFileRead_ReadBlock_SYSTEM_NAME(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		101
@@ -3145,7 +3205,7 @@ N = fread(fid,1,'uint8');                                                   %Rea
 data.device.system_name = fread(fid,N,'*char')';                            %Read in the characters of the system name.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_SYSTEM_SN(fid,data)
+function data = OmniTrakFileRead_ReadBlock_SYSTEM_SN(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		104
@@ -3158,7 +3218,7 @@ N = fread(fid,1,'uint8');                                                   %Rea
 data.device.serial_num = char(fread(fid,N,'uchar')');                       %Read in the serial number.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_SYSTEM_TYPE(fid,data)
+function data = OmniTrakFileRead_ReadBlock_SYSTEM_TYPE(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		100
@@ -3170,7 +3230,7 @@ end
 data.device.type = fread(fid,1,'uint8');                                    %Save the device type value.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_TASK_TYPE(fid,data)
+function data = OmniTrakFileRead_ReadBlock_TASK_TYPE(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		301
@@ -3181,7 +3241,7 @@ N = fread(fid,1,'uint16');                                                  %Rea
 data.task(1).type = fread(fid,N,'*char')';                                  %Read in the characters of the user's task type.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_TIME_ZONE_OFFSET(fid,data)
+function data = OmniTrakFileRead_ReadBlock_TIME_ZONE_OFFSET(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		BLOCK VALUE:	25
@@ -3197,7 +3257,7 @@ data = OmniTrakFileRead_Check_Field_Name(data,'clock');                     %Cal
 data.clock(1).time_zone = fread(fid,1,'float64');                           %Read in the time zone adjustment relative to UTC.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_TIME_ZONE_OFFSET_HHMM(fid,data)
+function data = OmniTrakFileRead_ReadBlock_TIME_ZONE_OFFSET_HHMM(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		BLOCK VALUE:	26
@@ -3216,7 +3276,48 @@ else                                                                        %Oth
 end
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_USER_SYSTEM_NAME(fid,data)
+function data = OmniTrakFileRead_ReadBlock_TRIAL_START_SERIAL_DATE(fid,data)
+
+%	OmniTrak File Block Code (OFBC):
+%		BLOCK VALUE:	2014
+%		DEFINITION:		TRIAL_START_SERIAL_DATE
+%		DESCRIPTION:	Timestamped event marker for the start of a trial, with accompanying microsecond clock reading
+
+data = OmniTrakFileRead_Check_Field_Name(data,'trial','start','datenum');   %Call the subfunction to check for existing fieldnames.
+
+timestamp = fread(fid,1,'float64');                                         %Read in the serial date number timestamp.
+t = fread(fid,1,'uint16');                                                  %Read in the trial index.
+data.trial(t).start.datenum = timestamp;                                    %Save the serial date number timestamp for the trial.
+
+
+function data = OmniTrakFileRead_ReadBlock_TTL_PULSE(fid,data)
+
+%	OmniTrak File Block Code (OFBC):
+%		BLOCK VALUE:	2048
+%		DEFINITION:		TTL_PULSE
+%		DESCRIPTION:	Timestamped event for a TTL pulse output, with channel number, voltage, and duration.
+
+data = OmniTrakFileRead_Check_Field_Name(data,'ttl');                       %Call the subfunction to check for existing fieldnames.
+
+ver = fread(fid,1,'uint8');                                                 %Read in the AMBULATION_XY_THETA data block version.
+
+switch ver                                                                  %Switch between the different data block versions.
+
+    case 1                                                                  %Version 1.
+        i = length(data.ttl) + 1;                                           %Increment the TTL pulse index.
+        data.ttl(i).datenum = fread(fid,1,'float64');                       %Serial date number.
+        data.ttl(i).chan = fread(fid,1,'uint8')';                           %Output channel.
+        data.ttl(i).volts = fread(fid,1,'float32')';                        %Output voltage.
+        data.ttl(i).dur = fread(fid,1,'uint32');                            %Pulse duration, in milliseconds.
+
+    otherwise                                                               %Unrecognized data block version.
+        error(['ERROR IN %s: Data block version #%1.0f is not '...
+            'recognized!'], upper(mfilename), ver);                         %Show an error.
+        
+end
+
+
+function data = OmniTrakFileRead_ReadBlock_USER_SYSTEM_NAME(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		130
@@ -3239,7 +3340,7 @@ else                                                                        %Oth
 end
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_USER_TIME(fid,data)
+function data = OmniTrakFileRead_ReadBlock_USER_TIME(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		60
@@ -3258,7 +3359,7 @@ data.clock(i).datenum = datenum(yr, mo, dy, hr, mn, sc);                    %Sav
 data.clock(i).source = 'USER';                                              %Indicate that the date/time source was a real-time clock.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_US_TIMER_ROLLOVER(fid,data)
+function data = OmniTrakFileRead_ReadBlock_US_TIMER_ROLLOVER(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		24
@@ -3267,7 +3368,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_US_TIMER_ROLLOVER(fid,data)
 fprintf(1,'Need to finish coding for Block 24: US_TIMER_ROLLOVER');
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_VIBRATION_TASK_TRIAL_OUTCOME(fid,data)
+function data = OmniTrakFileRead_ReadBlock_VIBRATION_TASK_TRIAL_OUTCOME(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		2700
@@ -3301,7 +3402,17 @@ for i = 1:num_signals                                                       %Ste
 end
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_VL53L0X_DIST(fid,data)
+function data = OmniTrakFileRead_ReadBlock_VIBROTACTILE_DETECTION_TASK_TRIAL(fid,data)
+
+%	OmniTrak File Block Code (OFBC):
+%		BLOCK VALUE:	2701
+%		DEFINITION:		VIBROTACTILE_DETECTION_TASK_TRIAL
+%		DESCRIPTION:	Vibrotactile detection task trial data.
+
+fprintf(1,'Need to finish coding for Block 2701: VIBROTACTILE_DETECTION_TASK_TRIAL\n');
+
+
+function data = OmniTrakFileRead_ReadBlock_VL53L0X_DIST(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		1300
@@ -3317,7 +3428,7 @@ data.dist(i).time = fread(fid,1,'uint32');                                  %Sav
 data.dist(i).int = fread(fid,1,'uint16');                                   %Save the distance reading as an unsigned 16-bit value.   
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_VL53L0X_ENABLED(fid,data)
+function data = OmniTrakFileRead_ReadBlock_VL53L0X_ENABLED(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		1006
@@ -3326,7 +3437,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_VL53L0X_ENABLED(fid,data)
 fprintf(1,'Need to finish coding for Block 1006: VL53L0X_ENABLED');
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_VL53L0X_FAIL(fid,data)
+function data = OmniTrakFileRead_ReadBlock_VL53L0X_FAIL(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		1301
@@ -3342,7 +3453,7 @@ data.dist(i).time = fread(fid,1,'uint32');                      %Save the millis
 data.dist(i).int = NaN;                                         %Save a NaN in place of a value to indicate a read failure.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_WINC1500_IP4_ADDR(fid,data)
+function data = OmniTrakFileRead_ReadBlock_WINC1500_IP4_ADDR(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		151
@@ -3351,7 +3462,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_WINC1500_IP4_ADDR(fid,data)
 fprintf(1,'Need to finish coding for Block 151: WINC1500_IP4_ADDR');
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_WINC1500_MAC_ADDR(fid,data)
+function data = OmniTrakFileRead_ReadBlock_WINC1500_MAC_ADDR(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		150
@@ -3361,7 +3472,7 @@ data = OmniTrakFileRead_Check_Field_Name(data,'device');                    %Cal
 data.device.mac_addr = fread(fid,6,'uint8');                                %Save the device MAC address.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_ZMOD4410_CONFIG_PARAMS(fid,data)
+function data = OmniTrakFileRead_ReadBlock_ZMOD4410_CONFIG_PARAMS(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		1701
@@ -3370,7 +3481,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_ZMOD4410_CONFIG_PARAMS(fid,data)
 fprintf(1,'Need to finish coding for Block 1701: ZMOD4410_CONFIG_PARAMS');
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_ZMOD4410_ECO2(fid,data)
+function data = OmniTrakFileRead_ReadBlock_ZMOD4410_ECO2(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		1710
@@ -3379,7 +3490,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_ZMOD4410_ECO2(fid,data)
 fprintf(1,'Need to finish coding for Block 1710: ZMOD4410_ECO2');
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_ZMOD4410_ENABLED(fid,data)
+function data = OmniTrakFileRead_ReadBlock_ZMOD4410_ENABLED(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		1009
@@ -3388,7 +3499,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_ZMOD4410_ENABLED(fid,data)
 fprintf(1,'Need to finish coding for Block 1009: ZMOD4410_ENABLED');
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_ZMOD4410_ERROR(fid,data)
+function data = OmniTrakFileRead_ReadBlock_ZMOD4410_ERROR(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		1702
@@ -3397,7 +3508,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_ZMOD4410_ERROR(fid,data)
 fprintf(1,'Need to finish coding for Block 1702: ZMOD4410_ERROR');
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_ZMOD4410_IAQ(fid,data)
+function data = OmniTrakFileRead_ReadBlock_ZMOD4410_IAQ(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		1711
@@ -3406,7 +3517,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_ZMOD4410_IAQ(fid,data)
 fprintf(1,'Need to finish coding for Block 1711: ZMOD4410_IAQ');
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_ZMOD4410_MOX_BOUND(fid,data)
+function data = OmniTrakFileRead_ReadBlock_ZMOD4410_MOX_BOUND(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		1700
@@ -3415,7 +3526,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_ZMOD4410_MOX_BOUND(fid,data)
 fprintf(1,'Need to finish coding for Block 1700: ZMOD4410_MOX_BOUND');
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_ZMOD4410_READING_FL(fid,data)
+function data = OmniTrakFileRead_ReadBlock_ZMOD4410_READING_FL(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		1703
@@ -3424,7 +3535,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_ZMOD4410_READING_FL(fid,data)
 fprintf(1,'Need to finish coding for Block 1703: ZMOD4410_READING_FL');
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_ZMOD4410_READING_INT(fid,data)
+function data = OmniTrakFileRead_ReadBlock_ZMOD4410_READING_INT(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		1704
@@ -3438,7 +3549,7 @@ data.gas_adc(i).time = fread(fid,1,'uint32');                               %Sav
 data.gas_adc(i).int = fread(fid,1,'uint16');                                %Save the TVOC reading as an unsigned 16-bit value.
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_ZMOD4410_R_CDA(fid,data)
+function data = OmniTrakFileRead_ReadBlock_ZMOD4410_R_CDA(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		1713
@@ -3447,7 +3558,7 @@ function data = OmniTrakFileRead_ReadBlock_V1_ZMOD4410_R_CDA(fid,data)
 fprintf(1,'Need to finish coding for Block 1713: ZMOD4410_R_CDA');
 
 
-function data = OmniTrakFileRead_ReadBlock_V1_ZMOD4410_TVOC(fid,data)
+function data = OmniTrakFileRead_ReadBlock_ZMOD4410_TVOC(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		1712

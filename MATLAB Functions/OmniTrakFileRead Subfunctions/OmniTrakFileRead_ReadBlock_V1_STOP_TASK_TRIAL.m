@@ -1,4 +1,4 @@
-function data = OmniTrakFileRead_ReadBlock_V1_STOP_TASK_TRIAL(fid,data)
+function data = OmniTrakFileRead_ReadBlock_STOP_TASK_TRIAL(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		BLOCK VALUE:	2801
