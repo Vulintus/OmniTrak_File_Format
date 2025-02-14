@@ -1,4 +1,4 @@
-function data = OmniTrakFileRead_ReadBlock_V1_WIFI_MAC_ADDR(fid,data)
+function data = OmniTrakFileRead_ReadBlock_WIFI_MAC_ADDR(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
 %		120

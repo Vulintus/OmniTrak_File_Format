@@ -1,7 +1,9 @@
 function data = OmniTrakFileRead_Beta(file,varargin)
 
 %
-% OmniTrakFileRead.m - Vulintus, Inc., 2018.
+% OmniTrakFileRead.m
+% 
+%   copyright 2018, Vulintus, Inc.
 %
 %   OMNITRAKFILEREAD reads in behavioral data from Vulintus' *.OmniTrak
 %   file format and returns data organized in the fields of the output
@@ -12,36 +14,40 @@ function data = OmniTrakFileRead_Beta(file,varargin)
 %   of OmniTrakFileRead from OmniTrakFileRead_Beta.
 %
 %   UPDATE LOG:
-%   02/22/2018 - Drew Sloan - Function first created.
-%   01/29/2020 - Drew Sloan - Block code routing separated into a
-%       programmatically generated switch-case subfunction, with separate
-%       subfunctions for each block code. Coinciding updates were made to
-%       "Update_OmniTrak_Libraries.m" to collate all new subfunctions into
-%       a release-version OmniTrakFileRead.m.
-%   03/16/2022 - Drew Sloan - Added an option input argument that
-%       terminates the file read after the header information (subject,
-%       device type, and session start time) is read.
+%   2018-02-22 - Drew Sloan - Function first created.
+%   2020-01-29 - Drew Sloan - Block code routing separated into a
+%                             programmatically generated switch-case 
+%                             subfunction, with separate subfunctions for 
+%                             each block code. Coinciding updates were made
+%                             to "Update_OmniTrak_Libraries.m" to collate 
+%                             all new subfunctions into a release-version 
+%                             OmniTrakFileRead.m.
+%   2022-03-16 - Drew Sloan - Added an option input argument that
+%                             terminates the file read after the header 
+%                             information (subject, device type, and 
+%                             session start time) is read.
+%   2025-02-14 - Drew Sloan - Converted the switch-case statements in the
+%                             ReadBlock routing function into a dictionary.
 %
 
-verbose = 0;                                                                %Default to non-verbose output.
-header_only = 0;                                                            %Default to reading the entire file, not just the header.
-show_waitbar = 0;                                                           %Default to not showing a waitbar.
+
+verbose = false;                                                            %Default to non-verbose output.
+header_only = false;                                                        %Default to reading the entire file, not just the header.
+show_waitbar = false;                                                       %Default to not showing a waitbar.
 for i = 1:numel(varargin)                                                   %Step through each optional input argument.
     switch lower(varargin{i})                                               %Switch between the recognized input arguments.
         case 'header'                                                       %Just read the header.
-            header_only = 1;                                                %Set the header only flag to 1.
+            header_only = true;                                             %Set the header only flag to 1.
         case 'verbose'                                                      %Request verbose output.
-            verbose = 1;                                                    %Set the verbose flag to 1.
+            verbose = true;                                                 %Set the verbose flag to 1.
         case 'waitbar'                                                      %Request a waitbar.
-            show_waitbar = 1;                                               %Set the waitbar flag to 1.
+            show_waitbar = true;                                            %Set the waitbar flag to 1.
     end
 end
 
-data = [];                                                                  %Create a structure to receive the data.
-
 if ~exist(file,'file') == 2                                                 %If the file doesn't exist...
-    error(['ERROR IN ' upper(mfilename) ': The specified file doesn''t '...
-        'exist!\n\t%s'],file);                                              %Throw an error.
+    error('ERROR IN %s: The specified file doesn''t exist!\n\t%s',...
+        upper(mfilename), file);                                            %Throw an error.
 end
 
 fid = fopen(file,'r');                                                      %Open the input file for read access.
@@ -52,21 +58,28 @@ fseek(fid,0,'bof');                                                         %Rew
 block = fread(fid,1,'uint16');                                              %Read in the first data block code.
 if isempty(block) || block ~= hex2dec('ABCD')                               %If the first block isn't the expected OmniTrak file identifier...
     fclose(fid);                                                            %Close the input file.
-    error(['ERROR IN ' upper(mfilename) ': The specified file doesn''t '...
-        'start with the *.OmniTrak 0xABCD identifier code!\n\t%s'],file);   %Throw an error.
+    error(['ERROR IN %s: The specified file doesn''t start with the '...
+        '*.OmniTrak 0xABCD identifier code!\n\t%s'],...
+        upper(mfilename), file);                                            %Throw an error.
 end
 
 block = fread(fid,1,'uint16');                                              %Read in the second data block code.
 if isempty(block) || block ~= 1                                             %If the second data block code isn't the format version.
     fclose(fid);                                                            %Close the input file.
-    error(['ERROR IN ' upper(mfilename) ': The specified file doesn''t '...
-        'specify an *.OmniTrak file version!\n\t%s'],file);                 %Throw an error.
+    error(['ERROR IN %s: The specified file doesn''t specify an '...
+        '*.OmniTrak file version!\n\t%s'], upper(mfilename), file);         %Throw an error.
 end
-data.file_version = fread(fid,1,'uint16');                                  %Read in the file version.
 
-waitbar_closed = 0;                                                         %Create a flag to indicate when the waitbar is closed.
-if show_waitbar == 1                                                        %If we're showing a progress waitbar.
-    [~, shortfile, ext] = fileparts(file);                                  %Grab the filename minus the path.
+[~, shortfile, ext] = fileparts(file);                                      %Grab the filename minus the path.
+
+data = struct('file',[]);                                                   %Create a data structure.
+data.file.name = [shortfile ext];                                           %Save the filename.
+data.file.version = fread(fid,1,'uint16');                                  %Save the file version.
+
+block_read = OmniTrakFileRead_ReadBlock_Dictionary(fid);                    %Load the block read function dictionary.
+
+waitbar_closed = false;                                                     %Create a flag to indicate when the waitbar is closed.
+if show_waitbar                                                             %If we're showing a progress waitbar.
     waitbar_str = sprintf('Reading: %s%s',shortfile,ext);                   %Create a string for the waitbar.
     waitbar = big_waitbar('title','OmniTrakFileRead Progress',...
         'string',waitbar_str,...
@@ -82,22 +95,31 @@ try                                                                         %Att
             continue                                                        %Skip the rest of the loop.
         end
         
-        data = OmniTrakFileRead_ReadBlock(fid, block, data, verbose);       %Call the subfunction to read the block.
+        if verbose && isKey(block_read, block)                              %If verbose output is enabled and this block is recognized...
+            fprintf(1,'b%1.0f\t>>\t0x%s: %s\n',...
+                ftell(fid)-2,...
+                dec2hex(block,4),...
+                block_read(block).def_name);                                %Print the block location in the file.
+        end
         
-        if isfield(data,'unrecognized_block')                               %If the last block was unrecognized...
-            fprintf(1,'UNRECOGNIZED BLOCK CODE: %1.0f!\n',block);           %Print the block code.
+        if isKey(block_read, block)                                         %If this block is recognized...
+            data = block_read(block).fcn(data);                             %Call the subfunction to read the block.
+        else                                                                %Otherwise, if the block isn't recognized...
+            fseek(fid,-2,'cof');                                            %Rewind 2 bytes.
+            data.unrecognized_block = [];                                   %Create an unrecognized block field.
+            data.unrecognized_block.pos = ftell(fid);                       %Save the file position.
+            data.unrecognized_block.code = block;                           %Save the data block code.
+            fprintf(1,'b%1.0f\t>>\t0x%s: UNRECOGNIZED BLOCK CODE!\n',...
+                ftell(fid),...
+                dec2hex(block,4));                                          %Print the block location in the file.
             fclose(fid);                                                    %Close the file.
             return                                                          %Skip execution of the rest of the function.
         end
         
         if header_only                                                      %If we're only reading the header.
-            if isfield(data,'subject') && ...
-                    ~isempty(data.subject) && ...     
-                    isfield(data,'file_start') && ...
-                    ~isempty(data.file_start) && ...
-                    isfield(data,'device') && ...
-                    isfield(data.device,'type') && ...
-                    ~isempty(data.device.type)
+            if isnt_empty_field(data,'subject','name') && ...
+                    isnt_empty_field(data,'file','start') && ...
+                    isnt_empty_field(data,'device','type')                  %If all the header fields are read in...
                 fclose(fid);                                                %Close the file.
                 return                                                      %Skip execution of the rest of the function.
             end
@@ -106,7 +128,7 @@ try                                                                         %Att
 
         if show_waitbar                                                     %If we're showing the waitbar...
             if waitbar.isclosed()                                           %If the user closed the waitbar figure...
-                waitbar_closed = 1;                                         %Set the waitbar closed flag to 1.
+                waitbar_closed = true;                                      %Set the waitbar closed flag to 1.
             else                                                            %If the waitbar hasn't been closed...
                 waitbar.value(ftell(fid)/file_size);                        %Update the waitbar value.
                 waitbar.string(sprintf('%s (%1.0f/%1.0f)',waitbar_str,...

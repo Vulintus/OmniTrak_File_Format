@@ -42,14 +42,17 @@ file_writer.close = @()OmniTrakFileWrite_Close(fid, ofbc.CLOCK_FILE_STOP);  %Add
 % SUBJECT_DEPRECATED: 4
 % CLOCK_FILE_START: 6
 
-% Block code: CLOCK_FILE_STOP = 7;
+% Block code: CLOCK_FILE_STOP = 7
 file_writer.clock_file_stop = ...
     @(varargin)OmniTrakFileWrite_WriteBlock_V1_Timestamped_Event(fid, ofbc.CLOCK_FILE_STOP,varargin{:});
 
 % DEVICE_FILE_INDEX: 10
 % NTP_SYNC: 20
 % NTP_SYNC_FAIL: 21
-% MS_US_CLOCK_SYNC: 22
+
+% Block code: CLOCK_SYNC = 22.
+file_writer.clock_sync = @(port_i, varargin)OmniTrakFileWrite_WriteBlock_V1_CLOCK_SYNC(fid, ofbc.CLOCK_SYNC, port_i, varargin{:});
+
 % MS_TIMER_ROLLOVER: 23
 % US_TIMER_ROLLOVER: 24
 

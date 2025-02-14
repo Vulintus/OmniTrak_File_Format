@@ -15,7 +15,7 @@
 | 10 | [DEVICE_FILE_INDEX](#block-code-10) | The device's current file index. |
 | 20 | [NTP_SYNC](#block-code-20) | A fetched NTP time (seconds since January 1, 1900) at the specified SoC millisecond clock time. |
 | 21 | [NTP_SYNC_FAIL](#block-code-21) | Indicates the an NTP synchonization attempt failed. |
-| 22 | [MS_US_CLOCK_SYNC](#block-code-22) | The current SoC microsecond clock time at the specified SoC millisecond clock time. |
+| 22 | [CLOCK_SYNC](#block-code-22) | The current SoC microsecond clock time at the specified SoC millisecond clock time. |
 | 23 | [MS_TIMER_ROLLOVER](#block-code-23) | Indicates that the millisecond timer rolled over since the last loop. |
 | 24 | [US_TIMER_ROLLOVER](#block-code-24) | Indicates that the microsecond timer rolled over since the last loop. |
 | 25 | [TIME_ZONE_OFFSET](#block-code-25) | Computer clock time zone offset from UTC. |
@@ -131,7 +131,7 @@
 ---
 
 * #### Block Code: 22
-  * Block Definition: MS_US_CLOCK_SYNC
+  * Block Definition: CLOCK_SYNC
   * Description: "The current SoC/microcontroller microsecond clock time at the specified SoC millisecond clock time."
   * Block Format:
     * 1x (uint32): SoC/microcontroller millisecond clock time.
