@@ -1,11 +1,11 @@
-function OmniTrakFileWrite_WriteBlock_V1_FR_TASK_TRIAL(fid, block_code, behavior, trial, licks)
+function OmniTrakFileWrite_WriteBlock_FR_TASK_TRIAL(fid, block_code, behavior, trial, licks)
 
 %
-% OmniTrakFileWrite_WriteBlock_V1_FR_TASK_TRIAL.m
+% OmniTrakFileWrite_WriteBlock_FR_TASK_TRIAL.m
 %   
 %   copyright 2023, Vulintus, Inc.
 %
-%   OMNITRAKFILEWRITE_WRITEBLOCK_V1_FR_TASK_TRIAL writes data from
+%   OMNITRAKFILEWRITE_WRITEBLOCK_FR_TASK_TRIAL writes data from
 %   individual trials of the Fixed Reinforcement task.
 %
 %   OFBC block code: 0x0AF0

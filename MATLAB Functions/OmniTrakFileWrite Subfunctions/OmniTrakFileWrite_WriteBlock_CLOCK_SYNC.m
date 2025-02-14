@@ -1,11 +1,11 @@
-function OmniTrakFileWrite_WriteBlock_V1_CLOCK_SYNC(fid, block_code, port_i, varargin)
+function OmniTrakFileWrite_WriteBlock_CLOCK_SYNC(fid, block_code, port_i, varargin)
 
 %
-% OmniTrakFileWrite_WriteBlock_V1_CLOCK_SYNC.m
+% OmniTrakFileWrite_WriteBlock_CLOCK_SYNC.m
 %   
 %   copyright 2025, Vulintus, Inc.
 %
-%   OMNITRAKFILEWRITE_WRITEBLOCK_V1_CLOCK_SYNC writes the current serial date 
+%   OMNITRAKFILEWRITE_WRITEBLOCK_CLOCK_SYNC writes the current serial date 
 %   number, millisecond clock reading, and/or microsecond clock reading at a 
 %   single timepoint to assist in timestamp synchronization in an *.OmniTrak 
 %   file.  

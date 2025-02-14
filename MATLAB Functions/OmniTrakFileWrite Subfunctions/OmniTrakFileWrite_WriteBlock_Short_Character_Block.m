@@ -1,9 +1,9 @@
-function OmniTrakFileWrite_WriteBlock_V1_Short_Character_Block(fid, block_code, str)
+function OmniTrakFileWrite_WriteBlock_Short_Character_Block(fid, block_code, str)
 
 %
-%OmniTrakFileWrite_WriteBlock_V1_Short_Character_Block.m - Vulintus, Inc.
+%OmniTrakFileWrite_WriteBlock_Short_Character_Block.m - Vulintus, Inc.
 %
-%   OMNITRAKFILEWRITE_WRITEBLOCK_V1_SHORT_CHARACTER_BLOCK adds the
+%   OMNITRAKFILEWRITE_WRITEBLOCK_SHORT_CHARACTER_BLOCK adds the
 %   specified character block to an *.OmniTrak data file, with a maximum
 %   character count of 255.
 %   

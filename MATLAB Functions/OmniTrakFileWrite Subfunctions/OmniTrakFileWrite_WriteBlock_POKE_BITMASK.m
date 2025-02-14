@@ -1,11 +1,11 @@
-function OmniTrakFileWrite_WriteBlock_V1_POKE_BITMASK(fid, block_code, micros, num_pokes, bitmask)
+function OmniTrakFileWrite_WriteBlock_POKE_BITMASK(fid, block_code, micros, num_pokes, bitmask)
 
 %
-% OmniTrakFileWrite_WriteBlock_V1_POKE_BITMASK.m
+% OmniTrakFileWrite_WriteBlock_POKE_BITMASK.m
 %   
 %   copyright 2024, Vulintus, Inc.
 %
-%   OMNITRAKFILEWRITE_WRITEBLOCK_V1_POKE_BITMASK writes the nosepokes'
+%   OMNITRAKFILEWRITE_WRITEBLOCK_POKE_BITMASK writes the nosepokes'
 %   status, as a bitmask, with the microcontroller microsecond and 
 %   computer serial date number timestamps.
 %   

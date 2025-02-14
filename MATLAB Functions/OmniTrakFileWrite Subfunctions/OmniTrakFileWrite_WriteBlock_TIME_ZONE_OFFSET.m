@@ -1,9 +1,9 @@
-function OmniTrakFileWrite_WriteBlock_V1_TIME_ZONE_OFFSET(fid, block_code)
+function OmniTrakFileWrite_WriteBlock_TIME_ZONE_OFFSET(fid, block_code)
 
 %
-%OmniTrakFileWrite_WriteBlock_V1_TIME_ZONE_OFFSET.m - Vulintus, Inc.
+%OmniTrakFileWrite_WriteBlock_TIME_ZONE_OFFSET.m - Vulintus, Inc.
 %
-%   OMNITRAKFILEWRITE_WRITEBLOCK_V1_TIME_ZONE_OFFSET adds the time zone
+%   OMNITRAKFILEWRITE_WRITEBLOCK_TIME_ZONE_OFFSET adds the time zone
 %   offset, in units of days, between the local computer's time zone and
 %   UTC time.
 %   

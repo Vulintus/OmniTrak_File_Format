@@ -1,9 +1,9 @@
-function OmniTrakFileWrite_WriteBlock_V1_SW_OPERANT_FEED(fid, block_code, feeder_index)
+function OmniTrakFileWrite_WriteBlock_SW_OPERANT_FEED(fid, block_code, feeder_index)
 
 %
-%OmniTrakFileWrite_WriteBlock_V1_SW_OPERANT_FEED.m - Vulintus, Inc.
+%OmniTrakFileWrite_WriteBlock_SW_OPERANT_FEED.m - Vulintus, Inc.
 %
-%   OMNITRAKFILEWRITE_WRITEBLOCK_V1_SW_OPERANT_FEED adds the time zone
+%   OMNITRAKFILEWRITE_WRITEBLOCK_SW_OPERANT_FEED adds the time zone
 %   offset, in units of days, between the local computer's time zone and
 %   UTC time.
 %   

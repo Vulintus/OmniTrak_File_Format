@@ -1,11 +1,11 @@
-function OmniTrakFileWrite_WriteBlock_V1_TTL_PULSE(fid, block_code, timestamp, chan, volts, dur)
+function OmniTrakFileWrite_WriteBlock_TTL_PULSE(fid, block_code, timestamp, chan, volts, dur)
 
 %
-% OmniTrakFileWrite_WriteBlock_V1_TTL_PULSE.m
+% OmniTrakFileWrite_WriteBlock_TTL_PULSE.m
 %   
 %   copyright 2025, Vulintus, Inc.
 %
-%   OMNITRAKFILEWRITE_WRITEBLOCK_V1_TTL_PULSE writes the channel, 
+%   OMNITRAKFILEWRITE_WRITEBLOCK_TTL_PULSE writes the channel, 
 %   timestamp, voltage, and duration (in milliseconds) of a TTL pulse when
 %   one is sent during a behavioral program.
 %

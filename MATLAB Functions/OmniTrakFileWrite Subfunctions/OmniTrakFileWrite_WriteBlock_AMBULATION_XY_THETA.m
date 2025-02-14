@@ -1,11 +1,11 @@
-function OmniTrakFileWrite_WriteBlock_V1_AMBULATION_XY_THETA(fid, block_code, timestamp, xy, angle)
+function OmniTrakFileWrite_WriteBlock_AMBULATION_XY_THETA(fid, block_code, timestamp, xy, angle)
 
 %
-% OmniTrakFileWrite_WriteBlock_V1_AMBULATION_XY_THETA.m
+% OmniTrakFileWrite_WriteBlock_AMBULATION_XY_THETA.m
 %   
 %   copyright 2025, Vulintus, Inc.
 %
-%   OMNITRAKFILEWRITE_WRITEBLOCK_V1_AMBULATION_XY_THETA writes a point in a
+%   OMNITRAKFILEWRITE_WRITEBLOCK_AMBULATION_XY_THETA writes a point in a
 %   ambulation tracking path, measured by either a set of optical flow
 %   sensors, like on the spherical treadmill, or by overhead video
 %   tracking. The save path point consists of absolute x- and 

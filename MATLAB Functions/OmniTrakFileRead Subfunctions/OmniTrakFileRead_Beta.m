@@ -50,6 +50,10 @@ if ~exist(file,'file') == 2                                                 %If 
         upper(mfilename), file);                                            %Throw an error.
 end
 
+[~, shortfile, ext] = fileparts(file);                                      %Grab the filename minus the path.
+data = struct('file',[]);                                                   %Create a data structure.
+data.file.name = [shortfile ext];                                           %Save the filename.
+
 fid = fopen(file,'r');                                                      %Open the input file for read access.
 fseek(fid,0,'eof');                                                         %Fast forward to the end of the file.
 file_size = ftell(fid);                                                     %Read in the number of bytes in the file.
@@ -69,11 +73,6 @@ if isempty(block) || block ~= 1                                             %If 
     error(['ERROR IN %s: The specified file doesn''t specify an '...
         '*.OmniTrak file version!\n\t%s'], upper(mfilename), file);         %Throw an error.
 end
-
-[~, shortfile, ext] = fileparts(file);                                      %Grab the filename minus the path.
-
-data = struct('file',[]);                                                   %Create a data structure.
-data.file.name = [shortfile ext];                                           %Save the filename.
 data.file.version = fread(fid,1,'uint16');                                  %Save the file version.
 
 block_read = OmniTrakFileRead_ReadBlock_Dictionary(fid);                    %Load the block read function dictionary.

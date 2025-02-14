@@ -58,7 +58,7 @@ This is the principal list for *.OmniTrak File Block Codes (OFBC) data block cod
 | 0x0069 | 105 | [SYSTEM_MFR](/Data%20Block%20Descriptions/0x0000-0x00FF.md#block-code-0x0069) | Manufacturer name for non-Vulintus systems. |
 | 0x006A | 106 | [COMPUTER_NAME](/Data%20Block%20Descriptions/0x0000-0x00FF.md#block-code-0x006A) | Windows PC computer name. |
 | 0x006B | 107 | [COM_PORT](/Data%20Block%20Descriptions/0x0000-0x00FF.md#block-code-0x006B) | The COM port of a computer-connected system. |
-| 0x006C | 108 | [DEVICE_ALIAS](/Data%20Block%20Descriptions/0x0000-0x00FF.md#block-code-0x006C) | Human-readable Adjective + Noun alias/name for the device, assigned by Vulintus during manufacturing |
+| 0x006C | 108 | [DEVICE_ALIAS](/Data%20Block%20Descriptions/0x0000-0x00FF.md#block-code-0x006C) | Human-readable Adjective + Noun alias/name for the device, assigned by Vulintus during manufacturing. |
 ||
 ||
 | 0x006E | 110 | [PRIMARY_MODULE](/Data%20Block%20Descriptions/0x0000-0x00FF.md#block-code-0x006E) | Primary module name, for systems with interchangeable modules. |
