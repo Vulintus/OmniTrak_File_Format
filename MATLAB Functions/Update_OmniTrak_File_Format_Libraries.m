@@ -306,8 +306,9 @@ timestamp = char(datetime('now','TimeZone','UTC'),'yyy-MM-dd, hh:mm:ss');   %Gra
 fid = fopen(filename,'wt');                                                 %Open the file for writing as text.
 
 fprintf(fid,'function ofbc = %s\n',fcn_name);                               %Print the function name to the file.
-fprintf(fid,'\n%%\t%s.m\n%%\n',fcn_name);                                   %Print the start of a function description comment.
-fprintf(fid,'%%\tVulintus, Inc.\n%%\n');                                    %Print Vulintus origin text to the file.
+fprintf(fid,'\n%%\n%% %s.m\n%%\n',fcn_name);                                %Print the start of a function description comment.
+fprintf(fid,'%%\tcopyright %s, Vulintus, Inc.\n%%\n',...
+    char(datetime,'yyyy'));                                                 %Print Vulintus origin text to the file.
 fprintf(fid,'%%\tOmniTrak File Format Block Codes (OFBC) library.\n%%\n');  %Print a library description to the file.
 fprintf(fid,'%%\tLibrary documentation:\n%%\t%s\n%%\n',repo_url);           %Print the library documenation link for each version to the file.
 fprintf(fid,'%%\tThis function was programmatically generated: ');          %Print a line to show the library was programmatically generated.
@@ -354,8 +355,9 @@ timestamp = char(datetime('now','TimeZone','UTC'),'yyy-MM-dd, hh:mm:ss');   %Gra
 fid = fopen(filename,'wt');                                                 %Open the file for writing as text.
 
 fprintf(fid,'function block_read = %s(fid)\n',fcn_name);                    %Print the function name to the file.
-fprintf(fid,'\n%%%s.m\n%%\n',fcn_name);                                     %Print the start of a function description comment.
-fprintf(fid,'%%\tVulintus, Inc.\n%%\n');                                    %Print Vulintus origin text to the file.
+fprintf(fid,'\n%%\n%% %s.m\n%%\n',fcn_name);                                %Print the start of a function description comment.
+fprintf(fid,'%%\tcopyright %s, Vulintus, Inc.\n%%\n',...
+    char(datetime,'yyyy'));                                                 %Print Vulintus origin text to the file.
 fprintf(fid,'%%\tOmniTrak file data block read subfunction router.\n%%\n'); %Print a function description to the file.
 fprintf(fid,'%%\tLibrary documentation:\n%%\t%s\n%%\n',repo_url);           %Print the library documenation link for each version to the file.
 fprintf(fid,'%%\tThis function was programmatically generated: ');          %Print a line to show the library was programmatically generated.

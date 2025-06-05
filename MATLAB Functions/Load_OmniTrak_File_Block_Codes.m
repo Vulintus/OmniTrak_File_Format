@@ -1,15 +1,16 @@
 function ofbc = Load_OmniTrak_File_Block_Codes
 
-%	Load_OmniTrak_File_Block_Codes.m
 %
-%	Vulintus, Inc.
+% Load_OmniTrak_File_Block_Codes.m
+%
+%	copyright 2025, Vulintus, Inc.
 %
 %	OmniTrak File Format Block Codes (OFBC) library.
 %
 %	Library documentation:
 %	https://github.com/Vulintus/OmniTrak_File_Format
 %
-%	This function was programmatically generated: 2025-02-14, 06:45:35 (UTC)
+%	This function was programmatically generated: 2025-06-05, 04:13:26 (UTC)
 %
 
 ofbc = dictionary;
@@ -54,7 +55,7 @@ ofbc('SYSTEM_SN') = 104;                              %System serial number, wri
 ofbc('SYSTEM_MFR') = 105;                             %Manufacturer name for non-Vulintus systems.
 ofbc('COMPUTER_NAME') = 106;                          %Windows PC computer name.
 ofbc('COM_PORT') = 107;                               %The COM port of a computer-connected system.
-ofbc('DEVICE_ALIAS') = 108;                           %Human-readable Adjective + Noun alias/name for the device, assigned by Vulintus during manufacturing
+ofbc('DEVICE_ALIAS') = 108;                           %Human-readable Adjective + Noun alias/name for the device, assigned by Vulintus during manufacturing.
 
 ofbc('PRIMARY_MODULE') = 110;                         %Primary module name, for systems with interchangeable modules.
 ofbc('PRIMARY_INPUT') = 111;                          %Primary input name, for modules with multiple input signals.
@@ -231,6 +232,9 @@ ofbc('MOTOTRAK_V3P0_OUTCOME') = 2500;                 %MotoTrak version 3.0 tria
 ofbc('MOTOTRAK_V3P0_SIGNAL') = 2501;                  %MotoTrak version 3.0 trial stream signal.
 
 ofbc('POKE_BITMASK') = 2560;                          %Nosepoke status bitmask, typically written only when it changes.
+
+ofbc('CAPSENSE_BITMASK') = 2576;                      %Capacitive sensor status bitmask, typically written only when it changes.
+ofbc('CAPSENSE_VALUE') = 2577;                        %Capacitive sensor reading for one sensor, in ADC ticks or clock cycles.
 
 ofbc('OUTPUT_TRIGGER_NAME') = 2600;                   %Name/description of the output trigger type for the given index.
 

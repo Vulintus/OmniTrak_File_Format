@@ -280,6 +280,10 @@ This is the principal list for *.OmniTrak File Block Codes (OFBC) data block cod
 | 0x0A00 | 2560 | [POKE_BITMASK](/Data%20Block%20Descriptions/0x0A00-0x0AFF.md#block-code-0x0A00) | Nosepoke status bitmask, typically written only when it changes. |
 ||
 ||
+| 0x0A10 | 2576 | [CAPSENSE_BITMASK](/Data%20Block%20Descriptions/0x0A00-0x0AFF.md#block-code-0x0A10) | Capacitive sensor status bitmask, typically written only when it changes. |
+| 0x0A11 | 2577 | [CAPSENSE_VALUE](/Data%20Block%20Descriptions/0x0A00-0x0AFF.md#block-code-0x0A11) | Capacitive sensor reading for one sensor, in ADC ticks or clock cycles. |
+||
+||
 | 0x0A28 | 2600 | [OUTPUT_TRIGGER_NAME](/Data%20Block%20Descriptions/0x0A00-0x0AFF.md#block-code-0x0A28) | Name/description of the output trigger type for the given index. |
 ||
 ||

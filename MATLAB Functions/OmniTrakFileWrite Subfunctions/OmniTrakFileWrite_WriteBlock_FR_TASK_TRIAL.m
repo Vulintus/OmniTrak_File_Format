@@ -1,4 +1,4 @@
-function OmniTrakFileWrite_WriteBlock_FR_TASK_TRIAL(fid, block_code, behavior, trial, licks)
+function OmniTrakFileWrite_WriteBlock_FR_TASK_TRIAL(fid, block_code, behavior)
 
 %
 % OmniTrakFileWrite_WriteBlock_FR_TASK_TRIAL.m
@@ -20,15 +20,23 @@ fwrite(fid,block_code,'uint16');                                            %Omn
 fwrite(fid,data_block_version,'uint16');                                    %Write the FR_TASK_TRIAL block version.
 
 fwrite(fid, behavior.session.count.trial, 'uint16');                        %Trial number.
-fwrite(fid, datenum(trial.time.start), 'float64');                          %Trial start timestamp (serial date number).
-fwrite(fid, trial.outcome(1), 'uchar');                                     %Trial outcome.
-fwrite(fid, trial.params.target_poke, 'uint8');                             %Target nosepoke.
+
+dt = behavior.session.trial(end).time.start.datetime;                       %Grab the trial start time.
+fwrite(fid, datenum(dt), 'float64');                                        %#ok<DATNM> %Trial start timestamp (serial date number).
+
+fwrite(fid, behavior.session.trial(end).outcome(1), 'uchar');               %Trial outcome.
+
+poke_i = behavior.session.trial(end).params.target_poke;                    %Grab the target poke index.
+fwrite(fid, poke_i, 'uint8');                                               %Target nosepoke.
 fwrite(fid, behavior.session.params.thresh, 'uint8');                       %Required number of pokes.
-fwrite(fid, max(trial.signal.plot(:,2)), 'uint16');                         %Poke count.
-fwrite(fid, trial.time.reward, 'float32');                                  %Hit time (0 for misses).
+fwrite(fid, behavior.session.trial(end).count.nosepoke(poke_i), 'uint16');  %Poke count.
+
+if isempty(behavior.session.trial(end).time.reward)                         %If no reward was delivered...
+    fwrite(fid, 0, 'float32');                                              %Hit time (0 for misses).
+else                                                                        %Otherwise...
+    fwrite(fid, behavior.session.trial(end).time.reward(1), 'float32');     %Hit time.
+end
+
 fwrite(fid, behavior.session.params.reward_dur, 'float32');                 %Reward window duration (lick availability), in seconds.
-fwrite(fid, length(licks), 'uint16');                                       %Number of licks after the hit.
-% for i = 1:length(licks)                                                     %Step through each lick.
-%     fwrite(fid, licks(i), 'float32');                                       %Write each lick time.
-% end
-fwrite(fid, behavior.session.count.feed, 'uint16');                          %Total Feed count.
+fwrite(fid, behavior.session.trial(end).count.lick, 'uint16');              %Number of licks after the hit.
+fwrite(fid, length(behavior.session.trial(end).time.reward), 'uint16');     %Total reward count.

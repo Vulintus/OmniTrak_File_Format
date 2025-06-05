@@ -8,7 +8,7 @@
 	Library documentation:
 	https://github.com/Vulintus/OmniTrak_File_Format
 
-	This file was programmatically generated: 2025-02-14, 06:45:34 (UTC)
+	This file was programmatically generated: 2025-06-05, 04:13:26 (UTC)
 */
 
 #ifndef _VULINTUS_OFBC_BLOCK_CODES_H_
@@ -60,7 +60,7 @@ const uint16_t OFBC_SYSTEM_SN = 0x0068;                            // System ser
 const uint16_t OFBC_SYSTEM_MFR = 0x0069;                           // Manufacturer name for non-Vulintus systems.
 const uint16_t OFBC_COMPUTER_NAME = 0x006A;                        // Windows PC computer name.
 const uint16_t OFBC_COM_PORT = 0x006B;                             // The COM port of a computer-connected system.
-const uint16_t OFBC_DEVICE_ALIAS = 0x006C;                         // Human-readable Adjective + Noun alias/name for the device, assigned by Vulintus during manufacturing
+const uint16_t OFBC_DEVICE_ALIAS = 0x006C;                         // Human-readable Adjective + Noun alias/name for the device, assigned by Vulintus during manufacturing.
 
 const uint16_t OFBC_PRIMARY_MODULE = 0x006E;                       // Primary module name, for systems with interchangeable modules.
 const uint16_t OFBC_PRIMARY_INPUT = 0x006F;                        // Primary input name, for modules with multiple input signals.
@@ -237,6 +237,9 @@ const uint16_t OFBC_MOTOTRAK_V3P0_OUTCOME = 0x09C4;                // MotoTrak v
 const uint16_t OFBC_MOTOTRAK_V3P0_SIGNAL = 0x09C5;                 // MotoTrak version 3.0 trial stream signal.
 
 const uint16_t OFBC_POKE_BITMASK = 0x0A00;                         // Nosepoke status bitmask, typically written only when it changes.
+
+const uint16_t OFBC_CAPSENSE_BITMASK = 0x0A10;                     // Capacitive sensor status bitmask, typically written only when it changes.
+const uint16_t OFBC_CAPSENSE_VALUE = 0x0A11;                       // Capacitive sensor reading for one sensor, in ADC ticks or clock cycles.
 
 const uint16_t OFBC_OUTPUT_TRIGGER_NAME = 0x0A28;                  // Name/description of the output trigger type for the given index.
 

@@ -1,15 +1,16 @@
 function block_read = OmniTrakFileRead_ReadBlock_Dictionary(fid)
 
-%OmniTrakFileRead_ReadBlock_Dictionary.m
 %
-%	Vulintus, Inc.
+% OmniTrakFileRead_ReadBlock_Dictionary.m
+%
+%	copyright 2025, Vulintus, Inc.
 %
 %	OmniTrak file data block read subfunction router.
 %
 %	Library documentation:
 %	https://github.com/Vulintus/OmniTrak_File_Format
 %
-%	This function was programmatically generated: 2025-02-14, 06:45:35 (UTC)
+%	This function was programmatically generated: 2025-06-05, 04:13:26 (UTC)
 %
 
 block_read = dictionary;
@@ -116,7 +117,7 @@ block_read(106) = struct('def_name', 'COMPUTER_NAME', 'fcn', @(data)OmniTrakFile
 % The COM port of a computer-connected system.
 block_read(107) = struct('def_name', 'COM_PORT', 'fcn', @(data)OmniTrakFileRead_ReadBlock_COM_PORT(fid,data));
 
-% Human-readable Adjective + Noun alias/name for the device, assigned by Vulintus during manufacturing
+% Human-readable Adjective + Noun alias/name for the device, assigned by Vulintus during manufacturing.
 block_read(108) = struct('def_name', 'DEVICE_ALIAS', 'fcn', @(data)OmniTrakFileRead_ReadBlock_DEVICE_ALIAS(fid,data));
 
 
@@ -560,6 +561,13 @@ block_read(2501) = struct('def_name', 'MOTOTRAK_V3P0_SIGNAL', 'fcn', @(data)Omni
 
 % Nosepoke status bitmask, typically written only when it changes.
 block_read(2560) = struct('def_name', 'POKE_BITMASK', 'fcn', @(data)OmniTrakFileRead_ReadBlock_POKE_BITMASK(fid,data));
+
+
+% Capacitive sensor status bitmask, typically written only when it changes.
+block_read(2576) = struct('def_name', 'CAPSENSE_BITMASK', 'fcn', @(data)OmniTrakFileRead_ReadBlock_CAPSENSE_BITMASK(fid,data));
+
+% Capacitive sensor reading for one sensor, in ADC ticks or clock cycles.
+block_read(2577) = struct('def_name', 'CAPSENSE_VALUE', 'fcn', @(data)OmniTrakFileRead_ReadBlock_CAPSENSE_VALUE(fid,data));
 
 
 % Name/description of the output trigger type for the given index.
