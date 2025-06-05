@@ -9,23 +9,21 @@ ver = fread(fid,1,'uint8');                                                 %#ok
 
 data = OmniTrakFileRead_Check_Field_Name(data,'poke',...
     {'datenum','micros','status'});                                         %Call the subfunction to check for existing fieldnames.         
-j = size(data.poke.datenum,1) + 1;                                          %Find the next index for the pellet timestamp for this dispenser.
-if isempty(data.poke.datenum)                                               %If the serial date number timestamp field is empty...
-    data.poke.datenum = NaN;                                                %Initialize the field with a NaN.
-end
-data.poke.datenum(j,1) = fread(fid,1,'float64');                            %Save the serial date number timestamp.
-if isempty(data.poke.micros)                                                %If the microcontroller microsecond timestamp field is empty...
-    data.poke.micros = NaN;                                                 %Initialize the field with a NaN.
-end
-data.poke.micros(j,1) = fread(fid,1,'float32');                             %Save the microcontroller microsecond timestamp.
-num_pokes = fread(fid,1,'uint8');                                           %Read in the number of nosepokes.
-poke_mask = fread(fid,1,'uint8');                                           %Read in the nosepoke bitmask.
-poke_status = zeros(1,num_pokes);                                           %Create a matrix to hold the nosepoke status.
-for i = 1:num_pokes                                                         %Step through each nosepoke.
-    poke_status(i) = bitget(poke_mask,i);                                   %Grab the status for each nosepoke.
-end
-if j == 1                                                                   %If this is the first nosepoke event...
-    data.poke.status = poke_status;                                         %Create the status matrix.
+i = size(data.poke.datenum,1) + 1;                                          %Find the next index for the pellet timestamp for this dispenser.
+
+if i == 1                                                                   %If this is the first bitmask reading...
+    data.poke.datenum = fread(fid,1,'float64');                             %Save the serial date number timestamp.
+    data.poke.micros = fread(fid,1,'float32');                              %Save the microcontroller microsecond timestamp.
 else                                                                        %Otherwise...
-    data.poke.status(j,:) = poke_status;                                    %Add the new status to the matrix.
+    data.poke.datenum(i,1) = fread(fid,1,'float64');                        %Save the serial date number timestamp.
+    data.poke.micros(i,1) = fread(fid,1,'float32');                         %Save the microcontroller microsecond timestamp.
+end
+
+num_sensors = fread(fid,1,'uint8');                                         %Read in the number of sensors.
+capsense_mask = fread(fid,1,'uint8');                                       %Read in the sensor status bitmask.
+capsense_status = bitget(capsense_mask,1:num_sensors);                      %Grab the status for each nosepoke.
+if i == 1                                                                   %If this is the first nosepoke event...
+    data.poke.status = capsense_status;                                     %Create the status matrix.
+else                                                                        %Otherwise...
+    data.poke.status(i,:) = capsense_status;                                %Add the new status to the matrix.
 end
