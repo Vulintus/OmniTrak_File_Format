@@ -1,11 +1,11 @@
-function OmniTrakFileWrite_WriteBlock_Timestamped_uint16(fid, block_code, uint16_val, varargin)
+function OmniTrakFileWrite_WriteBlock_DateTime_uint16(fid, block_code, uint16_val, varargin)
 
 %
-% OmniTrakFileWrite_WriteBlock_Timestamped_uint16.m
+% OmniTrakFileWrite_WriteBlock_DateTime_uint16.m
 % 
 %   copyright 2025, Vulintus, Inc.
 %
-%   OMNITRAKFILEWRITE_WRITEBLOCK_TIMESTAMPED_UINT16 write a block with a
+%   OMNITRAKFILEWRITE_WRITEBLOCK_DATETIME_UINT16 write a block with a
 %   uint16 value, preceded by a float64 serial date number, to an
 %   *.OmniTram file.
 %   

@@ -10,7 +10,7 @@ function ofbc = Load_OmniTrak_File_Block_Codes
 %	Library documentation:
 %	https://github.com/Vulintus/OmniTrak_File_Format
 %
-%	This function was programmatically generated: 2025-06-05, 04:13:26 (UTC)
+%	This function was programmatically generated: 2025-06-18, 08:38:18 (UTC)
 %
 
 ofbc = dictionary;
@@ -75,24 +75,29 @@ ofbc('CTRL_FW_TIME') = 143;                           %Controller firmware uploa
 ofbc('MODULE_FW_FILENAME') = 144;                     %OTMP Module firmware filename, copied from the macro, written as characters.
 ofbc('MODULE_FW_DATE') = 145;                         %OTMP Module firmware upload date, copied from the macro, written as characters.
 ofbc('MODULE_FW_TIME') = 146;                         %OTMP Module firmware upload time, copied from the macro, written as characters.
+ofbc('MODULE_NAME') = 147;                            %OTMP module name, written as characters.
+ofbc('MODULE_SKU') = 148;                             %OTMP Module SKU, typically written as 4 characters.
 
+ofbc('MODULE_SN') = 153;                              %OTMP Module serial number, written as characters.
 ofbc('WINC1500_MAC_ADDR') = 150;                      %The MAC address of the device's ATWINC1500 module.
 ofbc('WINC1500_IP4_ADDR') = 151;                      %The local IPv4 address of the device's ATWINC1500 module.
 
-ofbc('BATTERY_SOC') = 170;                            %Current battery state-of charge, in percent, measured the BQ27441
-ofbc('BATTERY_VOLTS') = 171;                          %Current battery voltage, in millivolts, measured by the BQ27441
-ofbc('BATTERY_CURRENT') = 172;                        %Average current draw from the battery, in milli-amps, measured by the BQ27441
-ofbc('BATTERY_FULL') = 173;                           %Full capacity of the battery, in milli-amp hours, measured by the BQ27441
-ofbc('BATTERY_REMAIN') = 174;                         %Remaining capacity of the battery, in milli-amp hours, measured by the BQ27441
-ofbc('BATTERY_POWER') = 175;                          %Average power draw, in milliWatts, measured by the BQ27441
-ofbc('BATTERY_SOH') = 176;                            %Battery state-of-health, in percent, measured by the BQ27441
-ofbc('BATTERY_STATUS') = 177;                         %Combined battery state-of-charge, voltage, current, capacity, power, and state-of-health, measured by the BQ27441
+ofbc('BATTERY_SOC') = 170;                            %Current battery state-of charge, in percent.
+ofbc('BATTERY_VOLTS') = 171;                          %Current battery voltage, in millivolts.
+ofbc('BATTERY_CURRENT') = 172;                        %Average current draw from the battery, in milli-amps.
+ofbc('BATTERY_FULL') = 173;                           %Full capacity of the battery, in milli-amp hours.
+ofbc('BATTERY_REMAIN') = 174;                         %Remaining capacity of the battery, in milli-amp hours.
+ofbc('BATTERY_POWER') = 175;                          %Average power draw, in milliWatts.
+ofbc('BATTERY_SOH') = 176;                            %Battery state-of-health, in percent.
+ofbc('BATTERY_STATUS') = 177;                         %Combined battery state-of-charge, voltage, current, capacity, power, and state-of-health.
 
 ofbc('FEED_SERVO_MAX_RPM') = 190;                     %Actual rotation rate, in RPM, of the feeder servo (OmniHome) when set to 180 speed.
 ofbc('FEED_SERVO_SPEED') = 191;                       %Current speed setting (0-180) for the feeder servo (OmniHome).
 
 ofbc('SUBJECT_NAME') = 200;                           %A single subject's name.
 ofbc('GROUP_NAME') = 201;                             %The subject's or subjects' experimental group name.
+
+ofbc('ADMIN_NAME') = 224;                             %Test administrator's name.
 
 ofbc('EXP_NAME') = 300;                               %The user's name for the current experiment.
 ofbc('TASK_TYPE') = 301;                              %The user's name for task type, which can be a variant of the overall experiment type.
@@ -212,6 +217,7 @@ ofbc('CALIBRATION_BASELINE') = 2200;                  %Starting calibration base
 ofbc('CALIBRATION_SLOPE') = 2201;                     %Starting calibration slope coefficient, for the specified module index.
 ofbc('CALIBRATION_BASELINE_ADJUST') = 2202;           %Timestamped in-session calibration baseline coefficient adjustment, for the specified module index.
 ofbc('CALIBRATION_SLOPE_ADJUST') = 2203;              %Timestamped in-session calibration slope coefficient adjustment, for the specified module index.
+ofbc('CALIBRATION_DATE') = 2204;                      %Most recent calibration date/time, for the specified module index.
 
 ofbc('HIT_THRESH_TYPE') = 2300;                       %Type of hit threshold (i.e. peak force), for the specified input.
 
@@ -256,3 +262,5 @@ ofbc('MODULE_CENTER_OFFSET') = 2731;                  %Center offset, in millime
 ofbc('STAP_2AFC_TRIAL_OUTCOME') = 2740;               %SensiTrak proprioception discrimination task trial outcome data.
 
 ofbc('FR_TASK_TRIAL') = 2800;                         %Fixed reinforcement task trial data.
+
+ofbc('SCOPE_TRACE') = 3072;                           %An oscilloscope recording, in units of volts, from one or multiple channels, with time units, in seconds, along with a variable number of parameters describing the recording conditions.

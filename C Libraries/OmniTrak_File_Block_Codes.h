@@ -8,7 +8,7 @@
 	Library documentation:
 	https://github.com/Vulintus/OmniTrak_File_Format
 
-	This file was programmatically generated: 2025-06-05, 04:13:26 (UTC)
+	This file was programmatically generated: 2025-06-18, 08:38:18 (UTC)
 */
 
 #ifndef _VULINTUS_OFBC_BLOCK_CODES_H_
@@ -80,24 +80,30 @@ const uint16_t OFBC_CTRL_FW_TIME = 0x008F;                         // Controller
 const uint16_t OFBC_MODULE_FW_FILENAME = 0x0090;                   // OTMP Module firmware filename, copied from the macro, written as characters.
 const uint16_t OFBC_MODULE_FW_DATE = 0x0091;                       // OTMP Module firmware upload date, copied from the macro, written as characters.
 const uint16_t OFBC_MODULE_FW_TIME = 0x0092;                       // OTMP Module firmware upload time, copied from the macro, written as characters.
+const uint16_t OFBC_MODULE_NAME = 0x0093;                          // OTMP module name, written as characters.
+const uint16_t OFBC_MODULE_SKU = 0x0094;                           // OTMP Module SKU, typically written as 4 characters.
+
+const uint16_t OFBC_MODULE_SN = 0x0099;                            // OTMP Module serial number, written as characters.
 
 const uint16_t OFBC_WINC1500_MAC_ADDR = 0x0096;                    // The MAC address of the device's ATWINC1500 module.
 const uint16_t OFBC_WINC1500_IP4_ADDR = 0x0097;                    // The local IPv4 address of the device's ATWINC1500 module.
 
-const uint16_t OFBC_BATTERY_SOC = 0x00AA;                          // Current battery state-of charge, in percent, measured the BQ27441
-const uint16_t OFBC_BATTERY_VOLTS = 0x00AB;                        // Current battery voltage, in millivolts, measured by the BQ27441
-const uint16_t OFBC_BATTERY_CURRENT = 0x00AC;                      // Average current draw from the battery, in milli-amps, measured by the BQ27441
-const uint16_t OFBC_BATTERY_FULL = 0x00AD;                         // Full capacity of the battery, in milli-amp hours, measured by the BQ27441
-const uint16_t OFBC_BATTERY_REMAIN = 0x00AE;                       // Remaining capacity of the battery, in milli-amp hours, measured by the BQ27441
-const uint16_t OFBC_BATTERY_POWER = 0x00AF;                        // Average power draw, in milliWatts, measured by the BQ27441
-const uint16_t OFBC_BATTERY_SOH = 0x00B0;                          // Battery state-of-health, in percent, measured by the BQ27441
-const uint16_t OFBC_BATTERY_STATUS = 0x00B1;                       // Combined battery state-of-charge, voltage, current, capacity, power, and state-of-health, measured by the BQ27441
+const uint16_t OFBC_BATTERY_SOC = 0x00AA;                          // Current battery state-of charge, in percent.
+const uint16_t OFBC_BATTERY_VOLTS = 0x00AB;                        // Current battery voltage, in millivolts.
+const uint16_t OFBC_BATTERY_CURRENT = 0x00AC;                      // Average current draw from the battery, in milli-amps.
+const uint16_t OFBC_BATTERY_FULL = 0x00AD;                         // Full capacity of the battery, in milli-amp hours.
+const uint16_t OFBC_BATTERY_REMAIN = 0x00AE;                       // Remaining capacity of the battery, in milli-amp hours.
+const uint16_t OFBC_BATTERY_POWER = 0x00AF;                        // Average power draw, in milliWatts.
+const uint16_t OFBC_BATTERY_SOH = 0x00B0;                          // Battery state-of-health, in percent.
+const uint16_t OFBC_BATTERY_STATUS = 0x00B1;                       // Combined battery state-of-charge, voltage, current, capacity, power, and state-of-health.
 
 const uint16_t OFBC_FEED_SERVO_MAX_RPM = 0x00BE;                   // Actual rotation rate, in RPM, of the feeder servo (OmniHome) when set to 180 speed.
 const uint16_t OFBC_FEED_SERVO_SPEED = 0x00BF;                     // Current speed setting (0-180) for the feeder servo (OmniHome).
 
 const uint16_t OFBC_SUBJECT_NAME = 0x00C8;                         // A single subject's name.
 const uint16_t OFBC_GROUP_NAME = 0x00C9;                           // The subject's or subjects' experimental group name.
+
+const uint16_t OFBC_ADMIN_NAME = 0x00E0;                           // Test administrator's name.
 
 const uint16_t OFBC_EXP_NAME = 0x012C;                             // The user's name for the current experiment.
 const uint16_t OFBC_TASK_TYPE = 0x012D;                            // The user's name for task type, which can be a variant of the overall experiment type.
@@ -217,6 +223,7 @@ const uint16_t OFBC_CALIBRATION_BASELINE = 0x0898;                 // Starting c
 const uint16_t OFBC_CALIBRATION_SLOPE = 0x0899;                    // Starting calibration slope coefficient, for the specified module index.
 const uint16_t OFBC_CALIBRATION_BASELINE_ADJUST = 0x089A;          // Timestamped in-session calibration baseline coefficient adjustment, for the specified module index.
 const uint16_t OFBC_CALIBRATION_SLOPE_ADJUST = 0x089B;             // Timestamped in-session calibration slope coefficient adjustment, for the specified module index.
+const uint16_t OFBC_CALIBRATION_DATE = 0x089C;                     // Most recent calibration date/time, for the specified module index.
 
 const uint16_t OFBC_HIT_THRESH_TYPE = 0x08FC;                      // Type of hit threshold (i.e. peak force), for the specified input.
 
@@ -261,5 +268,7 @@ const uint16_t OFBC_MODULE_CENTER_OFFSET = 0x0AAB;                 // Center off
 const uint16_t OFBC_STAP_2AFC_TRIAL_OUTCOME = 0x0AB4;              // SensiTrak proprioception discrimination task trial outcome data.
 
 const uint16_t OFBC_FR_TASK_TRIAL = 0x0AF0;                        // Fixed reinforcement task trial data.
+
+const uint16_t OFBC_SCOPE_TRACE = 0x0C00;                          // An oscilloscope recording, in units of volts, from one or multiple channels, with time units, in seconds, along with a variable number of parameters describing the recording conditions.
 
 #endif                                                             // #ifndef _VULINTUS_OFBC_BLOCK_CODES_H_

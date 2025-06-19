@@ -23,7 +23,7 @@ function Update_OmniTrak_File_Format_Libraries
 
 
 tbl_start = '<!---table starts below--->';                                  %Set the expected comment marking the table start.
-tbl_end = '<!---table ends above--->';                                      %Set the expected comment marking the table start.
+tbl_end = '<!---table ends above--->';                                      %Set the expected comment marking the table end.
 repo_url = 'https://github.com/Vulintus/OmniTrak_File_Format';              %Set the repository URL.
 
 %Set the expected names of the principal definition list.
@@ -398,6 +398,7 @@ for i = 1:length(ofbc_codes)                                                %Ste
         fprintf(subfid,['error(''Need to finish coding for OFBC block '...
             '%s ("%s")!'');\n'], ofbc_codes(i).hex, def_name);              %Print an error message to show.
         fclose(subfid);                                                     %Close the file.
+        rehash path;                                                        %Refresh function and file system path caches
         eval(sprintf('dbstop in ''%s''', subfcn_name));                     %Add a debugging breakpoint to the new subfunction.
     end
     if ~isempty(def_comment)                                                %If there's a comment to include...

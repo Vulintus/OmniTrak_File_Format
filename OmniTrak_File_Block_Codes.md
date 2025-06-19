@@ -82,20 +82,23 @@ This is the principal list for *.OmniTrak File Block Codes (OFBC) data block cod
 | 0x0090 | 144 | [MODULE_FW_FILENAME](/Data%20Block%20Descriptions/0x0000-0x00FF.md#block-code-0x0090) | OTMP Module firmware filename, copied from the macro, written as characters. |
 | 0x0091 | 145 | [MODULE_FW_DATE](/Data%20Block%20Descriptions/0x0000-0x00FF.md#block-code-0x0091) | OTMP Module firmware upload date, copied from the macro, written as characters. |
 | 0x0092 | 146 | [MODULE_FW_TIME](/Data%20Block%20Descriptions/0x0000-0x00FF.md#block-code-0x0092) | OTMP Module firmware upload time, copied from the macro, written as characters. |
+| 0x0093 | 147 | [MODULE_NAME](/Data%20Block%20Descriptions/0x0000-0x00FF.md#block-code-0x0093) | OTMP module name, written as characters. |
+| 0x0094 | 148 | [MODULE_SKU](/Data%20Block%20Descriptions/0x0000-0x00FF.md#block-code-0x0094) | OTMP Module SKU, typically written as 4 characters. |
 ||
 ||
+| 0x0099 | 153 | [MODULE_SN](/Data%20Block%20Descriptions/0x0000-0x00FF.md#block-code-0x0099) | OTMP Module serial number, written as characters. |
 | 0x0096 | 150 | [WINC1500_MAC_ADDR](/Data%20Block%20Descriptions/0x0000-0x00FF.md#block-code-0x0096) | The MAC address of the device's ATWINC1500 module. |
 | 0x0097 | 151 | [WINC1500_IP4_ADDR](/Data%20Block%20Descriptions/0x0000-0x00FF.md#block-code-0x0097) | The local IPv4 address of the device's ATWINC1500 module. |
 ||
 ||
-| 0x00AA | 170 | [BATTERY_SOC](/Data%20Block%20Descriptions/0x0000-0x00FF.md#block-code-0x00AA) | Current battery state-of charge, in percent, measured the BQ27441 |
-| 0x00AB | 171 | [BATTERY_VOLTS](/Data%20Block%20Descriptions/0x0000-0x00FF.md#block-code-0x00AB) | Current battery voltage, in millivolts, measured by the BQ27441 |
-| 0x00AC | 172 | [BATTERY_CURRENT](/Data%20Block%20Descriptions/0x0000-0x00FF.md#block-code-0x00AC) | Average current draw from the battery, in milli-amps, measured by the BQ27441 |
-| 0x00AD | 173 | [BATTERY_FULL](/Data%20Block%20Descriptions/0x0000-0x00FF.md#block-code-0x00AD) | Full capacity of the battery, in milli-amp hours, measured by the BQ27441 |
-| 0x00AE | 174 | [BATTERY_REMAIN](/Data%20Block%20Descriptions/0x0000-0x00FF.md#block-code-0x00AE) | Remaining capacity of the battery, in milli-amp hours, measured by the BQ27441 |
-| 0x00AF | 175 | [BATTERY_POWER](/Data%20Block%20Descriptions/0x0000-0x00FF.md#block-code-0x00AF) | Average power draw, in milliWatts, measured by the BQ27441 |
-| 0x00B0 | 176 | [BATTERY_SOH](/Data%20Block%20Descriptions/0x0000-0x00FF.md#block-code-0x00B0) | Battery state-of-health, in percent, measured by the BQ27441 |
-| 0x00B1 | 177 | [BATTERY_STATUS](/Data%20Block%20Descriptions/0x0000-0x00FF.md#block-code-0x00B1) | Combined battery state-of-charge, voltage, current, capacity, power, and state-of-health, measured by the BQ27441 |
+| 0x00AA | 170 | [BATTERY_SOC](/Data%20Block%20Descriptions/0x0000-0x00FF.md#block-code-0x00AA) | Current battery state-of charge, in percent. |
+| 0x00AB | 171 | [BATTERY_VOLTS](/Data%20Block%20Descriptions/0x0000-0x00FF.md#block-code-0x00AB) | Current battery voltage, in millivolts. |
+| 0x00AC | 172 | [BATTERY_CURRENT](/Data%20Block%20Descriptions/0x0000-0x00FF.md#block-code-0x00AC) | Average current draw from the battery, in milli-amps. |
+| 0x00AD | 173 | [BATTERY_FULL](/Data%20Block%20Descriptions/0x0000-0x00FF.md#block-code-0x00AD) | Full capacity of the battery, in milli-amp hours. |
+| 0x00AE | 174 | [BATTERY_REMAIN](/Data%20Block%20Descriptions/0x0000-0x00FF.md#block-code-0x00AE) | Remaining capacity of the battery, in milli-amp hours. |
+| 0x00AF | 175 | [BATTERY_POWER](/Data%20Block%20Descriptions/0x0000-0x00FF.md#block-code-0x00AF) | Average power draw, in milliWatts. |
+| 0x00B0 | 176 | [BATTERY_SOH](/Data%20Block%20Descriptions/0x0000-0x00FF.md#block-code-0x00B0) | Battery state-of-health, in percent. |
+| 0x00B1 | 177 | [BATTERY_STATUS](/Data%20Block%20Descriptions/0x0000-0x00FF.md#block-code-0x00B1) | Combined battery state-of-charge, voltage, current, capacity, power, and state-of-health. |
 ||
 ||
 | 0x00BE | 190 | [FEED_SERVO_MAX_RPM](/Data%20Block%20Descriptions/0x0000-0x00FF.md#block-code-0x00BE) | Actual rotation rate, in RPM, of the feeder servo (OmniHome) when set to 180 speed. |
@@ -104,6 +107,9 @@ This is the principal list for *.OmniTrak File Block Codes (OFBC) data block cod
 ||
 | 0x00C8 | 200 | [SUBJECT_NAME](/Data%20Block%20Descriptions/0x0000-0x00FF.md#block-code-0x00C8) | A single subject's name. |
 | 0x00C9 | 201 | [GROUP_NAME](/Data%20Block%20Descriptions/0x0000-0x00FF.md#block-code-0x00C9) | The subject's or subjects' experimental group name. |
+||
+||
+| 0x00E0 | 224 | [ADMIN_NAME](/Data%20Block%20Descriptions/0x0000-0x00FF.md#block-code-0x00E0) | Test administrator's name. |
 ||
 ||
 | 0x012C | 300 | [EXP_NAME](/Data%20Block%20Descriptions/0x0100-0x01FF.md#block-code-0x012C) | The user's name for the current experiment. |
@@ -252,6 +258,7 @@ This is the principal list for *.OmniTrak File Block Codes (OFBC) data block cod
 | 0x0899 | 2201 | [CALIBRATION_SLOPE](/Data%20Block%20Descriptions/0x0800-0x08FF.md#block-code-0x0899) | Starting calibration slope coefficient, for the specified module index. |
 | 0x089A | 2202 | [CALIBRATION_BASELINE_ADJUST](/Data%20Block%20Descriptions/0x0800-0x08FF.md#block-code-0x089A) | Timestamped in-session calibration baseline coefficient adjustment, for the specified module index. |
 | 0x089B | 2203 | [CALIBRATION_SLOPE_ADJUST](/Data%20Block%20Descriptions/0x0800-0x08FF.md#block-code-0x089B) | Timestamped in-session calibration slope coefficient adjustment, for the specified module index. |
+| 0x089C | 2204 | [CALIBRATION_DATE](/Data%20Block%20Descriptions/0x0800-0x08FF.md#block-code-0x089C) | Most recent calibration date/time, for the specified module index. |
 ||
 ||
 | 0x08FC | 2300 | [HIT_THRESH_TYPE](/Data%20Block%20Descriptions/0x0800-0x08FF.md#block-code-0x08FC) | Type of hit threshold (i.e. peak force), for the specified input. |
@@ -310,3 +317,6 @@ This is the principal list for *.OmniTrak File Block Codes (OFBC) data block cod
 ||
 ||
 | 0x0AF0 | 2800 | [FR_TASK_TRIAL](/Data%20Block%20Descriptions/0x0A00-0x0AFF.md#block-code-0x0AF0) | Fixed reinforcement task trial data. |
+||
+||
+| 0x0C00 | 3072 | [SCOPE_TRACE](/Data%20Block%20Descriptions/0x0C00-0x0CFF.md#block-code-0x0C00) | An oscilloscope recording, in units of volts, from one or multiple channels, with time units, in seconds, along with a variable number of parameters describing the recording conditions. |

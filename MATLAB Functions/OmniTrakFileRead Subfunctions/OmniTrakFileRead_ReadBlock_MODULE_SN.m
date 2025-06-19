@@ -1,27 +1,26 @@
-function data = OmniTrakFileRead_ReadBlock_MODULE_FW_FILENAME(fid,data)
+function data =  OmniTrakFileRead_ReadBlock_MODULE_SN(fid,data)
 
 %
-% OmniTrakFileRead_ReadBlock_MODULE_FW_FILENAME.m
+% OmniTrakFileRead_ReadBlock_MODULE_SN.m
 %   
 %   copyright 2025, Vulintus, Inc.
 %
-%   OmniTrakFileRead_ReadBlock_MODULE_FW_FILENAME reads in the 
-%   "MODULE_FW_FILENAME" data block from an *.OmniTrak format file. This 
-%   block is intended to contain the firmware filename, written as 
-%   characters, of a connected module, as well as the module's port index.
+%   OMNITRAKFILEREAD_READBLOCK_MODULE_SN reads in the "MODULE_SN" data
+%   block from an *.OmniTrak format file. This block is intended to contain
+%   the serial number, written as characters, of a connected module, as 
+%   well as the module's port index.
 %
 %	OmniTrak File Block Code (OFBC):
-%		BLOCK VALUE:	0x0090
-%		DEFINITION:		MODULE_FW_FILENAME
-%		DESCRIPTION:	OTMP Module firmware filename, copied from the 
-%                       macro, written as characters.
+%		BLOCK VALUE:	0x0099
+%		DEFINITION:		MODULE_SN
+%		DESCRIPTION:	OTMP Module serial number, written as characters.
 %
 %   UPDATE LOG:
 %   2025-06-19 - Drew Sloan - Function first created.
 %
 
 data = OmniTrakFileRead_Check_Field_Name(data,'device',...
-    {'port','firmware'});                                                   %Call the subfunction to check for existing fieldnames.         
+    {'port','serial_num'});                                                 %Call the subfunction to check for existing fieldnames.         
 
 port_i = fread(fid,1,'uint8');                                              %Read in the port index.
 existing_ports = vertcat(data.device.port);                                 %Fetch all the port indices already loaded in the structure...
@@ -35,5 +34,5 @@ else                                                                        %Oth
 end
 
 N = fread(fid,1,'uint8');                                                   %Read in the number of characters.
-data.device(i).firmware(1).filename = fread(fid,N,'*char')';                %Add the device firmware filename.
+data.device(i).serial_num = fread(fid,N,'*char')';                          %Add the device serial number.
 data.device(i).port = port_i;                                               %Add the port index.

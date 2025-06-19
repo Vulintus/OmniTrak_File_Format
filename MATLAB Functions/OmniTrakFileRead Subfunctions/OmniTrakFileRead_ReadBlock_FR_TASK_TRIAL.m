@@ -1,10 +1,25 @@
 function data = OmniTrakFileRead_ReadBlock_FR_TASK_TRIAL(fid,data)
 
+%
+% OmniTrakFileRead_ReadBlock_FR_TASK_TRIAL.m
+%   
+%   copyright 2025, Vulintus, Inc.
+%
+%   OMNITRAKFILEREAD_READBLOCK_FR_TASK_TRIAL reads in the "FR_TASK_TRIAL" 
+%   data block from an *.OmniTrak format file. This block is intended to 
+%   contain the parameters and outcomes for one Fixed Reinforcment behavior
+%   trial.
+%
 %	OmniTrak File Block Code (OFBC):
-%		BLOCK VALUE:	2800
+%		BLOCK VALUE:	0x0AF0
 %		DEFINITION:		FR_TASK_TRIAL
 %		DESCRIPTION:	Fixed reinforcement task trial data.
-
+%
+%   UPDATE LOG:
+%   ????-??-?? - Drew Sloan - Function first created.
+%   2025-06-19 - Drew Sloan - Updated function description to match the
+%                             "ReadBlock" documentation style.
+%
 
 data = OmniTrakFileRead_Check_Field_Name(data,'trial');                     %Call the subfunction to check for existing fieldnames.
 

@@ -1,9 +1,30 @@
 function data = OmniTrakFileRead_ReadBlock_POKE_BITMASK(fid,data)
 
+%
+% OmniTrakFileRead_ReadBlock_POKE_BITMASK.m
+%   
+%   copyright 2025, Vulintus, Inc.
+%
+%   OMNITRAKFILEREAD_READBLOCK_POKE_BITMASK reads in the "POKE_BITMASK" 
+%   data block from an *.OmniTrak format file. This block is intended to 
+%   contain an 8-bit bitmask with bits indicating the poked/unpoked status
+%   of a bank of nosepokes, paired both a computer clock timestamp (serial
+%   date number) and a 32-bit microcontroller clock timestamp (typically
+%   millis() or micros()).
+%
 %	OmniTrak File Block Code (OFBC):
-%		BLOCK VALUE:	2560
+%		BLOCK VALUE:	0x0A00
 %		DEFINITION:		POKE_BITMASK
-%		DESCRIPTION:	Nosepoke status bitmask, typically written only when it changes.
+%		DESCRIPTION:	Nosepoke status bitmask, typically written only 
+%                       when it changes.
+%
+%   UPDATE LOG:
+%   ????-??-?? - Drew Sloan - Function first created.
+%   2025-06-19 - Drew Sloan - Updated function description to match the
+%                             "ReadBlock" documentation style.
+%
+
+
 
 ver = fread(fid,1,'uint8');                                                 %#ok<NASGU> %Data block version.
 

@@ -10,7 +10,7 @@ function block_read = OmniTrakFileRead_ReadBlock_Dictionary(fid)
 %	Library documentation:
 %	https://github.com/Vulintus/OmniTrak_File_Format
 %
-%	This function was programmatically generated: 2025-06-05, 04:13:26 (UTC)
+%	This function was programmatically generated: 2025-06-18, 08:38:19 (UTC)
 %
 
 block_read = dictionary;
@@ -169,6 +169,16 @@ block_read(145) = struct('def_name', 'MODULE_FW_DATE', 'fcn', @(data)OmniTrakFil
 % OTMP Module firmware upload time, copied from the macro, written as characters.
 block_read(146) = struct('def_name', 'MODULE_FW_TIME', 'fcn', @(data)OmniTrakFileRead_ReadBlock_MODULE_FW_TIME(fid,data));
 
+% OTMP module name, written as characters.
+block_read(147) = struct('def_name', 'MODULE_NAME', 'fcn', @(data)OmniTrakFileRead_ReadBlock_MODULE_NAME(fid,data));
+
+% OTMP Module SKU, typically written as 4 characters.
+block_read(148) = struct('def_name', 'MODULE_SKU', 'fcn', @(data)OmniTrakFileRead_ReadBlock_MODULE_SKU(fid,data));
+
+
+% OTMP Module serial number, written as characters.
+block_read(153) = struct('def_name', 'MODULE_SN', 'fcn', @(data)OmniTrakFileRead_ReadBlock_MODULE_SN(fid,data));
+
 
 % The MAC address of the device's ATWINC1500 module.
 block_read(150) = struct('def_name', 'WINC1500_MAC_ADDR', 'fcn', @(data)OmniTrakFileRead_ReadBlock_WINC1500_MAC_ADDR(fid,data));
@@ -177,28 +187,28 @@ block_read(150) = struct('def_name', 'WINC1500_MAC_ADDR', 'fcn', @(data)OmniTrak
 block_read(151) = struct('def_name', 'WINC1500_IP4_ADDR', 'fcn', @(data)OmniTrakFileRead_ReadBlock_WINC1500_IP4_ADDR(fid,data));
 
 
-% Current battery state-of charge, in percent, measured the BQ27441
+% Current battery state-of charge, in percent.
 block_read(170) = struct('def_name', 'BATTERY_SOC', 'fcn', @(data)OmniTrakFileRead_ReadBlock_BATTERY_SOC(fid,data));
 
-% Current battery voltage, in millivolts, measured by the BQ27441
+% Current battery voltage, in millivolts.
 block_read(171) = struct('def_name', 'BATTERY_VOLTS', 'fcn', @(data)OmniTrakFileRead_ReadBlock_BATTERY_VOLTS(fid,data));
 
-% Average current draw from the battery, in milli-amps, measured by the BQ27441
+% Average current draw from the battery, in milli-amps.
 block_read(172) = struct('def_name', 'BATTERY_CURRENT', 'fcn', @(data)OmniTrakFileRead_ReadBlock_BATTERY_CURRENT(fid,data));
 
-% Full capacity of the battery, in milli-amp hours, measured by the BQ27441
+% Full capacity of the battery, in milli-amp hours.
 block_read(173) = struct('def_name', 'BATTERY_FULL', 'fcn', @(data)OmniTrakFileRead_ReadBlock_BATTERY_FULL(fid,data));
 
-% Remaining capacity of the battery, in milli-amp hours, measured by the BQ27441
+% Remaining capacity of the battery, in milli-amp hours.
 block_read(174) = struct('def_name', 'BATTERY_REMAIN', 'fcn', @(data)OmniTrakFileRead_ReadBlock_BATTERY_REMAIN(fid,data));
 
-% Average power draw, in milliWatts, measured by the BQ27441
+% Average power draw, in milliWatts.
 block_read(175) = struct('def_name', 'BATTERY_POWER', 'fcn', @(data)OmniTrakFileRead_ReadBlock_BATTERY_POWER(fid,data));
 
-% Battery state-of-health, in percent, measured by the BQ27441
+% Battery state-of-health, in percent.
 block_read(176) = struct('def_name', 'BATTERY_SOH', 'fcn', @(data)OmniTrakFileRead_ReadBlock_BATTERY_SOH(fid,data));
 
-% Combined battery state-of-charge, voltage, current, capacity, power, and state-of-health, measured by the BQ27441
+% Combined battery state-of-charge, voltage, current, capacity, power, and state-of-health.
 block_read(177) = struct('def_name', 'BATTERY_STATUS', 'fcn', @(data)OmniTrakFileRead_ReadBlock_BATTERY_STATUS(fid,data));
 
 
@@ -214,6 +224,10 @@ block_read(200) = struct('def_name', 'SUBJECT_NAME', 'fcn', @(data)OmniTrakFileR
 
 % The subject's or subjects' experimental group name.
 block_read(201) = struct('def_name', 'GROUP_NAME', 'fcn', @(data)OmniTrakFileRead_ReadBlock_GROUP_NAME(fid,data));
+
+
+% Test administrator's name.
+block_read(224) = struct('def_name', 'ADMIN_NAME', 'fcn', @(data)OmniTrakFileRead_ReadBlock_ADMIN_NAME(fid,data));
 
 
 % The user's name for the current experiment.
@@ -514,6 +528,9 @@ block_read(2202) = struct('def_name', 'CALIBRATION_BASELINE_ADJUST', 'fcn', @(da
 % Timestamped in-session calibration slope coefficient adjustment, for the specified module index.
 block_read(2203) = struct('def_name', 'CALIBRATION_SLOPE_ADJUST', 'fcn', @(data)OmniTrakFileRead_ReadBlock_CALIBRATION_SLOPE_ADJUST(fid,data));
 
+% Most recent calibration date/time, for the specified module index.
+block_read(2204) = struct('def_name', 'CALIBRATION_DATE', 'fcn', @(data)OmniTrakFileRead_ReadBlock_CALIBRATION_DATE(fid,data));
+
 
 % Type of hit threshold (i.e. peak force), for the specified input.
 block_read(2300) = struct('def_name', 'HIT_THRESH_TYPE', 'fcn', @(data)OmniTrakFileRead_ReadBlock_HIT_THRESH_TYPE(fid,data));
@@ -617,3 +634,7 @@ block_read(2740) = struct('def_name', 'STAP_2AFC_TRIAL_OUTCOME', 'fcn', @(data)O
 
 % Fixed reinforcement task trial data.
 block_read(2800) = struct('def_name', 'FR_TASK_TRIAL', 'fcn', @(data)OmniTrakFileRead_ReadBlock_FR_TASK_TRIAL(fid,data));
+
+
+% An oscilloscope recording, in units of volts, from one or multiple channels, with time units, in seconds, along with a variable number of parameters describing the recording conditions.
+block_read(3072) = struct('def_name', 'SCOPE_TRACE', 'fcn', @(data)OmniTrakFileRead_ReadBlock_SCOPE_TRACE(fid,data));

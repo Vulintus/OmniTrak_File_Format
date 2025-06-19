@@ -1,11 +1,11 @@
-function OmniTrakFileWrite_WriteBlock_Timestamped_Event(fid, block_code, varargin)
+function OmniTrakFileWrite_WriteBlock_DateTime_Event(fid, block_code, varargin)
 
 %
-% OmniTrakFileWrite_WriteBlock_Timestamped_Event.m
+% OmniTrakFileWrite_WriteBlock_DateTime_Event.m
 % 
 %   copyright 2025, Vulintus, Inc.
 %
-%   OMNITRAKFILEWRITE_WRITEBLOCK_TIMESTAMPED_EVENT writes a block with a
+%   OMNITRAKFILEWRITE_WRITEBLOCK_DATETIME_EVENT writes a block with a
 %   only a float64 serial date number, as an event timing marker, to an
 %   *.OmniTrak file.
 %   
