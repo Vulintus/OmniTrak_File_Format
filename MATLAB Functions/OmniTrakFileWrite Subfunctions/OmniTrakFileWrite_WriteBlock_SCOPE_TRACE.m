@@ -10,13 +10,18 @@ function OmniTrakFileWrite_WriteBlock_SCOPE_TRACE(fid, block_code, times, signal
 %   units in seconds, along with a variable number of parameters describing
 %   the recording conditions.
 %
-%   OFBC block code: 0x00x089CAF0
+%		BLOCK VALUE:	0x0C00
+%		DEFINITION:		SCOPE_TRACE
+%		DESCRIPTION:	An oscilloscope recording, in units of volts, from 
+%                       one or multiple channels, with time units, in 
+%                       seconds, along with a variable number of parameters 
+%                       describing the recording conditions.
 %
 %   UPDATE LOG:
 %   2025-06-18 - Drew Sloan - Function first created.
 %
 
-data_block_version = 1;                                                     %Set the SCOPE_TRACE block version.
+data_block_version = 1;                                                     %Set the data block version.
 
 fwrite(fid,block_code,'uint16');                                            %OmniTrak file format block code.
 fwrite(fid,data_block_version,'uint16');                                    %Write the SCOPE_TRACE block version.

@@ -1,52 +1,56 @@
-function OmniTrakFileWrite_WriteBlock_VIBROTACTILE_DETECTION_TASK_TRIAL(fid, block_code, varargin)
+function OmniTrakFileWrite_WriteBlock_STAP_2AFC_TRIAL_OUTCOME(fid, block_code, varargin)
 
 %
-% OmniTrakFileWrite_WriteBlock_VIBROTACTILE_DETECTION_TASK_TRIAL
+% OmniTrakFileWrite_WriteBlock_STAP_2AFC_TRIAL_OUTCOME
 %   
-%   copyright 2024, Vulintus, Inc.
+%   copyright 2025, Vulintus, Inc.
 %
-%   OMNITRAKFILEWRITE_WRITEBLOCK_VIBROTACTILE_DETECTION_TASK_TRIAL writes
-%   data from individual trials of the SensiTrak vibrotactile detection
+%   OMNITRAKFILEWRITE_WRITEBLOCK_STAP_2AFC_TASK_TRIAL writes data from 
+%   individual trials of the SensiTrak arm proprioception discrimination
 %   task to the *.OmniTrak file.
 %
-%		BLOCK VALUE:	0x0A8D
-%		DEFINITION:		VIBROTACTILE_DETECTION_TASK_TRIAL
-%		DESCRIPTION:	Vibrotactile detection task trial data.
+%		BLOCK VALUE:	0x0AB4
+%		DEFINITION:		STAP_2AFC_TRIAL_OUTCOME
+%		DESCRIPTION:	SensiTrak proprioception discrimination task trial 
+%                       outcome data.
 %
 %   UPDATE LOG:
-%   2024-12-04 - Drew Sloan - Function first created.
+%   2025-07-14 - Drew Sloan - Function first created, adapted from
+%                             "STAP_2AFC_Write_Trial_Data".
 %
+
 
 behavior = varargin{1};                                                     %The behavior structure will be the first optional input argument.
 
-data_block_version = 1;                                                     %Set the data block version.
+data_block_version = 2;                                                     %Set the data block version.
 
 fwrite(fid,block_code,'uint16');                                            %OmniTrak file format block code.
-fwrite(fid,data_block_version,'uint16');                                    %FR_TASK_TRIAL block version.
+fwrite(fid,65536,'uint16');                                                 %Write a maximum uint16 value to indicate this is not a Version 1 block.
+fwrite(fid,data_block_version,'uint16');                                    %Data block version.
 
 fwrite(fid,behavior.session.count.trial,'uint16');                          %Trial number.
 fwrite(fid,datenum(behavior.session.trial(end).time.start.datetime),...
-    'float64');                                                             %#ok<DATNM> %Start time of the trial
+    'float64');                                                             %#ok<DATNM> %Start time of the trial (serial date number).
+fwrite(fid,behavior.session.trial(end).time.start.micros,'uint32');         %Start time of the trial (microcontroller microsecond clock).
 fwrite(fid,behavior.session.trial(end).outcome(1),'uchar');                 %Trial outcome as an unsigned character.
+fwrite(fid,behavior.session.trial(end).params.target_feeder,'uchar');       %Target feeder.
+fwrite(fid,behavior.session.trial(end).params.visited_feeder,'uchar');      %Visited feeder.
 fwrite(fid,numel(behavior.session.trial(end).time.reward),'uint8');         %Number of feedings.
 if ~isempty(behavior.session.trial(end).time.reward)                        %If there were any feedings...
     fwrite(fid,datenum(behavior.session.trial(end).time.reward),...
         'float64');                                                         %#ok<DATNM> %serial date number timestamp for every feeding.
 end
-fwrite(fid,behavior.session.params.hitwin,'float32');                       %hit window duration, in seconds.
-for f = {'vib_dur',...
-        'vib_rate',...
-        'actual_vib_rate',...
-        'gap_length',...
-        'actual_gap_length',...
-        'hold_time',...
+fwrite(fid,numel(behavior.session.params.reward_mode),'uint8');             %Number of characters in the reward mode.
+fwrite(fid,behavior.session.params.reward_mode,'uchar');                    %Characters of the reward mode.
+fwrite(fid,numel('BASIC'),'uint8');                                         %Number of characters in the excursion type.
+fwrite(fid,'BASIC','uchar');                                                %Characters of the excursion type.
+for f = {'amplitude',...
+        'speed',...        
+        'hold_pre',...
+        'hold_peri',...
+        'choice_win',...
         'time_held'}                                                        %Step through various fields of the trial structure.
     fwrite(fid,behavior.session.trial(end).params.(f{1}),'float32');        %Write each field value as a 32-bit float.
-end
-for f = {'vib_n',...
-        'gap_start',...
-        'gap_stop'}                                                         %Step through various fields of the trial structure.
-    fwrite(fid,behavior.session.trial(end).params.(f{1}),'uint16');         %Write each field value as an unsigned 16-bit integer.
 end
 fwrite(fid,length(behavior.session.params.pre_sample_index),'uint32');      %number of pre-trial samples.
 signal = behavior.session.trial(end).signal.force.read();                   %Read the signal from the buffer.

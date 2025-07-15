@@ -16,21 +16,22 @@ function data =  OmniTrakFileRead_ReadBlock_MODULE_NAME(fid,data)
 %
 %   UPDATE LOG:
 %   2025-06-19 - Drew Sloan - Function first created.
+%   2025-07-02 - Drew Sloan - Changed filed name from "module" to "device".
 %
 
-data = OmniTrakFileRead_Check_Field_Name(data,'module',{'port','name'});  %Call the subfunction to check for existing fieldnames.         
+data = OmniTrakFileRead_Check_Field_Name(data,'device',{'port','name'});    %Call the subfunction to check for existing fieldnames.         
 
 port_i = fread(fid,1,'uint8');                                              %Read in the port index.
-existing_ports = vertcat(data.module.port);                                 %Fetch all the port indices already loaded in the structure...
+existing_ports = vertcat(data.device.port);                                 %Fetch all the port indices already loaded in the structure...
 if isempty(existing_ports)                                                  %If this is the first module...
     i = 1;                                                                  %Set the index to 1.
 else                                                                        %Otherwise...
     i = (port_i == existing_ports);                                         %Check for a match to an already-loaded module.
     if ~any(i)                                                              %If the port index doesn't match any existing modules...
-        i = length(data.module) + 1;                                        %Increment the index.
+        i = length(data.device) + 1;                                        %Increment the index.
     end
 end
 
 N = fread(fid,1,'uint8');                                                   %Read in the number of characters.
-data.module(i).name = fread(fid,N,'*char')';                                %Add the module name.
-data.module(i).port = port_i;                                               %Add the port index.
+data.device(i).name = fread(fid,N,'*char')';                                %Add the module name.
+data.device(i).port = port_i;                                               %Add the port index.
