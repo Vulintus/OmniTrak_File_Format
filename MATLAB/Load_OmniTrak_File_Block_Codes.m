@@ -10,7 +10,7 @@ function ofbc = Load_OmniTrak_File_Block_Codes
 %	Library documentation:
 %	https://github.com/Vulintus/OmniTrak_File_Format
 %
-%	This function was programmatically generated: 2025-06-18, 08:38:18 (UTC)
+%	This function was programmatically generated: 2025-08-26, 05:00:04 (UTC)
 %
 
 ofbc = dictionary;
@@ -104,6 +104,9 @@ ofbc('TASK_TYPE') = 301;                              %The user's name for task 
 
 ofbc('STAGE_NAME') = 400;                             %The stage name for a behavioral session.
 ofbc('STAGE_DESCRIPTION') = 401;                      %The stage description for a behavioral session.
+
+ofbc('SESSION_PARAMS_JSON') = 512;                    %Behavioral session parameters structure encoded in JSON format text.
+ofbc('TRIAL_PARAMS_JSON') = 513;                      %Behavioral trial parameters structure encoded in JSON format text.
 
 ofbc('AMG8833_ENABLED') = 1000;                       %Indicates that an AMG8833 thermopile array sensor is present in the system.
 ofbc('BMP280_ENABLED') = 1001;                        %Indicates that an BMP280 temperature/pressure sensor is present in the system.
@@ -209,7 +212,7 @@ ofbc('POSITION_MOVE_XY') = 2023;                      %Timestamped movement of a
 ofbc('POSITION_START_XYZ') = 2024;                    %Starting position of an autopositioner in the x-, y-, and z- directions, with distance in millimeters.
 ofbc('POSITION_MOVE_XYZ') = 2025;                     %Timestamped movement of an autopositioner in the x-, y-, and z- directions, with distance in millimeters.
 
-ofbc('TTL_PULSE') = 2048;                             %Timestamped event for a TTL pulse output, with channel number, voltage, and duration.
+ofbc('TTL_PULSETRAIN') = 2048;                        %Timestamped event for a single TTL pulse output, with channel number, voltage, and duration.
 
 ofbc('STREAM_INPUT_NAME') = 2100;                     %Stream input name for the specified input index.
 

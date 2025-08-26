@@ -55,7 +55,7 @@ end
 principal_list_file = fullfile(repo_dir, principal_list_file);              %Add the repository directory to the expected filename.
 
 %Set the target directories.
-matlab_dir = fullfile(repo_dir,'MATLAB Functions');                         %Set the directory for MATLAB functions.
+matlab_dir = fullfile(repo_dir,'MATLAB');                                   %Set the directory for MATLAB functions.
 if ~exist(matlab_dir,'dir')                                                 %If the MATLAB directory doesn't yet exist...
     mkdir(matlab_dir);                                                      %Create it.
 end

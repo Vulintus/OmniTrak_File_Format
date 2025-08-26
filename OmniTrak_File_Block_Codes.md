@@ -120,6 +120,10 @@ This is the principal list for *.OmniTrak File Block Codes (OFBC) data block cod
 | 0x0191 | 401 | [STAGE_DESCRIPTION](/Data%20Block%20Descriptions/0x0100-0x01FF.md#block-code-0x0191) | The stage description for a behavioral session. |
 ||
 ||
+| 0x0200 | 512 | [SESSION_PARAMS_JSON](/Data%20Block%20Descriptions/0x0200-0x02FF.md#block-code-0x0200) | Behavioral session parameters structure encoded in JSON format text. |
+| 0x0201 | 513 | [TRIAL_PARAMS_JSON](/Data%20Block%20Descriptions/0x0200-0x02FF.md#block-code-0x0201) | Behavioral trial parameters structure encoded in JSON format text. |
+||
+||
 | 0x03E8 | 1000 | [AMG8833_ENABLED](/Data%20Block%20Descriptions/0x0300-0x03FF.md#block-code-0x03E8) | Indicates that an AMG8833 thermopile array sensor is present in the system. |
 | 0x03E9 | 1001 | [BMP280_ENABLED](/Data%20Block%20Descriptions/0x0300-0x03FF.md#block-code-0x03E9) | Indicates that an BMP280 temperature/pressure sensor is present in the system. |
 | 0x03EA | 1002 | [BME280_ENABLED](/Data%20Block%20Descriptions/0x0300-0x03FF.md#block-code-0x03EA) | Indicates that an BME280 temperature/pressure/humidty sensor is present in the system. |
@@ -248,7 +252,7 @@ This is the principal list for *.OmniTrak File Block Codes (OFBC) data block cod
 | 0x07E9 | 2025 | [POSITION_MOVE_XYZ](/Data%20Block%20Descriptions/0x0700-0x07FF.md#block-code-0x07E9) | Timestamped movement of an autopositioner in the x-, y-, and z- directions, with distance in millimeters. |
 ||
 ||
-| 0x0800 | 2048 | [TTL_PULSE](/Data%20Block%20Descriptions/0x0800-0x08FF.md#block-code-0x0800) | Timestamped event for a TTL pulse output, with channel number, voltage, and duration. |
+| 0x0800 | 2048 | [TTL_PULSETRAIN](/Data%20Block%20Descriptions/0x0800-0x08FF.md#block-code-0x0800) | Timestamped event for a single TTL pulse output, with channel number, voltage, and duration. |
 ||
 ||
 | 0x0834 | 2100 | [STREAM_INPUT_NAME](/Data%20Block%20Descriptions/0x0800-0x08FF.md#block-code-0x0834) | Stream input name for the specified input index. |

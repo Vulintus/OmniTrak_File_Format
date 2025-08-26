@@ -8,7 +8,7 @@
 	Library documentation:
 	https://github.com/Vulintus/OmniTrak_File_Format
 
-	This file was programmatically generated: 2025-06-18, 08:38:18 (UTC)
+	This file was programmatically generated: 2025-08-26, 05:00:04 (UTC)
 */
 
 #ifndef _VULINTUS_OFBC_BLOCK_CODES_H_
@@ -110,6 +110,9 @@ const uint16_t OFBC_TASK_TYPE = 0x012D;                            // The user's
 
 const uint16_t OFBC_STAGE_NAME = 0x0190;                           // The stage name for a behavioral session.
 const uint16_t OFBC_STAGE_DESCRIPTION = 0x0191;                    // The stage description for a behavioral session.
+
+const uint16_t OFBC_SESSION_PARAMS_JSON = 0x0200;                  // Behavioral session parameters structure encoded in JSON format text.
+const uint16_t OFBC_TRIAL_PARAMS_JSON = 0x0201;                    // Behavioral trial parameters structure encoded in JSON format text.
 
 const uint16_t OFBC_AMG8833_ENABLED = 0x03E8;                      // Indicates that an AMG8833 thermopile array sensor is present in the system.
 const uint16_t OFBC_BMP280_ENABLED = 0x03E9;                       // Indicates that an BMP280 temperature/pressure sensor is present in the system.
@@ -215,7 +218,7 @@ const uint16_t OFBC_POSITION_MOVE_XY = 0x07E7;                     // Timestampe
 const uint16_t OFBC_POSITION_START_XYZ = 0x07E8;                   // Starting position of an autopositioner in the x-, y-, and z- directions, with distance in millimeters.
 const uint16_t OFBC_POSITION_MOVE_XYZ = 0x07E9;                    // Timestamped movement of an autopositioner in the x-, y-, and z- directions, with distance in millimeters.
 
-const uint16_t OFBC_TTL_PULSE = 0x0800;                            // Timestamped event for a TTL pulse output, with channel number, voltage, and duration.
+const uint16_t OFBC_TTL_PULSETRAIN = 0x0800;                       // Timestamped event for a single TTL pulse output, with channel number, voltage, and duration.
 
 const uint16_t OFBC_STREAM_INPUT_NAME = 0x0834;                    // Stream input name for the specified input index.
 

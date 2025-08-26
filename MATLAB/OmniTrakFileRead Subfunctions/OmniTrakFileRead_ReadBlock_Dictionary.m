@@ -10,7 +10,7 @@ function block_read = OmniTrakFileRead_ReadBlock_Dictionary(fid)
 %	Library documentation:
 %	https://github.com/Vulintus/OmniTrak_File_Format
 %
-%	This function was programmatically generated: 2025-06-18, 08:38:19 (UTC)
+%	This function was programmatically generated: 2025-08-26, 05:00:05 (UTC)
 %
 
 block_read = dictionary;
@@ -242,6 +242,13 @@ block_read(400) = struct('def_name', 'STAGE_NAME', 'fcn', @(data)OmniTrakFileRea
 
 % The stage description for a behavioral session.
 block_read(401) = struct('def_name', 'STAGE_DESCRIPTION', 'fcn', @(data)OmniTrakFileRead_ReadBlock_STAGE_DESCRIPTION(fid,data));
+
+
+% Behavioral session parameters structure encoded in JSON format text.
+block_read(512) = struct('def_name', 'SESSION_PARAMS_JSON', 'fcn', @(data)OmniTrakFileRead_ReadBlock_SESSION_PARAMS_JSON(fid,data));
+
+% Behavioral trial parameters structure encoded in JSON format text.
+block_read(513) = struct('def_name', 'TRIAL_PARAMS_JSON', 'fcn', @(data)OmniTrakFileRead_ReadBlock_TRIAL_PARAMS_JSON(fid,data));
 
 
 % Indicates that an AMG8833 thermopile array sensor is present in the system.
@@ -508,8 +515,8 @@ block_read(2024) = struct('def_name', 'POSITION_START_XYZ', 'fcn', @(data)OmniTr
 block_read(2025) = struct('def_name', 'POSITION_MOVE_XYZ', 'fcn', @(data)OmniTrakFileRead_ReadBlock_POSITION_MOVE_XYZ(fid,data));
 
 
-% Timestamped event for a TTL pulse output, with channel number, voltage, and duration.
-block_read(2048) = struct('def_name', 'TTL_PULSE', 'fcn', @(data)OmniTrakFileRead_ReadBlock_TTL_PULSE(fid,data));
+% Timestamped event for a single TTL pulse output, with channel number, voltage, and duration.
+block_read(2048) = struct('def_name', 'TTL_PULSETRAIN', 'fcn', @(data)OmniTrakFileRead_ReadBlock_TTL_PULSETRAIN(fid,data));
 
 
 % Stream input name for the specified input index.

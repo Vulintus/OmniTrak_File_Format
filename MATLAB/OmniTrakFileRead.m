@@ -1,10 +1,12 @@
 function data = OmniTrakFileRead(file,varargin)
 
-%Collated: 02/11/2025, 22:51:01
+%Collated: 08/14/2025, 22:39:50
 
 
 %
-% OmniTrakFileRead.m - Vulintus, Inc., 2018.
+% OmniTrakFileRead.m
+% 
+%   copyright 2018, Vulintus, Inc.
 %
 %   OMNITRAKFILEREAD reads in behavioral data from Vulintus' *.OmniTrak
 %   file format and returns data organized in the fields of the output
@@ -15,37 +17,45 @@ function data = OmniTrakFileRead(file,varargin)
 %   of OmniTrakFileRead from OmniTrakFileRead_Beta.
 %
 %   UPDATE LOG:
-%   02/22/2018 - Drew Sloan - Function first created.
-%   01/29/2020 - Drew Sloan - Block code routing separated into a
-%       programmatically generated switch-case subfunction, with separate
-%       subfunctions for each block code. Coinciding updates were made to
-%       "Update_OmniTrak_Libraries.m" to collate all new subfunctions into
-%       a release-version OmniTrakFileRead.m.
-%   03/16/2022 - Drew Sloan - Added an option input argument that
-%       terminates the file read after the header information (subject,
-%       device type, and session start time) is read.
+%   2018-02-22 - Drew Sloan - Function first created.
+%   2020-01-29 - Drew Sloan - Block code routing separated into a
+%                             programmatically generated switch-case 
+%                             subfunction, with separate subfunctions for 
+%                             each block code. Coinciding updates were made
+%                             to "Update_OmniTrak_Libraries.m" to collate 
+%                             all new subfunctions into a release-version 
+%                             OmniTrakFileRead.m.
+%   2022-03-16 - Drew Sloan - Added an option input argument that
+%                             terminates the file read after the header 
+%                             information (subject, device type, and 
+%                             session start time) is read.
+%   2025-02-14 - Drew Sloan - Converted the switch-case statements in the
+%                             ReadBlock routing function into a dictionary.
 %
 
-verbose = 0;                                                                %Default to non-verbose output.
-header_only = 0;                                                            %Default to reading the entire file, not just the header.
-show_waitbar = 0;                                                           %Default to not showing a waitbar.
+
+verbose = false;                                                            %Default to non-verbose output.
+header_only = false;                                                        %Default to reading the entire file, not just the header.
+show_waitbar = false;                                                       %Default to not showing a waitbar.
 for i = 1:numel(varargin)                                                   %Step through each optional input argument.
     switch lower(varargin{i})                                               %Switch between the recognized input arguments.
         case 'header'                                                       %Just read the header.
-            header_only = 1;                                                %Set the header only flag to 1.
+            header_only = true;                                             %Set the header only flag to 1.
         case 'verbose'                                                      %Request verbose output.
-            verbose = 1;                                                    %Set the verbose flag to 1.
+            verbose = true;                                                 %Set the verbose flag to 1.
         case 'waitbar'                                                      %Request a waitbar.
-            show_waitbar = 1;                                               %Set the waitbar flag to 1.
+            show_waitbar = true;                                            %Set the waitbar flag to 1.
     end
 end
 
-data = [];                                                                  %Create a structure to receive the data.
-
 if ~exist(file,'file') == 2                                                 %If the file doesn't exist...
-    error(['ERROR IN ' upper(mfilename) ': The specified file doesn''t '...
-        'exist!\n\t%s'],file);                                              %Throw an error.
+    error('ERROR IN %s: The specified file doesn''t exist!\n\t%s',...
+        upper(mfilename), file);                                            %Throw an error.
 end
+
+[~, shortfile, ext] = fileparts(file);                                      %Grab the filename minus the path.
+data = struct('file',[]);                                                   %Create a data structure.
+data.file.name = [shortfile ext];                                           %Save the filename.
 
 fid = fopen(file,'r');                                                      %Open the input file for read access.
 fseek(fid,0,'eof');                                                         %Fast forward to the end of the file.
@@ -55,21 +65,23 @@ fseek(fid,0,'bof');                                                         %Rew
 block = fread(fid,1,'uint16');                                              %Read in the first data block code.
 if isempty(block) || block ~= hex2dec('ABCD')                               %If the first block isn't the expected OmniTrak file identifier...
     fclose(fid);                                                            %Close the input file.
-    error(['ERROR IN ' upper(mfilename) ': The specified file doesn''t '...
-        'start with the *.OmniTrak 0xABCD identifier code!\n\t%s'],file);   %Throw an error.
+    error(['ERROR IN %s: The specified file doesn''t start with the '...
+        '*.OmniTrak 0xABCD identifier code!\n\t%s'],...
+        upper(mfilename), file);                                            %Throw an error.
 end
 
 block = fread(fid,1,'uint16');                                              %Read in the second data block code.
 if isempty(block) || block ~= 1                                             %If the second data block code isn't the format version.
     fclose(fid);                                                            %Close the input file.
-    error(['ERROR IN ' upper(mfilename) ': The specified file doesn''t '...
-        'specify an *.OmniTrak file version!\n\t%s'],file);                 %Throw an error.
+    error(['ERROR IN %s: The specified file doesn''t specify an '...
+        '*.OmniTrak file version!\n\t%s'], upper(mfilename), file);         %Throw an error.
 end
-data.file_version = fread(fid,1,'uint16');                                  %Read in the file version.
+data.file.version = fread(fid,1,'uint16');                                  %Save the file version.
 
-waitbar_closed = 0;                                                         %Create a flag to indicate when the waitbar is closed.
-if show_waitbar == 1                                                        %If we're showing a progress waitbar.
-    [~, shortfile, ext] = fileparts(file);                                  %Grab the filename minus the path.
+block_read = OmniTrakFileRead_ReadBlock_Dictionary(fid);                    %Load the block read function dictionary.
+
+waitbar_closed = false;                                                     %Create a flag to indicate when the waitbar is closed.
+if show_waitbar                                                             %If we're showing a progress waitbar.
     waitbar_str = sprintf('Reading: %s%s',shortfile,ext);                   %Create a string for the waitbar.
     waitbar = big_waitbar('title','OmniTrakFileRead Progress',...
         'string',waitbar_str,...
@@ -85,31 +97,31 @@ try                                                                         %Att
             continue                                                        %Skip the rest of the loop.
         end
         
-        if verbose == 1
-            block_names = fieldnames(block_codes)';
-            for f = block_names
-                if block_codes.(f{1}) == block
-                    fprintf(1,'b%1.0f\t>>\t%1.0f: %s\n',ftell(fid)-2,block,f{1});
-                end
-            end
+        if verbose && isKey(block_read, block)                              %If verbose output is enabled and this block is recognized...
+            fprintf(1,'b%1.0f\t>>\t0x%s: %s\n',...
+                ftell(fid)-2,...
+                dec2hex(block,4),...
+                block_read(block).def_name);                                %Print the block location in the file.
         end
-
-        data = block_read_fcn{block}(fid, data);                            %Call the subfunction to read the block.
         
-        if isfield(data,'unrecognized_block')                               %If the last block was unrecognized...
-            fprintf(1,'UNRECOGNIZED BLOCK CODE: %1.0f!\n',block);           %Print the block code.
+        if isKey(block_read, block)                                         %If this block is recognized...
+            data = block_read(block).fcn(data);                             %Call the subfunction to read the block.
+        else                                                                %Otherwise, if the block isn't recognized...
+            fseek(fid,-2,'cof');                                            %Rewind 2 bytes.
+            data.unrecognized_block = [];                                   %Create an unrecognized block field.
+            data.unrecognized_block.pos = ftell(fid);                       %Save the file position.
+            data.unrecognized_block.code = block;                           %Save the data block code.
+            fprintf(1,'b%1.0f\t>>\t0x%s: UNRECOGNIZED BLOCK CODE!\n',...
+                ftell(fid),...
+                dec2hex(block,4));                                          %Print the block location in the file.
             fclose(fid);                                                    %Close the file.
             return                                                          %Skip execution of the rest of the function.
         end
         
         if header_only                                                      %If we're only reading the header.
-            if isfield(data,'subject') && ...
-                    ~isempty(data.subject) && ...     
-                    isfield(data,'file_start') && ...
-                    ~isempty(data.file_start) && ...
-                    isfield(data,'device') && ...
-                    isfield(data.device,'type') && ...
-                    ~isempty(data.device.type)
+            if isnt_empty_field(data,'subject','name') && ...
+                    isnt_empty_field(data,'file','start') && ...
+                    isnt_empty_field(data,'device','type')                  %If all the header fields are read in...
                 fclose(fid);                                                %Close the file.
                 return                                                      %Skip execution of the rest of the function.
             end
@@ -118,7 +130,7 @@ try                                                                         %Att
 
         if show_waitbar                                                     %If we're showing the waitbar...
             if waitbar.isclosed()                                           %If the user closed the waitbar figure...
-                waitbar_closed = 1;                                         %Set the waitbar closed flag to 1.
+                waitbar_closed = true;                                      %Set the waitbar closed flag to 1.
             else                                                            %If the waitbar hasn't been closed...
                 waitbar.value(ftell(fid)/file_size);                        %Update the waitbar value.
                 waitbar.string(sprintf('%s (%1.0f/%1.0f)',waitbar_str,...
@@ -153,277 +165,6 @@ fclose(fid);                                                                %Clo
 
 if show_waitbar && ~waitbar.isclosed()                                      %If we're showing the waitbar and it's not yet closed....
     waitbar.close();                                                        %Close the waitbar.
-end
-
-
-function block_codes = Load_OmniTrak_File_Block_Codes(varargin)
-
-%LOAD_OMNITRAK_FILE_BLOCK_CODES.m
-%
-%	Vulintus, Inc.
-%
-%	OmniTrak file format block code libary.
-%
-%	https://github.com/Vulintus/OmniTrak_File_Format
-%
-%	This file was programmatically generated: 2025-02-11, 11:58:55 (UTC).
-%
-
-if nargin > 0
-	ver = varargin{1};
-else
-	ver = 1;
-end
-
-block_codes = [];
-
-switch ver
-
-	case 1
-
-		block_codes.CUR_DEF_VERSION = 1;
-
-		block_codes.OMNITRAK_FILE_VERIFY = 43981;                           %First unsigned 16-bit integer written to every *.OmniTrak file to identify the file type, has a hex value of 0xABCD.
-
-		block_codes.FILE_VERSION = 1;                                       %The version of the file format used.
-		block_codes.MS_FILE_START = 2;                                      %Value of the SoC millisecond clock at file creation.
-		block_codes.MS_FILE_STOP = 3;                                       %Value of the SoC millisecond clock when the file is closed.
-		block_codes.SUBJECT_DEPRECATED = 4;                                 %A single subject's name.
-
-		block_codes.CLOCK_FILE_START = 6;                                   %Computer clock serial date number at file creation (local time).
-		block_codes.CLOCK_FILE_STOP = 7;                                    %Computer clock serial date number when the file is closed (local time).
-
-		block_codes.DEVICE_FILE_INDEX = 10;                                 %The device's current file index.
-
-		block_codes.NTP_SYNC = 20;                                          %A fetched NTP time (seconds since January 1, 1900) at the specified SoC millisecond clock time.
-		block_codes.NTP_SYNC_FAIL = 21;                                     %Indicates the an NTP synchonization attempt failed.
-		block_codes.CLOCK_SYNC = 22;                                  %The current SoC microsecond clock time at the specified SoC millisecond clock time.
-		block_codes.MS_TIMER_ROLLOVER = 23;                                 %Indicates that the millisecond timer rolled over since the last loop.
-		block_codes.US_TIMER_ROLLOVER = 24;                                 %Indicates that the microsecond timer rolled over since the last loop.
-		block_codes.TIME_ZONE_OFFSET = 25;                                  %Computer clock time zone offset from UTC.
-		block_codes.TIME_ZONE_OFFSET_HHMM = 26;                             %Computer clock time zone offset from UTC as two integers, one for hours, and the other for minutes
-
-		block_codes.RTC_STRING_DEPRECATED = 30;                             %Current date/time string from the real-time clock.
-		block_codes.RTC_STRING = 31;                                        %Current date/time string from the real-time clock.
-		block_codes.RTC_VALUES = 32;                                        %Current date/time values from the real-time clock.
-
-		block_codes.ORIGINAL_FILENAME = 40;                                 %The original filename for the data file.
-		block_codes.RENAMED_FILE = 41;                                      %A timestamped event to indicate when a file has been renamed by one of Vulintus' automatic data organizing programs.
-		block_codes.DOWNLOAD_TIME = 42;                                     %A timestamp indicating when the data file was downloaded from the OmniTrak device to a computer.
-		block_codes.DOWNLOAD_SYSTEM = 43;                                   %The computer system name and the COM port used to download the data file form the OmniTrak device.
-
-		block_codes.INCOMPLETE_BLOCK = 50;                                  %Indicates that the file will end in an incomplete block.
-
-		block_codes.USER_TIME = 60;                                         %Date/time values from a user-set timestamp.
-
-		block_codes.SYSTEM_TYPE = 100;                                      %Vulintus system ID code (1 = MotoTrak, 2 = OmniTrak, 3 = HabiTrak, 4 = OmniHome, 5 = SensiTrak, 6 = Prototype).
-		block_codes.SYSTEM_NAME = 101;                                      %Vulintus system name.
-		block_codes.SYSTEM_HW_VER = 102;                                    %Vulintus system hardware version.
-		block_codes.SYSTEM_FW_VER = 103;                                    %System firmware version, written as characters.
-		block_codes.SYSTEM_SN = 104;                                        %System serial number, written as characters.
-		block_codes.SYSTEM_MFR = 105;                                       %Manufacturer name for non-Vulintus systems.
-		block_codes.COMPUTER_NAME = 106;                                    %Windows PC computer name.
-		block_codes.COM_PORT = 107;                                         %The COM port of a computer-connected system.
-		block_codes.DEVICE_ALIAS = 108;                                     %Human-readable Adjective + Noun alias/name for the device, assigned by Vulintus during manufacturing
-
-		block_codes.PRIMARY_MODULE = 110;                                   %Primary module name, for systems with interchangeable modules.
-		block_codes.PRIMARY_INPUT = 111;                                    %Primary input name, for modules with multiple input signals.
-		block_codes.SAMD_CHIP_ID = 112;                                     %The SAMD manufacturer's unique chip identifier.
-
-		block_codes.ESP8266_MAC_ADDR = 120;                                 %The MAC address of the device's ESP8266 module.
-		block_codes.ESP8266_IP4_ADDR = 121;                                 %The local IPv4 address of the device's ESP8266 module.
-		block_codes.ESP8266_CHIP_ID = 122;                                  %The ESP8266 manufacturer's unique chip identifier
-		block_codes.ESP8266_FLASH_ID = 123;                                 %The ESP8266 flash chip's unique chip identifier
-
-		block_codes.USER_SYSTEM_NAME = 130;                                 %The user's name for the system, i.e. booth number.
-
-		block_codes.DEVICE_RESET_COUNT = 140;                               %The current reboot count saved in EEPROM or flash memory.
-		block_codes.CTRL_FW_FILENAME = 141;                                 %Controller firmware filename, copied from the macro, written as characters.
-		block_codes.CTRL_FW_DATE = 142;                                     %Controller firmware upload date, copied from the macro, written as characters.
-		block_codes.CTRL_FW_TIME = 143;                                     %Controller firmware upload time, copied from the macro, written as characters.
-		block_codes.MODULE_FW_FILENAME = 144;                               %OTMP Module firmware filename, copied from the macro, written as characters.
-		block_codes.MODULE_FW_DATE = 145;                                   %OTMP Module firmware upload date, copied from the macro, written as characters.
-		block_codes.MODULE_FW_TIME = 146;                                   %OTMP Module firmware upload time, copied from the macro, written as characters.
-
-		block_codes.WINC1500_MAC_ADDR = 150;                                %The MAC address of the device's ATWINC1500 module.
-		block_codes.WINC1500_IP4_ADDR = 151;                                %The local IPv4 address of the device's ATWINC1500 module.
-
-		block_codes.BATTERY_SOC = 170;                                      %Current battery state-of charge, in percent, measured the BQ27441
-		block_codes.BATTERY_VOLTS = 171;                                    %Current battery voltage, in millivolts, measured by the BQ27441
-		block_codes.BATTERY_CURRENT = 172;                                  %Average current draw from the battery, in milli-amps, measured by the BQ27441
-		block_codes.BATTERY_FULL = 173;                                     %Full capacity of the battery, in milli-amp hours, measured by the BQ27441
-		block_codes.BATTERY_REMAIN = 174;                                   %Remaining capacity of the battery, in milli-amp hours, measured by the BQ27441
-		block_codes.BATTERY_POWER = 175;                                    %Average power draw, in milliWatts, measured by the BQ27441
-		block_codes.BATTERY_SOH = 176;                                      %Battery state-of-health, in percent, measured by the BQ27441
-		block_codes.BATTERY_STATUS = 177;                                   %Combined battery state-of-charge, voltage, current, capacity, power, and state-of-health, measured by the BQ27441
-
-		block_codes.FEED_SERVO_MAX_RPM = 190;                               %Actual rotation rate, in RPM, of the feeder servo (OmniHome) when set to 180 speed.
-		block_codes.FEED_SERVO_SPEED = 191;                                 %Current speed setting (0-180) for the feeder servo (OmniHome).
-
-		block_codes.SUBJECT_NAME = 200;                                     %A single subject's name.
-		block_codes.GROUP_NAME = 201;                                       %The subject's or subjects' experimental group name.
-
-		block_codes.EXP_NAME = 300;                                         %The user's name for the current experiment.
-		block_codes.TASK_TYPE = 301;                                        %The user's name for task type, which can be a variant of the overall experiment type.
-
-		block_codes.STAGE_NAME = 400;                                       %The stage name for a behavioral session.
-		block_codes.STAGE_DESCRIPTION = 401;                                %The stage description for a behavioral session.
-
-		block_codes.AMG8833_ENABLED = 1000;                                 %Indicates that an AMG8833 thermopile array sensor is present in the system.
-		block_codes.BMP280_ENABLED = 1001;                                  %Indicates that an BMP280 temperature/pressure sensor is present in the system.
-		block_codes.BME280_ENABLED = 1002;                                  %Indicates that an BME280 temperature/pressure/humidty sensor is present in the system.
-		block_codes.BME680_ENABLED = 1003;                                  %Indicates that an BME680 temperature/pressure/humidy/VOC sensor is present in the system.
-		block_codes.CCS811_ENABLED = 1004;                                  %Indicates that an CCS811 VOC/eC02 sensor is present in the system.
-		block_codes.SGP30_ENABLED = 1005;                                   %Indicates that an SGP30 VOC/eC02 sensor is present in the system.
-		block_codes.VL53L0X_ENABLED = 1006;                                 %Indicates that an VL53L0X time-of-flight distance sensor is present in the system.
-		block_codes.ALSPT19_ENABLED = 1007;                                 %Indicates that an ALS-PT19 ambient light sensor is present in the system.
-		block_codes.MLX90640_ENABLED = 1008;                                %Indicates that an MLX90640 thermopile array sensor is present in the system.
-		block_codes.ZMOD4410_ENABLED = 1009;                                %Indicates that an ZMOD4410 VOC/eC02 sensor is present in the system.
-
-		block_codes.AMBULATION_XY_THETA = 1024;                             %A point in a tracked ambulation path, with absolute x- and y-coordinates in millimeters, with facing direction theta, in degrees.
-
-		block_codes.AMG8833_THERM_CONV = 1100;                              %The conversion factor, in degrees Celsius, for converting 16-bit integer AMG8833 pixel readings to temperature.
-		block_codes.AMG8833_THERM_FL = 1101;                                %The current AMG8833 thermistor reading as a converted float32 value, in Celsius.
-		block_codes.AMG8833_THERM_INT = 1102;                               %The current AMG8833 thermistor reading as a raw, signed 16-bit integer.
-
-		block_codes.AMG8833_PIXELS_CONV = 1110;                             %The conversion factor, in degrees Celsius, for converting 16-bit integer AMG8833 pixel readings to temperature.
-		block_codes.AMG8833_PIXELS_FL = 1111;                               %The current AMG8833 pixel readings as converted float32 values, in Celsius.
-		block_codes.AMG8833_PIXELS_INT = 1112;                              %The current AMG8833 pixel readings as a raw, signed 16-bit integers.
-		block_codes.HTPA32X32_PIXELS_FP62 = 1113;                           %The current HTPA32x32 pixel readings as a fixed-point 6/2 type (6 bits for the unsigned integer part, 2 bits for the decimal part), in units of Celcius. This allows temperatures from 0 to 63.75 C.
-		block_codes.HTPA32X32_PIXELS_INT_K = 1114;                          %The current HTPA32x32 pixel readings represented as 16-bit unsigned integers in units of deciKelvin (dK, or Kelvin * 10).
-		block_codes.HTPA32X32_AMBIENT_TEMP = 1115;                          %The current ambient temperature measured by the HTPA32x32, represented as a 32-bit float, in units of Celcius.
-		block_codes.HTPA32X32_PIXELS_INT12_C = 1116;                        %The current HTPA32x32 pixel readings represented as 12-bit signed integers (2 pixels for every 3 bytes) in units of deciCelsius (dC, or Celsius * 10), with values under-range set to the minimum  (2048 dC) and values over-range set to the maximum (2047 dC).
-		block_codes.HTPA32X32_HOTTEST_PIXEL_FP62 = 1117;                    %The location and temperature of the hottest pixel in the HTPA32x32 image. This may not be the raw hottest pixel. It may have gone through some processing and filtering to determine the true hottest pixel. The temperature will be in FP62 formatted Celsius.
-
-		block_codes.BH1749_RGB = 1120;                                      %The current red, green, blue, IR, and green2 sensor readings from the BH1749 sensor
-		block_codes.DEBUG_SANITY_CHECK = 1121;                              %A special block acting as a sanity check, only used in cases of debugging
-
-		block_codes.BME280_TEMP_FL = 1200;                                  %The current BME280 temperature reading as a converted float32 value, in Celsius.
-		block_codes.BMP280_TEMP_FL = 1201;                                  %The current BMP280 temperature reading as a converted float32 value, in Celsius.
-		block_codes.BME680_TEMP_FL = 1202;                                  %The current BME680 temperature reading as a converted float32 value, in Celsius.
-
-		block_codes.BME280_PRES_FL = 1210;                                  %The current BME280 pressure reading as a converted float32 value, in Pascals (Pa).
-		block_codes.BMP280_PRES_FL = 1211;                                  %The current BMP280 pressure reading as a converted float32 value, in Pascals (Pa).
-		block_codes.BME680_PRES_FL = 1212;                                  %The current BME680 pressure reading as a converted float32 value, in Pascals (Pa).
-
-		block_codes.BME280_HUM_FL = 1220;                                   %The current BM280 humidity reading as a converted float32 value, in percent (%).
-		block_codes.BME680_HUM_FL = 1221;                                   %The current BME680 humidity reading as a converted float32 value, in percent (%).
-
-		block_codes.BME680_GAS_FL = 1230;                                   %The current BME680 gas resistance reading as a converted float32 value, in units of kOhms
-
-		block_codes.VL53L0X_DIST = 1300;                                    %The current VL53L0X distance reading as a 16-bit integer, in millimeters (-1 indicates out-of-range).
-		block_codes.VL53L0X_FAIL = 1301;                                    %Indicates the VL53L0X sensor experienced a range failure.
-
-		block_codes.SGP30_SN = 1400;                                        %The serial number of the SGP30.
-
-		block_codes.SGP30_EC02 = 1410;                                      %The current SGp30 eCO2 reading distance reading as a 16-bit integer, in parts per million (ppm).
-
-		block_codes.SGP30_TVOC = 1420;                                      %The current SGp30 TVOC reading distance reading as a 16-bit integer, in parts per million (ppm).
-
-		block_codes.MLX90640_DEVICE_ID = 1500;                              %The MLX90640 unique device ID saved in the device's EEPROM.
-		block_codes.MLX90640_EEPROM_DUMP = 1501;                            %Raw download of the entire MLX90640 EEPROM, as unsigned 16-bit integers.
-		block_codes.MLX90640_ADC_RES = 1502;                                %ADC resolution setting on the MLX90640 (16-, 17-, 18-, or 19-bit).
-		block_codes.MLX90640_REFRESH_RATE = 1503;                           %Current refresh rate on the MLX90640 (0.25, 0.5, 1, 2, 4, 8, 16, or 32 Hz).
-		block_codes.MLX90640_I2C_CLOCKRATE = 1504;                          %Current I2C clock freqency used with the MLX90640 (100, 400, or 1000 kHz).
-
-		block_codes.MLX90640_PIXELS_TO = 1510;                              %The current MLX90640 pixel readings as converted float32 values, in Celsius.
-		block_codes.MLX90640_PIXELS_IM = 1511;                              %The current MLX90640 pixel readings as converted, but uncalibrationed, float32 values.
-		block_codes.MLX90640_PIXELS_INT = 1512;                             %The current MLX90640 pixel readings as a raw, unsigned 16-bit integers.
-
-		block_codes.MLX90640_I2C_TIME = 1520;                               %The I2C transfer time of the frame data from the MLX90640 to the microcontroller, in milliseconds.
-		block_codes.MLX90640_CALC_TIME = 1521;                              %The calculation time for the uncalibrated or calibrated image captured by the MLX90640.
-		block_codes.MLX90640_IM_WRITE_TIME = 1522;                          %The SD card write time for the MLX90640 float32 image data.
-		block_codes.MLX90640_INT_WRITE_TIME = 1523;                         %The SD card write time for the MLX90640 raw uint16 data.
-
-		block_codes.ALSPT19_LIGHT = 1600;                                   %The current analog value of the ALS-PT19 ambient light sensor, as an unsigned integer ADC value.
-
-		block_codes.ZMOD4410_MOX_BOUND = 1700;                              %The current lower and upper bounds for the ZMOD4410 ADC reading used in calculations.
-		block_codes.ZMOD4410_CONFIG_PARAMS = 1701;                          %Current configuration values for the ZMOD4410.
-		block_codes.ZMOD4410_ERROR = 1702;                                  %Timestamped ZMOD4410 error event.
-		block_codes.ZMOD4410_READING_FL = 1703;                             %Timestamped ZMOD4410 reading calibrated and converted to float32.
-		block_codes.ZMOD4410_READING_INT = 1704;                            %Timestamped ZMOD4410 reading saved as the raw uint16 ADC value.
-
-		block_codes.ZMOD4410_ECO2 = 1710;                                   %Timestamped ZMOD4410 eCO2 reading.
-		block_codes.ZMOD4410_IAQ = 1711;                                    %Timestamped ZMOD4410 indoor air quality reading.
-		block_codes.ZMOD4410_TVOC = 1712;                                   %Timestamped ZMOD4410 total volatile organic compound reading.
-		block_codes.ZMOD4410_R_CDA = 1713;                                  %Timestamped ZMOD4410 total volatile organic compound reading.
-
-		block_codes.LSM303_ACC_SETTINGS = 1800;                             %Current accelerometer reading settings on any enabled LSM303.
-		block_codes.LSM303_MAG_SETTINGS = 1801;                             %Current magnetometer reading settings on any enabled LSM303.
-		block_codes.LSM303_ACC_FL = 1802;                                   %Current readings from the LSM303 accelerometer, as float values in m/s^2.
-		block_codes.LSM303_MAG_FL = 1803;                                   %Current readings from the LSM303 magnetometer, as float values in uT.
-		block_codes.LSM303_TEMP_FL = 1804;                                  %Current readings from the LSM303 temperature sensor, as float value in degrees Celcius
-
-		block_codes.SPECTRO_WAVELEN = 1900;                                 %Spectrometer wavelengths, in nanometers.
-		block_codes.SPECTRO_TRACE = 1901;                                   %Spectrometer measurement trace.
-
-		block_codes.PELLET_DISPENSE = 2000;                                 %Timestamped event for feeding/pellet dispensing.
-		block_codes.PELLET_FAILURE = 2001;                                  %Timestamped event for feeding/pellet dispensing in which no pellet was detected.
-
-		block_codes.HARD_PAUSE_START = 2010;                                %Timestamped event marker for the start of a session pause, with no events recorded during the pause.
-		block_codes.HARD_PAUSE_START = 2011;                                %Timestamped event marker for the stop of a session pause, with no events recorded during the pause.
-		block_codes.SOFT_PAUSE_START = 2012;                                %Timestamped event marker for the start of a session pause, with non-operant events recorded during the pause.
-		block_codes.SOFT_PAUSE_START = 2013;                                %Timestamped event marker for the stop of a session pause, with non-operant events recorded during the pause.
-		block_codes.TRIAL_START_SERIAL_DATE = 2014;                         %Timestamped event marker for the start of a trial, with accompanying microsecond clock reading
-
-		block_codes.POSITION_START_X = 2020;                                %Starting position of an autopositioner in just the x-direction, with distance in millimeters.
-		block_codes.POSITION_MOVE_X = 2021;                                 %Timestamped movement of an autopositioner in just the x-direction, with distance in millimeters.
-		block_codes.POSITION_START_XY = 2022;                               %Starting position of an autopositioner in just the x- and y-directions, with distance in millimeters.
-		block_codes.POSITION_MOVE_XY = 2023;                                %Timestamped movement of an autopositioner in just the x- and y-directions, with distance in millimeters.
-		block_codes.POSITION_START_XYZ = 2024;                              %Starting position of an autopositioner in the x-, y-, and z- directions, with distance in millimeters.
-		block_codes.POSITION_MOVE_XYZ = 2025;                               %Timestamped movement of an autopositioner in the x-, y-, and z- directions, with distance in millimeters.
-
-		block_codes.TTL_PULSE = 2048;                                       %Timestamped event for a TTL pulse output, with channel number, voltage, and duration.
-
-		block_codes.STREAM_INPUT_NAME = 2100;                               %Stream input name for the specified input index.
-
-		block_codes.CALIBRATION_BASELINE = 2200;                            %Starting calibration baseline coefficient, for the specified module index.
-		block_codes.CALIBRATION_SLOPE = 2201;                               %Starting calibration slope coefficient, for the specified module index.
-		block_codes.CALIBRATION_BASELINE_ADJUST = 2202;                     %Timestamped in-session calibration baseline coefficient adjustment, for the specified module index.
-		block_codes.CALIBRATION_SLOPE_ADJUST = 2203;                        %Timestamped in-session calibration slope coefficient adjustment, for the specified module index.
-
-		block_codes.HIT_THRESH_TYPE = 2300;                                 %Type of hit threshold (i.e. peak force), for the specified input.
-
-		block_codes.SECONDARY_THRESH_NAME = 2310;                           %A name/description of secondary thresholds used in the behavior.
-
-		block_codes.INIT_THRESH_TYPE = 2320;                                %Type of initation threshold (i.e. force or touch), for the specified input.
-
-		block_codes.REMOTE_MANUAL_FEED = 2400;                              %A timestamped manual feed event, triggered remotely.
-		block_codes.HWUI_MANUAL_FEED = 2401;                                %A timestamped manual feed event, triggered from the hardware user interface.
-		block_codes.FW_RANDOM_FEED = 2402;                                  %A timestamped manual feed event, triggered randomly by the firmware.
-		block_codes.SWUI_MANUAL_FEED_DEPRECATED = 2403;                     %A timestamped manual feed event, triggered from a computer software user interface.
-		block_codes.FW_OPERANT_FEED = 2404;                                 %A timestamped operant-rewarded feed event, trigged by the OmniHome firmware, with the possibility of multiple feedings.
-		block_codes.SWUI_MANUAL_FEED = 2405;                                %A timestamped manual feed event, triggered from a computer software user interface.
-		block_codes.SW_RANDOM_FEED = 2406;                                  %A timestamped manual feed event, triggered randomly by computer software.
-		block_codes.SW_OPERANT_FEED = 2407;                                 %A timestamped operant-rewarded feed event, trigged by the PC-based behavioral software, with the possibility of multiple feedings.
-
-		block_codes.MOTOTRAK_V3P0_OUTCOME = 2500;                           %MotoTrak version 3.0 trial outcome data.
-		block_codes.MOTOTRAK_V3P0_SIGNAL = 2501;                            %MotoTrak version 3.0 trial stream signal.
-
-		block_codes.POKE_BITMASK = 2560;                                    %Nosepoke status bitmask, typically written only when it changes.
-
-		block_codes.OUTPUT_TRIGGER_NAME = 2600;                             %Name/description of the output trigger type for the given index.
-
-		block_codes.VIBRATION_TASK_TRIAL_OUTCOME = 2700;                    %Vibration task trial outcome data.
-		block_codes.VIBROTACTILE_DETECTION_TASK_TRIAL = 2701;               %Vibrotactile detection task trial data.
-
-		block_codes.LED_DETECTION_TASK_TRIAL_OUTCOME = 2710;                %LED detection task trial outcome data.
-		block_codes.LIGHT_SRC_MODEL = 2711;                                 %Light source model name.
-		block_codes.LIGHT_SRC_TYPE = 2712;                                  %Light source type (i.e. LED, LASER, etc).
-
-		block_codes.STTC_2AFC_TRIAL_OUTCOME = 2720;                         %SensiTrak tactile discrimination task trial outcome data.
-		block_codes.STTC_NUM_PADS = 2721;                                   %Number of pads on the SensiTrak Tactile Carousel module.
-		block_codes.MODULE_MICROSTEP = 2722;                                %Microstep setting on the specified OTMP module.
-		block_codes.MODULE_STEPS_PER_ROT = 2723;                            %Steps per rotation on the specified OTMP module.
-
-		block_codes.MODULE_PITCH_CIRC = 2730;                               %Pitch circumference, in millimeters, of the driving gear on the specified OTMP module.
-		block_codes.MODULE_CENTER_OFFSET = 2731;                            %Center offset, in millimeters, for the specified OTMP module.
-
-		block_codes.STAP_2AFC_TRIAL_OUTCOME = 2740;                         %SensiTrak proprioception discrimination task trial outcome data.
-
-		block_codes.FR_TASK_TRIAL = 2800;                                   %Fixed reinforcement task trial data.
-		block_codes.STOP_TASK_TRIAL = 2801;                                 %Stop task trial data.
-
 end
 
 
@@ -480,581 +221,38 @@ for i = 1:numel(fieldname)                                                  %Ste
 end
 
 
-function data = OmniTrakFileRead_ReadBlock(fid,block,data,verbose)
+function data =  OmniTrakFileRead_ReadBlock_ADMIN_NAME(fid,data)
 
-%OMNITRAKFILEREAD_READ_BLOCK.m
 %
-%	Vulintus, Inc.
+% OmniTrakFileRead_ReadBlock_ADMIN_NAME.m
+%   
+%   copyright 2025, Vulintus, Inc.
 %
-%	OmniTrak file block read subfunction router.
+%   OMNITRAKFILEREAD_READBLOCK_ADMIN_NAME reads in the "ADMIN_NAME" data
+%   block from an *.OmniTrak format file. This block is intended to contain
+%   the test administrator's name, i.e. the name of the human experimenter
+%   administering the experiment/program.
 %
-%	https://github.com/Vulintus/OmniTrak_File_Format
+%	OmniTrak File Block Code (OFBC):
+%		BLOCK VALUE:	0x00E0
+%		DEFINITION:		ADMIN_NAME
+%		DESCRIPTION:	Test administrator's name.
 %
-%	This file was programmatically generated: 2025-02-11, 11:58:55 (UTC).
+%   UPDATE LOG:
+%   2025-06-19 - Drew Sloan - Function first created.
 %
 
-block_codes = Load_OmniTrak_File_Block_Codes(data.file_version);
-
-if verbose == 1
-	block_names = fieldnames(block_codes)';
-	for f = block_names
-		if block_codes.(f{1}) == block
-			fprintf(1,'b%1.0f\t>>\t%1.0f: %s\n',ftell(fid)-2,block,f{1});
-		end
-	end
-end
-
-switch data.file_version
-
-	case 1
-
-		switch block
-
-			case block_codes.FILE_VERSION                                   %The version of the file format used.
-				data = OmniTrakFileRead_ReadBlock_FILE_VERSION(fid,data);
-
-			case block_codes.MS_FILE_START                                  %Value of the SoC millisecond clock at file creation.
-				data = OmniTrakFileRead_ReadBlock_MS_FILE_START(fid,data);
-
-			case block_codes.MS_FILE_STOP                                   %Value of the SoC millisecond clock when the file is closed.
-				data = OmniTrakFileRead_ReadBlock_MS_FILE_STOP(fid,data);
-
-			case block_codes.SUBJECT_DEPRECATED                             %A single subject's name.
-				data = OmniTrakFileRead_ReadBlock_SUBJECT_DEPRECATED(fid,data);
-
-			case block_codes.CLOCK_FILE_START                               %Computer clock serial date number at file creation (local time).
-				data = OmniTrakFileRead_ReadBlock_CLOCK_FILE_START(fid,data);
-
-			case block_codes.CLOCK_FILE_STOP                                %Computer clock serial date number when the file is closed (local time).
-				data = OmniTrakFileRead_ReadBlock_CLOCK_FILE_STOP(fid,data);
-
-			case block_codes.DEVICE_FILE_INDEX                              %The device's current file index.
-				data = OmniTrakFileRead_ReadBlock_DEVICE_FILE_INDEX(fid,data);
-
-			case block_codes.NTP_SYNC                                       %A fetched NTP time (seconds since January 1, 1900) at the specified SoC millisecond clock time.
-				data = OmniTrakFileRead_ReadBlock_NTP_SYNC(fid,data);
-
-			case block_codes.NTP_SYNC_FAIL                                  %Indicates the an NTP synchonization attempt failed.
-				data = OmniTrakFileRead_ReadBlock_NTP_SYNC_FAIL(fid,data);
-
-			case block_codes.CLOCK_SYNC                               %The current SoC microsecond clock time at the specified SoC millisecond clock time.
-				data = OmniTrakFileRead_ReadBlock_CLOCK_SYNC(fid,data);
-
-			case block_codes.MS_TIMER_ROLLOVER                              %Indicates that the millisecond timer rolled over since the last loop.
-				data = OmniTrakFileRead_ReadBlock_MS_TIMER_ROLLOVER(fid,data);
-
-			case block_codes.US_TIMER_ROLLOVER                              %Indicates that the microsecond timer rolled over since the last loop.
-				data = OmniTrakFileRead_ReadBlock_US_TIMER_ROLLOVER(fid,data);
-
-			case block_codes.TIME_ZONE_OFFSET                               %Computer clock time zone offset from UTC.
-				data = OmniTrakFileRead_ReadBlock_TIME_ZONE_OFFSET(fid,data);
-
-			case block_codes.TIME_ZONE_OFFSET_HHMM                          %Computer clock time zone offset from UTC as two integers, one for hours, and the other for minutes
-				data = OmniTrakFileRead_ReadBlock_TIME_ZONE_OFFSET_HHMM(fid,data);
-
-			case block_codes.RTC_STRING_DEPRECATED                          %Current date/time string from the real-time clock.
-				data = OmniTrakFileRead_ReadBlock_RTC_STRING_DEPRECATED(fid,data);
-
-			case block_codes.RTC_STRING                                     %Current date/time string from the real-time clock.
-				data = OmniTrakFileRead_ReadBlock_RTC_STRING(fid,data);
-
-			case block_codes.RTC_VALUES                                     %Current date/time values from the real-time clock.
-				data = OmniTrakFileRead_ReadBlock_RTC_VALUES(fid,data);
-
-			case block_codes.ORIGINAL_FILENAME                              %The original filename for the data file.
-				data = OmniTrakFileRead_ReadBlock_ORIGINAL_FILENAME(fid,data);
-
-			case block_codes.RENAMED_FILE                                   %A timestamped event to indicate when a file has been renamed by one of Vulintus' automatic data organizing programs.
-				data = OmniTrakFileRead_ReadBlock_RENAMED_FILE(fid,data);
-
-			case block_codes.DOWNLOAD_TIME                                  %A timestamp indicating when the data file was downloaded from the OmniTrak device to a computer.
-				data = OmniTrakFileRead_ReadBlock_DOWNLOAD_TIME(fid,data);
-
-			case block_codes.DOWNLOAD_SYSTEM                                %The computer system name and the COM port used to download the data file form the OmniTrak device.
-				data = OmniTrakFileRead_ReadBlock_DOWNLOAD_SYSTEM(fid,data);
-
-			case block_codes.INCOMPLETE_BLOCK                               %Indicates that the file will end in an incomplete block.
-				data = OmniTrakFileRead_ReadBlock_INCOMPLETE_BLOCK(fid,data);
-
-			case block_codes.USER_TIME                                      %Date/time values from a user-set timestamp.
-				data = OmniTrakFileRead_ReadBlock_USER_TIME(fid,data);
-
-			case block_codes.SYSTEM_TYPE                                    %Vulintus system ID code (1 = MotoTrak, 2 = OmniTrak, 3 = HabiTrak, 4 = OmniHome, 5 = SensiTrak, 6 = Prototype).
-				data = OmniTrakFileRead_ReadBlock_SYSTEM_TYPE(fid,data);
-
-			case block_codes.SYSTEM_NAME                                    %Vulintus system name.
-				data = OmniTrakFileRead_ReadBlock_SYSTEM_NAME(fid,data);
-
-			case block_codes.SYSTEM_HW_VER                                  %Vulintus system hardware version.
-				data = OmniTrakFileRead_ReadBlock_SYSTEM_HW_VER(fid,data);
-
-			case block_codes.SYSTEM_FW_VER                                  %System firmware version, written as characters.
-				data = OmniTrakFileRead_ReadBlock_SYSTEM_FW_VER(fid,data);
-
-			case block_codes.SYSTEM_SN                                      %System serial number, written as characters.
-				data = OmniTrakFileRead_ReadBlock_SYSTEM_SN(fid,data);
-
-			case block_codes.SYSTEM_MFR                                     %Manufacturer name for non-Vulintus systems.
-				data = OmniTrakFileRead_ReadBlock_SYSTEM_MFR(fid,data);
-
-			case block_codes.COMPUTER_NAME                                  %Windows PC computer name.
-				data = OmniTrakFileRead_ReadBlock_COMPUTER_NAME(fid,data);
-
-			case block_codes.COM_PORT                                       %The COM port of a computer-connected system.
-				data = OmniTrakFileRead_ReadBlock_COM_PORT(fid,data);
-
-			case block_codes.DEVICE_ALIAS                                   %Human-readable Adjective + Noun alias/name for the device, assigned by Vulintus during manufacturing
-				data = OmniTrakFileRead_ReadBlock_DEVICE_ALIAS(fid,data);
-
-			case block_codes.PRIMARY_MODULE                                 %Primary module name, for systems with interchangeable modules.
-				data = OmniTrakFileRead_ReadBlock_PRIMARY_MODULE(fid,data);
-
-			case block_codes.PRIMARY_INPUT                                  %Primary input name, for modules with multiple input signals.
-				data = OmniTrakFileRead_ReadBlock_PRIMARY_INPUT(fid,data);
-
-			case block_codes.SAMD_CHIP_ID                                   %The SAMD manufacturer's unique chip identifier.
-				data = OmniTrakFileRead_ReadBlock_SAMD_CHIP_ID(fid,data);
-
-			case block_codes.ESP8266_MAC_ADDR                               %The MAC address of the device's ESP8266 module.
-				data = OmniTrakFileRead_ReadBlock_ESP8266_MAC_ADDR(fid,data);
-
-			case block_codes.ESP8266_IP4_ADDR                               %The local IPv4 address of the device's ESP8266 module.
-				data = OmniTrakFileRead_ReadBlock_ESP8266_IP4_ADDR(fid,data);
-
-			case block_codes.ESP8266_CHIP_ID                                %The ESP8266 manufacturer's unique chip identifier
-				data = OmniTrakFileRead_ReadBlock_ESP8266_CHIP_ID(fid,data);
-
-			case block_codes.ESP8266_FLASH_ID                               %The ESP8266 flash chip's unique chip identifier
-				data = OmniTrakFileRead_ReadBlock_ESP8266_FLASH_ID(fid,data);
-
-			case block_codes.USER_SYSTEM_NAME                               %The user's name for the system, i.e. booth number.
-				data = OmniTrakFileRead_ReadBlock_USER_SYSTEM_NAME(fid,data);
-
-			case block_codes.DEVICE_RESET_COUNT                             %The current reboot count saved in EEPROM or flash memory.
-				data = OmniTrakFileRead_ReadBlock_DEVICE_RESET_COUNT(fid,data);
-
-			case block_codes.CTRL_FW_FILENAME                               %Controller firmware filename, copied from the macro, written as characters.
-				data = OmniTrakFileRead_ReadBlock_CTRL_FW_FILENAME(fid,data);
-
-			case block_codes.CTRL_FW_DATE                                   %Controller firmware upload date, copied from the macro, written as characters.
-				data = OmniTrakFileRead_ReadBlock_CTRL_FW_DATE(fid,data);
-
-			case block_codes.CTRL_FW_TIME                                   %Controller firmware upload time, copied from the macro, written as characters.
-				data = OmniTrakFileRead_ReadBlock_CTRL_FW_TIME(fid,data);
-
-			case block_codes.MODULE_FW_FILENAME                             %OTMP Module firmware filename, copied from the macro, written as characters.
-				data = OmniTrakFileRead_ReadBlock_MODULE_FW_FILENAME(fid,data);
-
-			case block_codes.MODULE_FW_DATE                                 %OTMP Module firmware upload date, copied from the macro, written as characters.
-				data = OmniTrakFileRead_ReadBlock_MODULE_FW_DATE(fid,data);
-
-			case block_codes.MODULE_FW_TIME                                 %OTMP Module firmware upload time, copied from the macro, written as characters.
-				data = OmniTrakFileRead_ReadBlock_MODULE_FW_TIME(fid,data);
-
-			case block_codes.WINC1500_MAC_ADDR                              %The MAC address of the device's ATWINC1500 module.
-				data = OmniTrakFileRead_ReadBlock_WINC1500_MAC_ADDR(fid,data);
-
-			case block_codes.WINC1500_IP4_ADDR                              %The local IPv4 address of the device's ATWINC1500 module.
-				data = OmniTrakFileRead_ReadBlock_WINC1500_IP4_ADDR(fid,data);
-
-			case block_codes.BATTERY_SOC                                    %Current battery state-of charge, in percent, measured the BQ27441
-				data = OmniTrakFileRead_ReadBlock_BATTERY_SOC(fid,data);
-
-			case block_codes.BATTERY_VOLTS                                  %Current battery voltage, in millivolts, measured by the BQ27441
-				data = OmniTrakFileRead_ReadBlock_BATTERY_VOLTS(fid,data);
-
-			case block_codes.BATTERY_CURRENT                                %Average current draw from the battery, in milli-amps, measured by the BQ27441
-				data = OmniTrakFileRead_ReadBlock_BATTERY_CURRENT(fid,data);
-
-			case block_codes.BATTERY_FULL                                   %Full capacity of the battery, in milli-amp hours, measured by the BQ27441
-				data = OmniTrakFileRead_ReadBlock_BATTERY_FULL(fid,data);
-
-			case block_codes.BATTERY_REMAIN                                 %Remaining capacity of the battery, in milli-amp hours, measured by the BQ27441
-				data = OmniTrakFileRead_ReadBlock_BATTERY_REMAIN(fid,data);
-
-			case block_codes.BATTERY_POWER                                  %Average power draw, in milliWatts, measured by the BQ27441
-				data = OmniTrakFileRead_ReadBlock_BATTERY_POWER(fid,data);
-
-			case block_codes.BATTERY_SOH                                    %Battery state-of-health, in percent, measured by the BQ27441
-				data = OmniTrakFileRead_ReadBlock_BATTERY_SOH(fid,data);
-
-			case block_codes.BATTERY_STATUS                                 %Combined battery state-of-charge, voltage, current, capacity, power, and state-of-health, measured by the BQ27441
-				data = OmniTrakFileRead_ReadBlock_BATTERY_STATUS(fid,data);
-
-			case block_codes.FEED_SERVO_MAX_RPM                             %Actual rotation rate, in RPM, of the feeder servo (OmniHome) when set to 180 speed.
-				data = OmniTrakFileRead_ReadBlock_FEED_SERVO_MAX_RPM(fid,data);
-
-			case block_codes.FEED_SERVO_SPEED                               %Current speed setting (0-180) for the feeder servo (OmniHome).
-				data = OmniTrakFileRead_ReadBlock_FEED_SERVO_SPEED(fid,data);
-
-			case block_codes.SUBJECT_NAME                                   %A single subject's name.
-				data = OmniTrakFileRead_ReadBlock_SUBJECT_NAME(fid,data);
-
-			case block_codes.GROUP_NAME                                     %The subject's or subjects' experimental group name.
-				data = OmniTrakFileRead_ReadBlock_GROUP_NAME(fid,data);
-
-			case block_codes.EXP_NAME                                       %The user's name for the current experiment.
-				data = OmniTrakFileRead_ReadBlock_EXP_NAME(fid,data);
-
-			case block_codes.TASK_TYPE                                      %The user's name for task type, which can be a variant of the overall experiment type.
-				data = OmniTrakFileRead_ReadBlock_TASK_TYPE(fid,data);
-
-			case block_codes.STAGE_NAME                                     %The stage name for a behavioral session.
-				data = OmniTrakFileRead_ReadBlock_STAGE_NAME(fid,data);
-
-			case block_codes.STAGE_DESCRIPTION                              %The stage description for a behavioral session.
-				data = OmniTrakFileRead_ReadBlock_STAGE_DESCRIPTION(fid,data);
-
-			case block_codes.AMG8833_ENABLED                                %Indicates that an AMG8833 thermopile array sensor is present in the system.
-				data = OmniTrakFileRead_ReadBlock_AMG8833_ENABLED(fid,data);
-
-			case block_codes.BMP280_ENABLED                                 %Indicates that an BMP280 temperature/pressure sensor is present in the system.
-				data = OmniTrakFileRead_ReadBlock_BMP280_ENABLED(fid,data);
-
-			case block_codes.BME280_ENABLED                                 %Indicates that an BME280 temperature/pressure/humidty sensor is present in the system.
-				data = OmniTrakFileRead_ReadBlock_BME280_ENABLED(fid,data);
-
-			case block_codes.BME680_ENABLED                                 %Indicates that an BME680 temperature/pressure/humidy/VOC sensor is present in the system.
-				data = OmniTrakFileRead_ReadBlock_BME680_ENABLED(fid,data);
-
-			case block_codes.CCS811_ENABLED                                 %Indicates that an CCS811 VOC/eC02 sensor is present in the system.
-				data = OmniTrakFileRead_ReadBlock_CCS811_ENABLED(fid,data);
-
-			case block_codes.SGP30_ENABLED                                  %Indicates that an SGP30 VOC/eC02 sensor is present in the system.
-				data = OmniTrakFileRead_ReadBlock_SGP30_ENABLED(fid,data);
-
-			case block_codes.VL53L0X_ENABLED                                %Indicates that an VL53L0X time-of-flight distance sensor is present in the system.
-				data = OmniTrakFileRead_ReadBlock_VL53L0X_ENABLED(fid,data);
-
-			case block_codes.ALSPT19_ENABLED                                %Indicates that an ALS-PT19 ambient light sensor is present in the system.
-				data = OmniTrakFileRead_ReadBlock_ALSPT19_ENABLED(fid,data);
-
-			case block_codes.MLX90640_ENABLED                               %Indicates that an MLX90640 thermopile array sensor is present in the system.
-				data = OmniTrakFileRead_ReadBlock_MLX90640_ENABLED(fid,data);
-
-			case block_codes.ZMOD4410_ENABLED                               %Indicates that an ZMOD4410 VOC/eC02 sensor is present in the system.
-				data = OmniTrakFileRead_ReadBlock_ZMOD4410_ENABLED(fid,data);
-
-			case block_codes.AMBULATION_XY_THETA                            %A point in a tracked ambulation path, with absolute x- and y-coordinates in millimeters, with facing direction theta, in degrees.
-				data = OmniTrakFileRead_ReadBlock_AMBULATION_XY_THETA(fid,data);
-
-			case block_codes.AMG8833_THERM_CONV                             %The conversion factor, in degrees Celsius, for converting 16-bit integer AMG8833 pixel readings to temperature.
-				data = OmniTrakFileRead_ReadBlock_AMG8833_THERM_CONV(fid,data);
-
-			case block_codes.AMG8833_THERM_FL                               %The current AMG8833 thermistor reading as a converted float32 value, in Celsius.
-				data = OmniTrakFileRead_ReadBlock_AMG8833_THERM_FL(fid,data);
-
-			case block_codes.AMG8833_THERM_INT                              %The current AMG8833 thermistor reading as a raw, signed 16-bit integer.
-				data = OmniTrakFileRead_ReadBlock_AMG8833_THERM_INT(fid,data);
-
-			case block_codes.AMG8833_PIXELS_CONV                            %The conversion factor, in degrees Celsius, for converting 16-bit integer AMG8833 pixel readings to temperature.
-				data = OmniTrakFileRead_ReadBlock_AMG8833_PIXELS_CONV(fid,data);
-
-			case block_codes.AMG8833_PIXELS_FL                              %The current AMG8833 pixel readings as converted float32 values, in Celsius.
-				data = OmniTrakFileRead_ReadBlock_AMG8833_PIXELS_FL(fid,data);
-
-			case block_codes.AMG8833_PIXELS_INT                             %The current AMG8833 pixel readings as a raw, signed 16-bit integers.
-				data = OmniTrakFileRead_ReadBlock_AMG8833_PIXELS_INT(fid,data);
-
-			case block_codes.HTPA32X32_PIXELS_FP62                          %The current HTPA32x32 pixel readings as a fixed-point 6/2 type (6 bits for the unsigned integer part, 2 bits for the decimal part), in units of Celcius. This allows temperatures from 0 to 63.75 C.
-				data = OmniTrakFileRead_ReadBlock_HTPA32X32_PIXELS_FP62(fid,data);
-
-			case block_codes.HTPA32X32_PIXELS_INT_K                         %The current HTPA32x32 pixel readings represented as 16-bit unsigned integers in units of deciKelvin (dK, or Kelvin * 10).
-				data = OmniTrakFileRead_ReadBlock_HTPA32X32_PIXELS_INT_K(fid,data);
-
-			case block_codes.HTPA32X32_AMBIENT_TEMP                         %The current ambient temperature measured by the HTPA32x32, represented as a 32-bit float, in units of Celcius.
-				data = OmniTrakFileRead_ReadBlock_HTPA32X32_AMBIENT_TEMP(fid,data);
-
-			case block_codes.HTPA32X32_PIXELS_INT12_C                       %The current HTPA32x32 pixel readings represented as 12-bit signed integers (2 pixels for every 3 bytes) in units of deciCelsius (dC, or Celsius * 10), with values under-range set to the minimum  (2048 dC) and values over-range set to the maximum (2047 dC).
-				data = OmniTrakFileRead_ReadBlock_HTPA32X32_PIXELS_INT12_C(fid,data);
-
-			case block_codes.HTPA32X32_HOTTEST_PIXEL_FP62                   %The location and temperature of the hottest pixel in the HTPA32x32 image. This may not be the raw hottest pixel. It may have gone through some processing and filtering to determine the true hottest pixel. The temperature will be in FP62 formatted Celsius.
-				data = OmniTrakFileRead_ReadBlock_HTPA32X32_HOTTEST_PIXEL_FP62(fid,data);
-
-			case block_codes.BH1749_RGB                                     %The current red, green, blue, IR, and green2 sensor readings from the BH1749 sensor
-				data = OmniTrakFileRead_ReadBlock_BH1749_RGB(fid,data);
-
-			case block_codes.DEBUG_SANITY_CHECK                             %A special block acting as a sanity check, only used in cases of debugging
-				data = OmniTrakFileRead_ReadBlock_DEBUG_SANITY_CHECK(fid,data);
-
-			case block_codes.BME280_TEMP_FL                                 %The current BME280 temperature reading as a converted float32 value, in Celsius.
-				data = OmniTrakFileRead_ReadBlock_BME280_TEMP_FL(fid,data);
-
-			case block_codes.BMP280_TEMP_FL                                 %The current BMP280 temperature reading as a converted float32 value, in Celsius.
-				data = OmniTrakFileRead_ReadBlock_BMP280_TEMP_FL(fid,data);
-
-			case block_codes.BME680_TEMP_FL                                 %The current BME680 temperature reading as a converted float32 value, in Celsius.
-				data = OmniTrakFileRead_ReadBlock_BME680_TEMP_FL(fid,data);
-
-			case block_codes.BME280_PRES_FL                                 %The current BME280 pressure reading as a converted float32 value, in Pascals (Pa).
-				data = OmniTrakFileRead_ReadBlock_BME280_PRES_FL(fid,data);
-
-			case block_codes.BMP280_PRES_FL                                 %The current BMP280 pressure reading as a converted float32 value, in Pascals (Pa).
-				data = OmniTrakFileRead_ReadBlock_BMP280_PRES_FL(fid,data);
-
-			case block_codes.BME680_PRES_FL                                 %The current BME680 pressure reading as a converted float32 value, in Pascals (Pa).
-				data = OmniTrakFileRead_ReadBlock_BME680_PRES_FL(fid,data);
-
-			case block_codes.BME280_HUM_FL                                  %The current BM280 humidity reading as a converted float32 value, in percent (%).
-				data = OmniTrakFileRead_ReadBlock_BME280_HUM_FL(fid,data);
-
-			case block_codes.BME680_HUM_FL                                  %The current BME680 humidity reading as a converted float32 value, in percent (%).
-				data = OmniTrakFileRead_ReadBlock_BME680_HUM_FL(fid,data);
-
-			case block_codes.BME680_GAS_FL                                  %The current BME680 gas resistance reading as a converted float32 value, in units of kOhms
-				data = OmniTrakFileRead_ReadBlock_BME680_GAS_FL(fid,data);
-
-			case block_codes.VL53L0X_DIST                                   %The current VL53L0X distance reading as a 16-bit integer, in millimeters (-1 indicates out-of-range).
-				data = OmniTrakFileRead_ReadBlock_VL53L0X_DIST(fid,data);
-
-			case block_codes.VL53L0X_FAIL                                   %Indicates the VL53L0X sensor experienced a range failure.
-				data = OmniTrakFileRead_ReadBlock_VL53L0X_FAIL(fid,data);
-
-			case block_codes.SGP30_SN                                       %The serial number of the SGP30.
-				data = OmniTrakFileRead_ReadBlock_SGP30_SN(fid,data);
-
-			case block_codes.SGP30_EC02                                     %The current SGp30 eCO2 reading distance reading as a 16-bit integer, in parts per million (ppm).
-				data = OmniTrakFileRead_ReadBlock_SGP30_EC02(fid,data);
-
-			case block_codes.SGP30_TVOC                                     %The current SGp30 TVOC reading distance reading as a 16-bit integer, in parts per million (ppm).
-				data = OmniTrakFileRead_ReadBlock_SGP30_TVOC(fid,data);
-
-			case block_codes.MLX90640_DEVICE_ID                             %The MLX90640 unique device ID saved in the device's EEPROM.
-				data = OmniTrakFileRead_ReadBlock_MLX90640_DEVICE_ID(fid,data);
-
-			case block_codes.MLX90640_EEPROM_DUMP                           %Raw download of the entire MLX90640 EEPROM, as unsigned 16-bit integers.
-				data = OmniTrakFileRead_ReadBlock_MLX90640_EEPROM_DUMP(fid,data);
-
-			case block_codes.MLX90640_ADC_RES                               %ADC resolution setting on the MLX90640 (16-, 17-, 18-, or 19-bit).
-				data = OmniTrakFileRead_ReadBlock_MLX90640_ADC_RES(fid,data);
-
-			case block_codes.MLX90640_REFRESH_RATE                          %Current refresh rate on the MLX90640 (0.25, 0.5, 1, 2, 4, 8, 16, or 32 Hz).
-				data = OmniTrakFileRead_ReadBlock_MLX90640_REFRESH_RATE(fid,data);
-
-			case block_codes.MLX90640_I2C_CLOCKRATE                         %Current I2C clock freqency used with the MLX90640 (100, 400, or 1000 kHz).
-				data = OmniTrakFileRead_ReadBlock_MLX90640_I2C_CLOCKRATE(fid,data);
-
-			case block_codes.MLX90640_PIXELS_TO                             %The current MLX90640 pixel readings as converted float32 values, in Celsius.
-				data = OmniTrakFileRead_ReadBlock_MLX90640_PIXELS_TO(fid,data);
-
-			case block_codes.MLX90640_PIXELS_IM                             %The current MLX90640 pixel readings as converted, but uncalibrationed, float32 values.
-				data = OmniTrakFileRead_ReadBlock_MLX90640_PIXELS_IM(fid,data);
-
-			case block_codes.MLX90640_PIXELS_INT                            %The current MLX90640 pixel readings as a raw, unsigned 16-bit integers.
-				data = OmniTrakFileRead_ReadBlock_MLX90640_PIXELS_INT(fid,data);
-
-			case block_codes.MLX90640_I2C_TIME                              %The I2C transfer time of the frame data from the MLX90640 to the microcontroller, in milliseconds.
-				data = OmniTrakFileRead_ReadBlock_MLX90640_I2C_TIME(fid,data);
-
-			case block_codes.MLX90640_CALC_TIME                             %The calculation time for the uncalibrated or calibrated image captured by the MLX90640.
-				data = OmniTrakFileRead_ReadBlock_MLX90640_CALC_TIME(fid,data);
-
-			case block_codes.MLX90640_IM_WRITE_TIME                         %The SD card write time for the MLX90640 float32 image data.
-				data = OmniTrakFileRead_ReadBlock_MLX90640_IM_WRITE_TIME(fid,data);
-
-			case block_codes.MLX90640_INT_WRITE_TIME                        %The SD card write time for the MLX90640 raw uint16 data.
-				data = OmniTrakFileRead_ReadBlock_MLX90640_INT_WRITE_TIME(fid,data);
-
-			case block_codes.ALSPT19_LIGHT                                  %The current analog value of the ALS-PT19 ambient light sensor, as an unsigned integer ADC value.
-				data = OmniTrakFileRead_ReadBlock_ALSPT19_LIGHT(fid,data);
-
-			case block_codes.ZMOD4410_MOX_BOUND                             %The current lower and upper bounds for the ZMOD4410 ADC reading used in calculations.
-				data = OmniTrakFileRead_ReadBlock_ZMOD4410_MOX_BOUND(fid,data);
-
-			case block_codes.ZMOD4410_CONFIG_PARAMS                         %Current configuration values for the ZMOD4410.
-				data = OmniTrakFileRead_ReadBlock_ZMOD4410_CONFIG_PARAMS(fid,data);
-
-			case block_codes.ZMOD4410_ERROR                                 %Timestamped ZMOD4410 error event.
-				data = OmniTrakFileRead_ReadBlock_ZMOD4410_ERROR(fid,data);
-
-			case block_codes.ZMOD4410_READING_FL                            %Timestamped ZMOD4410 reading calibrated and converted to float32.
-				data = OmniTrakFileRead_ReadBlock_ZMOD4410_READING_FL(fid,data);
-
-			case block_codes.ZMOD4410_READING_INT                           %Timestamped ZMOD4410 reading saved as the raw uint16 ADC value.
-				data = OmniTrakFileRead_ReadBlock_ZMOD4410_READING_INT(fid,data);
-
-			case block_codes.ZMOD4410_ECO2                                  %Timestamped ZMOD4410 eCO2 reading.
-				data = OmniTrakFileRead_ReadBlock_ZMOD4410_ECO2(fid,data);
-
-			case block_codes.ZMOD4410_IAQ                                   %Timestamped ZMOD4410 indoor air quality reading.
-				data = OmniTrakFileRead_ReadBlock_ZMOD4410_IAQ(fid,data);
-
-			case block_codes.ZMOD4410_TVOC                                  %Timestamped ZMOD4410 total volatile organic compound reading.
-				data = OmniTrakFileRead_ReadBlock_ZMOD4410_TVOC(fid,data);
-
-			case block_codes.ZMOD4410_R_CDA                                 %Timestamped ZMOD4410 total volatile organic compound reading.
-				data = OmniTrakFileRead_ReadBlock_ZMOD4410_R_CDA(fid,data);
-
-			case block_codes.LSM303_ACC_SETTINGS                            %Current accelerometer reading settings on any enabled LSM303.
-				data = OmniTrakFileRead_ReadBlock_LSM303_ACC_SETTINGS(fid,data);
-
-			case block_codes.LSM303_MAG_SETTINGS                            %Current magnetometer reading settings on any enabled LSM303.
-				data = OmniTrakFileRead_ReadBlock_LSM303_MAG_SETTINGS(fid,data);
-
-			case block_codes.LSM303_ACC_FL                                  %Current readings from the LSM303 accelerometer, as float values in m/s^2.
-				data = OmniTrakFileRead_ReadBlock_LSM303_ACC_FL(fid,data);
-
-			case block_codes.LSM303_MAG_FL                                  %Current readings from the LSM303 magnetometer, as float values in uT.
-				data = OmniTrakFileRead_ReadBlock_LSM303_MAG_FL(fid,data);
-
-			case block_codes.LSM303_TEMP_FL                                 %Current readings from the LSM303 temperature sensor, as float value in degrees Celcius
-				data = OmniTrakFileRead_ReadBlock_LSM303_TEMP_FL(fid,data);
-
-			case block_codes.SPECTRO_WAVELEN                                %Spectrometer wavelengths, in nanometers.
-				data = OmniTrakFileRead_ReadBlock_SPECTRO_WAVELEN(fid,data);
-
-			case block_codes.SPECTRO_TRACE                                  %Spectrometer measurement trace.
-				data = OmniTrakFileRead_ReadBlock_SPECTRO_TRACE(fid,data);
-
-			case block_codes.PELLET_DISPENSE                                %Timestamped event for feeding/pellet dispensing.
-				data = OmniTrakFileRead_ReadBlock_PELLET_DISPENSE(fid,data);
-
-			case block_codes.PELLET_FAILURE                                 %Timestamped event for feeding/pellet dispensing in which no pellet was detected.
-				data = OmniTrakFileRead_ReadBlock_PELLET_FAILURE(fid,data);
-
-			case block_codes.HARD_PAUSE_START                               %Timestamped event marker for the start of a session pause, with no events recorded during the pause.
-				data = OmniTrakFileRead_ReadBlock_HARD_PAUSE_START(fid,data);
-
-			case block_codes.HARD_PAUSE_START                               %Timestamped event marker for the stop of a session pause, with no events recorded during the pause.
-				data = OmniTrakFileRead_ReadBlock_HARD_PAUSE_START(fid,data);
-
-			case block_codes.SOFT_PAUSE_START                               %Timestamped event marker for the start of a session pause, with non-operant events recorded during the pause.
-				data = OmniTrakFileRead_ReadBlock_SOFT_PAUSE_START(fid,data);
-
-			case block_codes.SOFT_PAUSE_START                               %Timestamped event marker for the stop of a session pause, with non-operant events recorded during the pause.
-				data = OmniTrakFileRead_ReadBlock_SOFT_PAUSE_START(fid,data);
-
-			case block_codes.TRIAL_START_SERIAL_DATE                        %Timestamped event marker for the start of a trial, with accompanying microsecond clock reading
-				data = OmniTrakFileRead_ReadBlock_TRIAL_START_SERIAL_DATE(fid,data);
-
-			case block_codes.POSITION_START_X                               %Starting position of an autopositioner in just the x-direction, with distance in millimeters.
-				data = OmniTrakFileRead_ReadBlock_POSITION_START_X(fid,data);
-
-			case block_codes.POSITION_MOVE_X                                %Timestamped movement of an autopositioner in just the x-direction, with distance in millimeters.
-				data = OmniTrakFileRead_ReadBlock_POSITION_MOVE_X(fid,data);
-
-			case block_codes.POSITION_START_XY                              %Starting position of an autopositioner in just the x- and y-directions, with distance in millimeters.
-				data = OmniTrakFileRead_ReadBlock_POSITION_START_XY(fid,data);
-
-			case block_codes.POSITION_MOVE_XY                               %Timestamped movement of an autopositioner in just the x- and y-directions, with distance in millimeters.
-				data = OmniTrakFileRead_ReadBlock_POSITION_MOVE_XY(fid,data);
-
-			case block_codes.POSITION_START_XYZ                             %Starting position of an autopositioner in the x-, y-, and z- directions, with distance in millimeters.
-				data = OmniTrakFileRead_ReadBlock_POSITION_START_XYZ(fid,data);
-
-			case block_codes.POSITION_MOVE_XYZ                              %Timestamped movement of an autopositioner in the x-, y-, and z- directions, with distance in millimeters.
-				data = OmniTrakFileRead_ReadBlock_POSITION_MOVE_XYZ(fid,data);
-
-			case block_codes.TTL_PULSE                                      %Timestamped event for a TTL pulse output, with channel number, voltage, and duration.
-				data = OmniTrakFileRead_ReadBlock_TTL_PULSE(fid,data);
-
-			case block_codes.STREAM_INPUT_NAME                              %Stream input name for the specified input index.
-				data = OmniTrakFileRead_ReadBlock_STREAM_INPUT_NAME(fid,data);
-
-			case block_codes.CALIBRATION_BASELINE                           %Starting calibration baseline coefficient, for the specified module index.
-				data = OmniTrakFileRead_ReadBlock_CALIBRATION_BASELINE(fid,data);
-
-			case block_codes.CALIBRATION_SLOPE                              %Starting calibration slope coefficient, for the specified module index.
-				data = OmniTrakFileRead_ReadBlock_CALIBRATION_SLOPE(fid,data);
-
-			case block_codes.CALIBRATION_BASELINE_ADJUST                    %Timestamped in-session calibration baseline coefficient adjustment, for the specified module index.
-				data = OmniTrakFileRead_ReadBlock_CALIBRATION_BASELINE_ADJUST(fid,data);
-
-			case block_codes.CALIBRATION_SLOPE_ADJUST                       %Timestamped in-session calibration slope coefficient adjustment, for the specified module index.
-				data = OmniTrakFileRead_ReadBlock_CALIBRATION_SLOPE_ADJUST(fid,data);
-
-			case block_codes.HIT_THRESH_TYPE                                %Type of hit threshold (i.e. peak force), for the specified input.
-				data = OmniTrakFileRead_ReadBlock_HIT_THRESH_TYPE(fid,data);
-
-			case block_codes.SECONDARY_THRESH_NAME                          %A name/description of secondary thresholds used in the behavior.
-				data = OmniTrakFileRead_ReadBlock_SECONDARY_THRESH_NAME(fid,data);
-
-			case block_codes.INIT_THRESH_TYPE                               %Type of initation threshold (i.e. force or touch), for the specified input.
-				data = OmniTrakFileRead_ReadBlock_INIT_THRESH_TYPE(fid,data);
-
-			case block_codes.REMOTE_MANUAL_FEED                             %A timestamped manual feed event, triggered remotely.
-				data = OmniTrakFileRead_ReadBlock_REMOTE_MANUAL_FEED(fid,data);
-
-			case block_codes.HWUI_MANUAL_FEED                               %A timestamped manual feed event, triggered from the hardware user interface.
-				data = OmniTrakFileRead_ReadBlock_HWUI_MANUAL_FEED(fid,data);
-
-			case block_codes.FW_RANDOM_FEED                                 %A timestamped manual feed event, triggered randomly by the firmware.
-				data = OmniTrakFileRead_ReadBlock_FW_RANDOM_FEED(fid,data);
-
-			case block_codes.SWUI_MANUAL_FEED_DEPRECATED                    %A timestamped manual feed event, triggered from a computer software user interface.
-				data = OmniTrakFileRead_ReadBlock_SWUI_MANUAL_FEED_DEPRECATED(fid,data);
-
-			case block_codes.FW_OPERANT_FEED                                %A timestamped operant-rewarded feed event, trigged by the OmniHome firmware, with the possibility of multiple feedings.
-				data = OmniTrakFileRead_ReadBlock_FW_OPERANT_FEED(fid,data);
-
-			case block_codes.SWUI_MANUAL_FEED                               %A timestamped manual feed event, triggered from a computer software user interface.
-				data = OmniTrakFileRead_ReadBlock_SWUI_MANUAL_FEED(fid,data);
-
-			case block_codes.SW_RANDOM_FEED                                 %A timestamped manual feed event, triggered randomly by computer software.
-				data = OmniTrakFileRead_ReadBlock_SW_RANDOM_FEED(fid,data);
-
-			case block_codes.SW_OPERANT_FEED                                %A timestamped operant-rewarded feed event, trigged by the PC-based behavioral software, with the possibility of multiple feedings.
-				data = OmniTrakFileRead_ReadBlock_SW_OPERANT_FEED(fid,data);
-
-			case block_codes.MOTOTRAK_V3P0_OUTCOME                          %MotoTrak version 3.0 trial outcome data.
-				data = OmniTrakFileRead_ReadBlock_MOTOTRAK_V3P0_OUTCOME(fid,data);
-
-			case block_codes.MOTOTRAK_V3P0_SIGNAL                           %MotoTrak version 3.0 trial stream signal.
-				data = OmniTrakFileRead_ReadBlock_MOTOTRAK_V3P0_SIGNAL(fid,data);
-
-			case block_codes.POKE_BITMASK                                   %Nosepoke status bitmask, typically written only when it changes.
-				data = OmniTrakFileRead_ReadBlock_POKE_BITMASK(fid,data);
-
-			case block_codes.OUTPUT_TRIGGER_NAME                            %Name/description of the output trigger type for the given index.
-				data = OmniTrakFileRead_ReadBlock_OUTPUT_TRIGGER_NAME(fid,data);
-
-			case block_codes.VIBRATION_TASK_TRIAL_OUTCOME                   %Vibration task trial outcome data.
-				data = OmniTrakFileRead_ReadBlock_VIBRATION_TASK_TRIAL_OUTCOME(fid,data);
-
-			case block_codes.VIBROTACTILE_DETECTION_TASK_TRIAL              %Vibrotactile detection task trial data.
-				data = OmniTrakFileRead_ReadBlock_VIBROTACTILE_DETECTION_TASK_TRIAL(fid,data);
-
-			case block_codes.LED_DETECTION_TASK_TRIAL_OUTCOME               %LED detection task trial outcome data.
-				data = OmniTrakFileRead_ReadBlock_LED_DETECTION_TASK_TRIAL_OUTCOME(fid,data);
-
-			case block_codes.LIGHT_SRC_MODEL                                %Light source model name.
-				data = OmniTrakFileRead_ReadBlock_LIGHT_SRC_MODEL(fid,data);
-
-			case block_codes.LIGHT_SRC_TYPE                                 %Light source type (i.e. LED, LASER, etc).
-				data = OmniTrakFileRead_ReadBlock_LIGHT_SRC_TYPE(fid,data);
-
-			case block_codes.STTC_2AFC_TRIAL_OUTCOME                        %SensiTrak tactile discrimination task trial outcome data.
-				data = OmniTrakFileRead_ReadBlock_STTC_2AFC_TRIAL_OUTCOME(fid,data);
-
-			case block_codes.STTC_NUM_PADS                                  %Number of pads on the SensiTrak Tactile Carousel module.
-				data = OmniTrakFileRead_ReadBlock_STTC_NUM_PADS(fid,data);
-
-			case block_codes.MODULE_MICROSTEP                               %Microstep setting on the specified OTMP module.
-				data = OmniTrakFileRead_ReadBlock_MODULE_MICROSTEP(fid,data);
-
-			case block_codes.MODULE_STEPS_PER_ROT                           %Steps per rotation on the specified OTMP module.
-				data = OmniTrakFileRead_ReadBlock_MODULE_STEPS_PER_ROT(fid,data);
-
-			case block_codes.MODULE_PITCH_CIRC                              %Pitch circumference, in millimeters, of the driving gear on the specified OTMP module.
-				data = OmniTrakFileRead_ReadBlock_MODULE_PITCH_CIRC(fid,data);
-
-			case block_codes.MODULE_CENTER_OFFSET                           %Center offset, in millimeters, for the specified OTMP module.
-				data = OmniTrakFileRead_ReadBlock_MODULE_CENTER_OFFSET(fid,data);
-
-			case block_codes.STAP_2AFC_TRIAL_OUTCOME                        %SensiTrak proprioception discrimination task trial outcome data.
-				data = OmniTrakFileRead_ReadBlock_STAP_2AFC_TRIAL_OUTCOME(fid,data);
-
-			case block_codes.FR_TASK_TRIAL                                  %Fixed reinforcement task trial data.
-				data = OmniTrakFileRead_ReadBlock_FR_TASK_TRIAL(fid,data);
-
-			case block_codes.STOP_TASK_TRIAL                                %Stop task trial data.
-				data = OmniTrakFileRead_ReadBlock_STOP_TASK_TRIAL(fid,data);
-
-			otherwise                                                       %No matching block.
-				data = OmniTrakFileRead_Unrecognized_Block(fid,data);
-
-	end
-end
+data = OmniTrakFileRead_Check_Field_Name(data,'admin','name');              %Call the subfunction to check for existing fieldnames.         
+
+N = fread(fid,1,'uint8');                                                   %Read in the number of characters.
+if isempty(data.admin.name)                                                 %If no administrator name is yet set...
+    data.admin.name = fread(fid,N,'*char')';                                %Add the name to a cell array of names.
+else                                                                        %Otherwise...
+    if ~iscell(data.admin.name)                                             %If the name field isn't already a cell array.
+        data.admin.name = cellstr(data.admin.name);                         %Convert it to a cell array.
+    end
+    data.admin.name{end+1} = fread(fid,N,'*char')';                         %Add the name to a cell array of names.
+end                       
 
 
 function data = OmniTrakFileRead_ReadBlock_ALSPT19_ENABLED(fid,data)
@@ -1535,6 +733,48 @@ function data = OmniTrakFileRead_ReadBlock_CALIBRATION_BASELINE_ADJUST(fid,data)
 fprintf(1,'Need to finish coding for Block 2202: CALIBRATION_BASELINE_ADJUST');
 
 
+function data =  OmniTrakFileRead_ReadBlock_CALIBRATION_DATE(fid,data)
+
+%
+% OmniTrakFileRead_ReadBlock_CALIBRATION_DATE.m
+%   
+%   copyright 2025, Vulintus, Inc.
+%
+%   OmniTrakFileRead_ReadBlock_CALIBRATION_DATE reads in the 
+%   "CALIBRATION_DATE" data block from an *.OmniTrak format file. This 
+%   block is intended to contain the most recent calibration date/time for 
+%   a connected module, recorded as a serial date number, as well as the 
+%   module's port index.
+%
+%	OmniTrak File Block Code (OFBC):
+%		BLOCK VALUE:	0x089C
+%		DEFINITION:		CALIBRATION_DATE
+%		DESCRIPTION:	Most recent calibration date/time, for the specified module index.
+%
+%   UPDATE LOG:
+%   2025-06-19 - Drew Sloan - Function first created.
+%
+
+data = OmniTrakFileRead_Check_Field_Name(data,'device',...
+    {'port','calibration_date'});                                           %Call the subfunction to check for existing fieldnames.         
+
+port_i = fread(fid,1,'uint8');                                              %Read in the port index.
+existing_ports = vertcat(data.device.port);                                 %Fetch all the port indices already loaded in the structure...
+if isempty(existing_ports)                                                  %If this is the first module...
+    i = 1;                                                                  %Set the index to 1.
+else                                                                        %Otherwise...
+    i = (port_i == existing_ports);                                         %Check for a match to an already-loaded module.
+    if ~any(i)                                                              %If the port index doesn't match any existing modules...
+        i = length(data.device) + 1;                                        %Increment the index.
+    end
+end
+
+serial_date = fread(fid,1,'float64');                                       %Grab the serial date number.
+data.device(i).calibration_date = ...
+    datetime(serial_date,'ConvertFrom','datenum');                          %Add the calibration date as a datetime class.
+data.device(i).port = port_i;                                               %Add the port index.
+
+
 function data = OmniTrakFileRead_ReadBlock_CALIBRATION_SLOPE(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
@@ -1555,6 +795,105 @@ function data = OmniTrakFileRead_ReadBlock_CALIBRATION_SLOPE_ADJUST(fid,data)
 fprintf(1,'Need to finish coding for Block 2203: CALIBRATION_SLOPE_ADJUST');
 
 
+function data =  OmniTrakFileRead_ReadBlock_CAPSENSE_BITMASK(fid,data)
+
+%
+% OmniTrakFileRead_ReadBlock_CAPSENSE_BITMASK.m
+%   
+%   copyright 2025, Vulintus, Inc.
+%
+%   OMNITRAKFILEREAD_READBLOCK_CAPSENSE_BITMASK reads the values from a
+%   "CAPSENSE_BITMASK" data block in a Vulintus *.OmniTrak format file and
+%   adds them to a data structure for analysis.
+%
+%   Data block value:       0x0A10
+%   Data block name:        CAPSENSE_BITMASK
+%   Data block description: Capacitive sensor status bitmask, typically 
+%                           written only when it changes.
+%
+%   UPDATE LOG:
+%   2025-06-05 - Drew Sloan - Function first created.
+%
+
+
+ver = fread(fid,1,'uint8');                                                 %#ok<NASGU> %Data block version.
+
+data = OmniTrakFileRead_Check_Field_Name(data,'capsense',...
+    {'datenum','micros','status','value'});                                 %Call the subfunction to check for existing fieldnames.         
+i = size(data.capsense.datenum,1) + 1;                                      %Find the next bitmask index.
+
+if i == 1                                                                   %If this is the first bitmask reading...
+    data.capsense.datenum = fread(fid,1,'float64');                         %Save the serial date number timestamp.
+    data.capsense.micros = fread(fid,1,'float32');                          %Save the microcontroller microsecond timestamp.
+else                                                                        %Otherwise...
+    data.capsense.datenum(i,1) = fread(fid,1,'float64');                    %Save the serial date number timestamp.
+    data.capsense.micros(i,1) = fread(fid,1,'float32');                     %Save the microcontroller microsecond timestamp.
+end
+
+num_sensors = fread(fid,1,'uint8');                                         %Read in the number of sensors.
+capsense_mask = fread(fid,1,'uint8');                                       %Read in the sensor status bitmask.
+capsense_status = bitget(capsense_mask,1:num_sensors);                      %Grab the status for each nosecapsense.
+if i == 1                                                                   %If this is the first nosepoke event...
+    data.capsense.status = capsense_status;                                 %Create the status matrix.
+else                                                                        %Otherwise...
+    data.capsense.status(i,:) = capsense_status;                            %Add the new status to the matrix.
+end
+
+
+function data =  OmniTrakFileRead_ReadBlock_CAPSENSE_VALUE(fid,data)
+
+%
+% OmniTrakFileRead_ReadBlock_CAPSENSE_VALUE.m
+%   
+%   copyright 2025, Vulintus, Inc.
+%
+%   OMNITRAKFILEREAD_READBLOCK_CAPSENSE_VALUE reads the values from a
+%   "CAPSENSE_VALUE" data block in a Vulintus *.OmniTrak format file and
+%   adds them to a data structure for analysis.
+%
+%   Data block value:       0x0A11
+%   Data block name:        CAPSENSE_VALUE
+%   Data block description: Capacitive sensor reading for one sensor, in 
+%                           ADC ticks or clock cycles.
+%
+%   UPDATE LOG:
+%   2025-06-05 - Drew Sloan - Function first created.
+%
+
+
+ver = fread(fid,1,'uint8');                                                 %#ok<NASGU> %Data block version.
+
+data = OmniTrakFileRead_Check_Field_Name(data,'capsense',...
+    {'datenum','micros','status','value'});                                 %Call the subfunction to check for existing fieldnames.         
+i = size(data.capsense.datenum,1) + 1;                                      %Find the next bitmask index.
+
+if i == 1                                                                   %If this is the first bitmask reading...
+    data.capsense.datenum = fread(fid,1,'float64');                         %Save the serial date number timestamp.
+    data.capsense.micros = fread(fid,1,'float32');                          %Save the microcontroller microsecond timestamp.
+else                                                                        %Otherwise...
+    data.capsense.datenum(i,1) = fread(fid,1,'float64');                    %Save the serial date number timestamp.
+    data.capsense.micros(i,1) = fread(fid,1,'float32');                     %Save the microcontroller microsecond timestamp.
+end
+
+num_sensors = fread(fid,1,'uint8');                                         %Read in the number of sensors.
+capsense_mask = fread(fid,1,'uint8');                                       %Read in the sensor status bitmask.
+capsense_status = bitget(capsense_mask,1:num_sensors);                      %Grab the status for each nosecapsense.
+if i == 1                                                                   %If this is the first nosepoke event...
+    data.capsense.status = capsense_status;                                 %Create the status matrix.
+else                                                                        %Otherwise...
+    data.capsense.status(i,:) = capsense_status;                            %Add the new status to the matrix.
+end
+
+sensor_index = fread(fid,1,'uint8');                                        %Read the sensor index.
+sensor_val = fread(fid,1,'uint16');                                         %Read the sensor value.
+j = size(data.capsense.value,1) + 1;                                        %Find the next value index.
+if j == 1                                                                   %If this is the first value reading...
+    data.capsense.status = [sensor_index, sensor_val, i];                   %Create the status matrix.
+else                                                                        %Otherwise...
+    data.capsense.status(j,:) = [sensor_index, sensor_val, i];              %Add the new status to the matrix.
+end
+
+
 function data = OmniTrakFileRead_ReadBlock_CCS811_ENABLED(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
@@ -1570,8 +909,8 @@ function data = OmniTrakFileRead_ReadBlock_CLOCK_FILE_START(fid,data)
 %		6
 %		CLOCK_FILE_START
 
-data = OmniTrakFileRead_Check_Field_Name(data,'file_start','datenum');      %Call the subfunction to check for existing fieldnames.    
-data.file_start.datenum = fread(fid,1,'float64');                           %Save the file start 32-bit millisecond clock timestamp.
+data = OmniTrakFileRead_Check_Field_Name(data,'file','start','datenum');    %Call the subfunction to check for existing fieldnames.    
+data.file.start.datenum = fread(fid,1,'float64');                           %Save the file start 32-bit millisecond clock timestamp.
 
 
 function data = OmniTrakFileRead_ReadBlock_CLOCK_FILE_STOP(fid,data)
@@ -1580,30 +919,100 @@ function data = OmniTrakFileRead_ReadBlock_CLOCK_FILE_STOP(fid,data)
 %		7
 %		CLOCK_FILE_STOP
 
-data = OmniTrakFileRead_Check_Field_Name(data,'file_stop','datenum');       %Call the subfunction to check for existing fieldnames.
-data.file_stop.datenum = fread(fid,1,'float64');                            %Save the file stop 32-bit millisecond clock timestamp.
+data = OmniTrakFileRead_Check_Field_Name(data,'file','stop','datenum');     %Call the subfunction to check for existing fieldnames.
+data.file.stop.datenum = fread(fid,1,'float64');                            %Save the file stop 32-bit millisecond clock timestamp.
+
+
+function data = OmniTrakFileRead_ReadBlock_CLOCK_SYNC(fid,data)
+
+%	OmniTrak File Block Code (OFBC):
+%		22
+%		CLOCK_SYNC
+
+data = OmniTrakFileRead_Check_Field_Name(data,'clock','sync');            %Call the subfunction to check for existing fieldnames.
+
+ver = fread(fid,1,'uint8');                                                 %Read in the AMBULATION_XY_THETA data block version.
+
+switch ver                                                                  %Switch between the different data block versions.
+
+    case 1                                                                  %Version 1.    
+        i = length(data.clock.sync) + 1;                                    %Increment the clock synchronization index.
+        data.clock.sync(i).port = fread(fid,1,'uint8');                     %Grab the port number.
+        type_mask = fread(fid,1,'uint8');                                   %Grab the timestamp type bitmask.
+        if bitget(type_mask,1)                                              %If a serial date number was saved...
+            data.clock.sync(i).datenum = fread(fid,1,'float64');            %Serial date number.
+        end
+        if bitget(type_mask,2)                                              %If a millisecond clock reading was saved...
+            data.clock.sync(i).millis = fread(fid,1,'uint32');              %Millisecond clock reading.
+        end
+        if bitget(type_mask,3)                                              %If a microsecond clock reading was saved...
+            data.clock.sync(i).micros = fread(fid,1,'uint32');              %Microsecond clock reading.
+        end
+
+    otherwise                                                               %Unrecognized data block version.
+        error(['ERROR IN %s: Data block version #%1.0f is not '...
+            'recognized!'], upper(mfilename), ver);                         %Show an error.
+        
+end
 
 
 function data = OmniTrakFileRead_ReadBlock_COMPUTER_NAME(fid,data)
 
+%
+% OmniTrakFileRead_ReadBlock_COMPUTER_NAME.m
+%   
+%   copyright 2025, Vulintus, Inc.
+%
+%   OMNITRAKFILEREAD_READBLOCK_COMPUTER_NAME reads in the "COMPUTER_NAME" 
+%   data block from an *.OmniTrak format file. This block is intended to 
+%   contain the computer name set in Windows for the computer running the
+%   data collection program, written as characters.
+%
 %	OmniTrak File Block Code (OFBC):
-%		106
-%		COMPUTER_NAME
+%		BLOCK VALUE:	0x006A
+%		DEFINITION:		COMPUTER_NAME
+%		DESCRIPTION:	Windows PC computer name.
+%
+%   UPDATE LOG:
+%   ????-??-?? - Drew Sloan - Function first created.
+%   2025-06-19 - Drew Sloan - Updated function description to match the
+%                             "ReadBlock" documentation style.
+%
 
-data = OmniTrakFileRead_Check_Field_Name(data,'device','computer');         %Call the subfunction to check for existing fieldnames.
+data = OmniTrakFileRead_Check_Field_Name(data,'system','computer');         %Call the subfunction to check for existing fieldnames.
+
 N = fread(fid,1,'uint8');                                                   %Read in the number of characters.
-data.device.computer = char(fread(fid,N,'uchar')');                         %Read in the computer name.
+data.system.computer = fread(fid,N,'*char')';                               %Read in the computer name.
 
 
 function data = OmniTrakFileRead_ReadBlock_COM_PORT(fid,data)
 
+%
+% OmniTrakFileRead_ReadBlock_COM_PORT.m
+%   
+%   copyright 2025, Vulintus, Inc.
+%
+%   OMNITRAKFILEREAD_READBLOCK_COM_PORT reads in the "COM_PORT" data block
+%   from an *.OmniTrak format file. This block is intended to contain the
+%   the USB COM port name for the wired USB connection between the Vulintus
+%   system and the computer running the data collection program, written as
+%   characters.
+%
 %	OmniTrak File Block Code (OFBC):
-%		107
-%		COM_PORT
+%		BLOCK VALUE:	0x006B
+%		DEFINITION:		COM_PORT
+%		DESCRIPTION:	The COM port of a computer-connected system.
+%
+%   UPDATE LOG:
+%   ????-??-?? - Drew Sloan - Function first created.
+%   2025-06-19 - Drew Sloan - Updated function description to match the
+%                             "ReadBlock" documentation style.
+%
 
-data = OmniTrakFileRead_Check_Field_Name(data,'device','com_port');         %Call the subfunction to check for existing fieldnames.
+data = OmniTrakFileRead_Check_Field_Name(data,'system','com_port');         %Call the subfunction to check for existing fieldnames.
+
 N = fread(fid,1,'uint8');                                                   %Read in the number of characters.
-data.device.com_port = char(fread(fid,N,'uchar')');                         %Read in the port name.
+data.system.com_port = char(fread(fid,N,'uchar')');                         %Read in the port name.
 
 
 function data = OmniTrakFileRead_ReadBlock_CTRL_FW_DATE(fid,data)
@@ -1721,14 +1130,51 @@ fprintf(1,'Need to finish coding for Block 1121: DEBUG_SANITY_CHECK\n');
 
 function data = OmniTrakFileRead_ReadBlock_DEVICE_ALIAS(fid,data)
 
+%
+% OmniTrakFileRead_ReadBlock_DEVICE_ALIAS.m
+%   
+%   copyright 2025, Vulintus, Inc.
+%
+%   OMNITRAKFILEREAD_READBLOCK_DEVICE_ALIAS reads in the "DEVICE_ALIAS" 
+%   data block from an *.OmniTrak format file. This block is intended to 
+%   contain a unique human-readable serial number, typically an
+%   adjective + noun combination such as ArdentAardvark or MellowMuskrat,
+%   for example, written as characters.
+%
+%   Note that this data block assumes the device alias is for the primary 
+%   device or controller, and assigns a port index of zero. Device aliases 
+%   for connected modules should be saved with the "MODULE_VULINTUS_ALIAS"
+%   block.
+%
 %	OmniTrak File Block Code (OFBC):
-%		BLOCK VALUE:	108
+%		BLOCK VALUE:	0x006C
 %		DEFINITION:		DEVICE_ALIAS
-%		DESCRIPTION:	Human-readable Adjective + Noun alias/name for the device, assigned by Vulintus during manufacturing
+%		DESCRIPTION:	Human-readable Adjective + Noun alias/name for the
+%                       device, assigned by Vulintus during manufacturing.
+%
+%   UPDATE LOG:
+%   ????-??-?? - Drew Sloan - Function first created.
+%   2025-06-19 - Drew Sloan - Updated function description to match the
+%                             "ReadBlock" documentation style.
+%
 
-data = OmniTrakFileRead_Check_Field_Name(data,'device','alias');            %Call the subfunction to check for existing fieldnames.
-nchar = fread(fid,1,'uint8');                                               %Read in the number of characters in the device alias.
-data.device.alias = char(fread(fid,nchar,'uchar')');                        %Save the 32-bit SAMD chip ID.
+data = OmniTrakFileRead_Check_Field_Name(data,'device',{'alias','port'});   %Call the subfunction to check for existing fieldnames.
+
+port_i = 0;                                                                 %Set the port index.
+
+existing_ports = vertcat(data.device.port);                                 %Fetch all the port indices already loaded in the structure...
+if isempty(existing_ports)                                                  %If this is the first module...
+    i = 1;                                                                  %Set the index to 1.
+else                                                                        %Otherwise...
+    i = (port_i == existing_ports);                                         %Check for a match to an already-loaded module.
+    if ~any(i)                                                              %If the port index doesn't match any existing modules...
+        i = length(data.device) + 1;                                        %Increment the index.
+    end
+end
+
+N = fread(fid,1,'uint8');                                                   %Read in the number of characters in the device alias.
+data.device(i).alias = fread(fid,N,'*char')';                               %Save the 32-bit SAMD chip ID.
+data.device(i).port = port_i;                                               %Add the port index.
 
 
 function data = OmniTrakFileRead_ReadBlock_DEVICE_FILE_INDEX(fid,data)
@@ -1778,6 +1224,648 @@ function data = OmniTrakFileRead_ReadBlock_DOWNLOAD_TIME(fid,data)
 data = OmniTrakFileRead_Check_Field_Name(data,'file_info','download',...
     'time');                                                                %Call the subfunction to check for existing fieldnames.
 data.file_info.download.time = fread(fid,1,'float64');                      %Read in the timestamp for the download.
+
+
+function block_read = OmniTrakFileRead_ReadBlock_Dictionary(fid)
+
+%
+% OmniTrakFileRead_ReadBlock_Dictionary.m
+%
+%	copyright 2025, Vulintus, Inc.
+%
+%	OmniTrak file data block read subfunction router.
+%
+%	Library documentation:
+%	https://github.com/Vulintus/OmniTrak_File_Format
+%
+%	This function was programmatically generated: 2025-06-18, 08:38:19 (UTC)
+%
+
+block_read = dictionary;
+
+
+% The version of the file format used.
+block_read(1) = struct('def_name', 'FILE_VERSION', 'fcn', @(data)OmniTrakFileRead_ReadBlock_FILE_VERSION(fid,data));
+
+% Value of the SoC millisecond clock at file creation.
+block_read(2) = struct('def_name', 'MS_FILE_START', 'fcn', @(data)OmniTrakFileRead_ReadBlock_MS_FILE_START(fid,data));
+
+% Value of the SoC millisecond clock when the file is closed.
+block_read(3) = struct('def_name', 'MS_FILE_STOP', 'fcn', @(data)OmniTrakFileRead_ReadBlock_MS_FILE_STOP(fid,data));
+
+% A single subject's name.
+block_read(4) = struct('def_name', 'SUBJECT_DEPRECATED', 'fcn', @(data)OmniTrakFileRead_ReadBlock_SUBJECT_DEPRECATED(fid,data));
+
+
+% Computer clock serial date number at file creation (local time).
+block_read(6) = struct('def_name', 'CLOCK_FILE_START', 'fcn', @(data)OmniTrakFileRead_ReadBlock_CLOCK_FILE_START(fid,data));
+
+% Computer clock serial date number when the file is closed (local time).
+block_read(7) = struct('def_name', 'CLOCK_FILE_STOP', 'fcn', @(data)OmniTrakFileRead_ReadBlock_CLOCK_FILE_STOP(fid,data));
+
+
+% The device's current file index.
+block_read(10) = struct('def_name', 'DEVICE_FILE_INDEX', 'fcn', @(data)OmniTrakFileRead_ReadBlock_DEVICE_FILE_INDEX(fid,data));
+
+
+% A fetched NTP time (seconds since January 1, 1900) at the specified SoC millisecond clock time.
+block_read(20) = struct('def_name', 'NTP_SYNC', 'fcn', @(data)OmniTrakFileRead_ReadBlock_NTP_SYNC(fid,data));
+
+% Indicates the an NTP synchonization attempt failed.
+block_read(21) = struct('def_name', 'NTP_SYNC_FAIL', 'fcn', @(data)OmniTrakFileRead_ReadBlock_NTP_SYNC_FAIL(fid,data));
+
+% The current serial date number, millisecond clock reading, and/or microsecond clock reading at a single timepoint.
+block_read(22) = struct('def_name', 'CLOCK_SYNC', 'fcn', @(data)OmniTrakFileRead_ReadBlock_CLOCK_SYNC(fid,data));
+
+% Indicates that the millisecond timer rolled over since the last loop.
+block_read(23) = struct('def_name', 'MS_TIMER_ROLLOVER', 'fcn', @(data)OmniTrakFileRead_ReadBlock_MS_TIMER_ROLLOVER(fid,data));
+
+% Indicates that the microsecond timer rolled over since the last loop.
+block_read(24) = struct('def_name', 'US_TIMER_ROLLOVER', 'fcn', @(data)OmniTrakFileRead_ReadBlock_US_TIMER_ROLLOVER(fid,data));
+
+% Computer clock time zone offset from UTC.
+block_read(25) = struct('def_name', 'TIME_ZONE_OFFSET', 'fcn', @(data)OmniTrakFileRead_ReadBlock_TIME_ZONE_OFFSET(fid,data));
+
+% Computer clock time zone offset from UTC as two integers, one for hours, and the other for minutes
+block_read(26) = struct('def_name', 'TIME_ZONE_OFFSET_HHMM', 'fcn', @(data)OmniTrakFileRead_ReadBlock_TIME_ZONE_OFFSET_HHMM(fid,data));
+
+
+% Current date/time string from the real-time clock.
+block_read(30) = struct('def_name', 'RTC_STRING_DEPRECATED', 'fcn', @(data)OmniTrakFileRead_ReadBlock_RTC_STRING_DEPRECATED(fid,data));
+
+% Current date/time string from the real-time clock.
+block_read(31) = struct('def_name', 'RTC_STRING', 'fcn', @(data)OmniTrakFileRead_ReadBlock_RTC_STRING(fid,data));
+
+% Current date/time values from the real-time clock.
+block_read(32) = struct('def_name', 'RTC_VALUES', 'fcn', @(data)OmniTrakFileRead_ReadBlock_RTC_VALUES(fid,data));
+
+
+% The original filename for the data file.
+block_read(40) = struct('def_name', 'ORIGINAL_FILENAME', 'fcn', @(data)OmniTrakFileRead_ReadBlock_ORIGINAL_FILENAME(fid,data));
+
+% A timestamped event to indicate when a file has been renamed by one of Vulintus' automatic data organizing programs.
+block_read(41) = struct('def_name', 'RENAMED_FILE', 'fcn', @(data)OmniTrakFileRead_ReadBlock_RENAMED_FILE(fid,data));
+
+% A timestamp indicating when the data file was downloaded from the OmniTrak device to a computer.
+block_read(42) = struct('def_name', 'DOWNLOAD_TIME', 'fcn', @(data)OmniTrakFileRead_ReadBlock_DOWNLOAD_TIME(fid,data));
+
+% The computer system name and the COM port used to download the data file form the OmniTrak device.
+block_read(43) = struct('def_name', 'DOWNLOAD_SYSTEM', 'fcn', @(data)OmniTrakFileRead_ReadBlock_DOWNLOAD_SYSTEM(fid,data));
+
+
+% Indicates that the file will end in an incomplete block.
+block_read(50) = struct('def_name', 'INCOMPLETE_BLOCK', 'fcn', @(data)OmniTrakFileRead_ReadBlock_INCOMPLETE_BLOCK(fid,data));
+
+
+% Date/time values from a user-set timestamp.
+block_read(60) = struct('def_name', 'USER_TIME', 'fcn', @(data)OmniTrakFileRead_ReadBlock_USER_TIME(fid,data));
+
+
+% Vulintus system ID code (1 = MotoTrak, 2 = OmniTrak, 3 = HabiTrak, 4 = OmniHome, 5 = SensiTrak, 6 = Prototype).
+block_read(100) = struct('def_name', 'SYSTEM_TYPE', 'fcn', @(data)OmniTrakFileRead_ReadBlock_SYSTEM_TYPE(fid,data));
+
+% Vulintus system name.
+block_read(101) = struct('def_name', 'SYSTEM_NAME', 'fcn', @(data)OmniTrakFileRead_ReadBlock_SYSTEM_NAME(fid,data));
+
+% Vulintus system hardware version.
+block_read(102) = struct('def_name', 'SYSTEM_HW_VER', 'fcn', @(data)OmniTrakFileRead_ReadBlock_SYSTEM_HW_VER(fid,data));
+
+% System firmware version, written as characters.
+block_read(103) = struct('def_name', 'SYSTEM_FW_VER', 'fcn', @(data)OmniTrakFileRead_ReadBlock_SYSTEM_FW_VER(fid,data));
+
+% System serial number, written as characters.
+block_read(104) = struct('def_name', 'SYSTEM_SN', 'fcn', @(data)OmniTrakFileRead_ReadBlock_SYSTEM_SN(fid,data));
+
+% Manufacturer name for non-Vulintus systems.
+block_read(105) = struct('def_name', 'SYSTEM_MFR', 'fcn', @(data)OmniTrakFileRead_ReadBlock_SYSTEM_MFR(fid,data));
+
+% Windows PC computer name.
+block_read(106) = struct('def_name', 'COMPUTER_NAME', 'fcn', @(data)OmniTrakFileRead_ReadBlock_COMPUTER_NAME(fid,data));
+
+% The COM port of a computer-connected system.
+block_read(107) = struct('def_name', 'COM_PORT', 'fcn', @(data)OmniTrakFileRead_ReadBlock_COM_PORT(fid,data));
+
+% Human-readable Adjective + Noun alias/name for the device, assigned by Vulintus during manufacturing.
+block_read(108) = struct('def_name', 'DEVICE_ALIAS', 'fcn', @(data)OmniTrakFileRead_ReadBlock_DEVICE_ALIAS(fid,data));
+
+
+% Primary module name, for systems with interchangeable modules.
+block_read(110) = struct('def_name', 'PRIMARY_MODULE', 'fcn', @(data)OmniTrakFileRead_ReadBlock_PRIMARY_MODULE(fid,data));
+
+% Primary input name, for modules with multiple input signals.
+block_read(111) = struct('def_name', 'PRIMARY_INPUT', 'fcn', @(data)OmniTrakFileRead_ReadBlock_PRIMARY_INPUT(fid,data));
+
+% The SAMD manufacturer's unique chip identifier.
+block_read(112) = struct('def_name', 'SAMD_CHIP_ID', 'fcn', @(data)OmniTrakFileRead_ReadBlock_SAMD_CHIP_ID(fid,data));
+
+
+% The MAC address of the device's ESP8266 module.
+block_read(120) = struct('def_name', 'ESP8266_MAC_ADDR', 'fcn', @(data)OmniTrakFileRead_ReadBlock_ESP8266_MAC_ADDR(fid,data));
+
+% The local IPv4 address of the device's ESP8266 module.
+block_read(121) = struct('def_name', 'ESP8266_IP4_ADDR', 'fcn', @(data)OmniTrakFileRead_ReadBlock_ESP8266_IP4_ADDR(fid,data));
+
+% The ESP8266 manufacturer's unique chip identifier
+block_read(122) = struct('def_name', 'ESP8266_CHIP_ID', 'fcn', @(data)OmniTrakFileRead_ReadBlock_ESP8266_CHIP_ID(fid,data));
+
+% The ESP8266 flash chip's unique chip identifier
+block_read(123) = struct('def_name', 'ESP8266_FLASH_ID', 'fcn', @(data)OmniTrakFileRead_ReadBlock_ESP8266_FLASH_ID(fid,data));
+
+
+% The user's name for the system, i.e. booth number.
+block_read(130) = struct('def_name', 'USER_SYSTEM_NAME', 'fcn', @(data)OmniTrakFileRead_ReadBlock_USER_SYSTEM_NAME(fid,data));
+
+
+% The current reboot count saved in EEPROM or flash memory.
+block_read(140) = struct('def_name', 'DEVICE_RESET_COUNT', 'fcn', @(data)OmniTrakFileRead_ReadBlock_DEVICE_RESET_COUNT(fid,data));
+
+% Controller firmware filename, copied from the macro, written as characters.
+block_read(141) = struct('def_name', 'CTRL_FW_FILENAME', 'fcn', @(data)OmniTrakFileRead_ReadBlock_CTRL_FW_FILENAME(fid,data));
+
+% Controller firmware upload date, copied from the macro, written as characters.
+block_read(142) = struct('def_name', 'CTRL_FW_DATE', 'fcn', @(data)OmniTrakFileRead_ReadBlock_CTRL_FW_DATE(fid,data));
+
+% Controller firmware upload time, copied from the macro, written as characters.
+block_read(143) = struct('def_name', 'CTRL_FW_TIME', 'fcn', @(data)OmniTrakFileRead_ReadBlock_CTRL_FW_TIME(fid,data));
+
+% OTMP Module firmware filename, copied from the macro, written as characters.
+block_read(144) = struct('def_name', 'MODULE_FW_FILENAME', 'fcn', @(data)OmniTrakFileRead_ReadBlock_MODULE_FW_FILENAME(fid,data));
+
+% OTMP Module firmware upload date, copied from the macro, written as characters.
+block_read(145) = struct('def_name', 'MODULE_FW_DATE', 'fcn', @(data)OmniTrakFileRead_ReadBlock_MODULE_FW_DATE(fid,data));
+
+% OTMP Module firmware upload time, copied from the macro, written as characters.
+block_read(146) = struct('def_name', 'MODULE_FW_TIME', 'fcn', @(data)OmniTrakFileRead_ReadBlock_MODULE_FW_TIME(fid,data));
+
+% OTMP module name, written as characters.
+block_read(147) = struct('def_name', 'MODULE_NAME', 'fcn', @(data)OmniTrakFileRead_ReadBlock_MODULE_NAME(fid,data));
+
+% OTMP Module SKU, typically written as 4 characters.
+block_read(148) = struct('def_name', 'MODULE_SKU', 'fcn', @(data)OmniTrakFileRead_ReadBlock_MODULE_SKU(fid,data));
+
+
+% OTMP Module serial number, written as characters.
+block_read(153) = struct('def_name', 'MODULE_SN', 'fcn', @(data)OmniTrakFileRead_ReadBlock_MODULE_SN(fid,data));
+
+
+% The MAC address of the device's ATWINC1500 module.
+block_read(150) = struct('def_name', 'WINC1500_MAC_ADDR', 'fcn', @(data)OmniTrakFileRead_ReadBlock_WINC1500_MAC_ADDR(fid,data));
+
+% The local IPv4 address of the device's ATWINC1500 module.
+block_read(151) = struct('def_name', 'WINC1500_IP4_ADDR', 'fcn', @(data)OmniTrakFileRead_ReadBlock_WINC1500_IP4_ADDR(fid,data));
+
+
+% Current battery state-of charge, in percent.
+block_read(170) = struct('def_name', 'BATTERY_SOC', 'fcn', @(data)OmniTrakFileRead_ReadBlock_BATTERY_SOC(fid,data));
+
+% Current battery voltage, in millivolts.
+block_read(171) = struct('def_name', 'BATTERY_VOLTS', 'fcn', @(data)OmniTrakFileRead_ReadBlock_BATTERY_VOLTS(fid,data));
+
+% Average current draw from the battery, in milli-amps.
+block_read(172) = struct('def_name', 'BATTERY_CURRENT', 'fcn', @(data)OmniTrakFileRead_ReadBlock_BATTERY_CURRENT(fid,data));
+
+% Full capacity of the battery, in milli-amp hours.
+block_read(173) = struct('def_name', 'BATTERY_FULL', 'fcn', @(data)OmniTrakFileRead_ReadBlock_BATTERY_FULL(fid,data));
+
+% Remaining capacity of the battery, in milli-amp hours.
+block_read(174) = struct('def_name', 'BATTERY_REMAIN', 'fcn', @(data)OmniTrakFileRead_ReadBlock_BATTERY_REMAIN(fid,data));
+
+% Average power draw, in milliWatts.
+block_read(175) = struct('def_name', 'BATTERY_POWER', 'fcn', @(data)OmniTrakFileRead_ReadBlock_BATTERY_POWER(fid,data));
+
+% Battery state-of-health, in percent.
+block_read(176) = struct('def_name', 'BATTERY_SOH', 'fcn', @(data)OmniTrakFileRead_ReadBlock_BATTERY_SOH(fid,data));
+
+% Combined battery state-of-charge, voltage, current, capacity, power, and state-of-health.
+block_read(177) = struct('def_name', 'BATTERY_STATUS', 'fcn', @(data)OmniTrakFileRead_ReadBlock_BATTERY_STATUS(fid,data));
+
+
+% Actual rotation rate, in RPM, of the feeder servo (OmniHome) when set to 180 speed.
+block_read(190) = struct('def_name', 'FEED_SERVO_MAX_RPM', 'fcn', @(data)OmniTrakFileRead_ReadBlock_FEED_SERVO_MAX_RPM(fid,data));
+
+% Current speed setting (0-180) for the feeder servo (OmniHome).
+block_read(191) = struct('def_name', 'FEED_SERVO_SPEED', 'fcn', @(data)OmniTrakFileRead_ReadBlock_FEED_SERVO_SPEED(fid,data));
+
+
+% A single subject's name.
+block_read(200) = struct('def_name', 'SUBJECT_NAME', 'fcn', @(data)OmniTrakFileRead_ReadBlock_SUBJECT_NAME(fid,data));
+
+% The subject's or subjects' experimental group name.
+block_read(201) = struct('def_name', 'GROUP_NAME', 'fcn', @(data)OmniTrakFileRead_ReadBlock_GROUP_NAME(fid,data));
+
+
+% Test administrator's name.
+block_read(224) = struct('def_name', 'ADMIN_NAME', 'fcn', @(data)OmniTrakFileRead_ReadBlock_ADMIN_NAME(fid,data));
+
+
+% The user's name for the current experiment.
+block_read(300) = struct('def_name', 'EXP_NAME', 'fcn', @(data)OmniTrakFileRead_ReadBlock_EXP_NAME(fid,data));
+
+% The user's name for task type, which can be a variant of the overall experiment type.
+block_read(301) = struct('def_name', 'TASK_TYPE', 'fcn', @(data)OmniTrakFileRead_ReadBlock_TASK_TYPE(fid,data));
+
+
+% The stage name for a behavioral session.
+block_read(400) = struct('def_name', 'STAGE_NAME', 'fcn', @(data)OmniTrakFileRead_ReadBlock_STAGE_NAME(fid,data));
+
+% The stage description for a behavioral session.
+block_read(401) = struct('def_name', 'STAGE_DESCRIPTION', 'fcn', @(data)OmniTrakFileRead_ReadBlock_STAGE_DESCRIPTION(fid,data));
+
+
+% Indicates that an AMG8833 thermopile array sensor is present in the system.
+block_read(1000) = struct('def_name', 'AMG8833_ENABLED', 'fcn', @(data)OmniTrakFileRead_ReadBlock_AMG8833_ENABLED(fid,data));
+
+% Indicates that an BMP280 temperature/pressure sensor is present in the system.
+block_read(1001) = struct('def_name', 'BMP280_ENABLED', 'fcn', @(data)OmniTrakFileRead_ReadBlock_BMP280_ENABLED(fid,data));
+
+% Indicates that an BME280 temperature/pressure/humidty sensor is present in the system.
+block_read(1002) = struct('def_name', 'BME280_ENABLED', 'fcn', @(data)OmniTrakFileRead_ReadBlock_BME280_ENABLED(fid,data));
+
+% Indicates that an BME680 temperature/pressure/humidy/VOC sensor is present in the system.
+block_read(1003) = struct('def_name', 'BME680_ENABLED', 'fcn', @(data)OmniTrakFileRead_ReadBlock_BME680_ENABLED(fid,data));
+
+% Indicates that an CCS811 VOC/eC02 sensor is present in the system.
+block_read(1004) = struct('def_name', 'CCS811_ENABLED', 'fcn', @(data)OmniTrakFileRead_ReadBlock_CCS811_ENABLED(fid,data));
+
+% Indicates that an SGP30 VOC/eC02 sensor is present in the system.
+block_read(1005) = struct('def_name', 'SGP30_ENABLED', 'fcn', @(data)OmniTrakFileRead_ReadBlock_SGP30_ENABLED(fid,data));
+
+% Indicates that an VL53L0X time-of-flight distance sensor is present in the system.
+block_read(1006) = struct('def_name', 'VL53L0X_ENABLED', 'fcn', @(data)OmniTrakFileRead_ReadBlock_VL53L0X_ENABLED(fid,data));
+
+% Indicates that an ALS-PT19 ambient light sensor is present in the system.
+block_read(1007) = struct('def_name', 'ALSPT19_ENABLED', 'fcn', @(data)OmniTrakFileRead_ReadBlock_ALSPT19_ENABLED(fid,data));
+
+% Indicates that an MLX90640 thermopile array sensor is present in the system.
+block_read(1008) = struct('def_name', 'MLX90640_ENABLED', 'fcn', @(data)OmniTrakFileRead_ReadBlock_MLX90640_ENABLED(fid,data));
+
+% Indicates that an ZMOD4410 VOC/eC02 sensor is present in the system.
+block_read(1009) = struct('def_name', 'ZMOD4410_ENABLED', 'fcn', @(data)OmniTrakFileRead_ReadBlock_ZMOD4410_ENABLED(fid,data));
+
+
+% A point in a tracked ambulation path, with absolute x- and y-coordinates in millimeters, with facing direction theta, in degrees.
+block_read(1024) = struct('def_name', 'AMBULATION_XY_THETA', 'fcn', @(data)OmniTrakFileRead_ReadBlock_AMBULATION_XY_THETA(fid,data));
+
+
+% The conversion factor, in degrees Celsius, for converting 16-bit integer AMG8833 pixel readings to temperature.
+block_read(1100) = struct('def_name', 'AMG8833_THERM_CONV', 'fcn', @(data)OmniTrakFileRead_ReadBlock_AMG8833_THERM_CONV(fid,data));
+
+% The current AMG8833 thermistor reading as a converted float32 value, in Celsius.
+block_read(1101) = struct('def_name', 'AMG8833_THERM_FL', 'fcn', @(data)OmniTrakFileRead_ReadBlock_AMG8833_THERM_FL(fid,data));
+
+% The current AMG8833 thermistor reading as a raw, signed 16-bit integer.
+block_read(1102) = struct('def_name', 'AMG8833_THERM_INT', 'fcn', @(data)OmniTrakFileRead_ReadBlock_AMG8833_THERM_INT(fid,data));
+
+
+% The conversion factor, in degrees Celsius, for converting 16-bit integer AMG8833 pixel readings to temperature.
+block_read(1110) = struct('def_name', 'AMG8833_PIXELS_CONV', 'fcn', @(data)OmniTrakFileRead_ReadBlock_AMG8833_PIXELS_CONV(fid,data));
+
+% The current AMG8833 pixel readings as converted float32 values, in Celsius.
+block_read(1111) = struct('def_name', 'AMG8833_PIXELS_FL', 'fcn', @(data)OmniTrakFileRead_ReadBlock_AMG8833_PIXELS_FL(fid,data));
+
+% The current AMG8833 pixel readings as a raw, signed 16-bit integers.
+block_read(1112) = struct('def_name', 'AMG8833_PIXELS_INT', 'fcn', @(data)OmniTrakFileRead_ReadBlock_AMG8833_PIXELS_INT(fid,data));
+
+% The current HTPA32x32 pixel readings as a fixed-point 6/2 type (6 bits for the unsigned integer part, 2 bits for the decimal part), in units of Celcius. This allows temperatures from 0 to 63.75 C.
+block_read(1113) = struct('def_name', 'HTPA32X32_PIXELS_FP62', 'fcn', @(data)OmniTrakFileRead_ReadBlock_HTPA32X32_PIXELS_FP62(fid,data));
+
+% The current HTPA32x32 pixel readings represented as 16-bit unsigned integers in units of deciKelvin (dK, or Kelvin * 10).
+block_read(1114) = struct('def_name', 'HTPA32X32_PIXELS_INT_K', 'fcn', @(data)OmniTrakFileRead_ReadBlock_HTPA32X32_PIXELS_INT_K(fid,data));
+
+% The current ambient temperature measured by the HTPA32x32, represented as a 32-bit float, in units of Celcius.
+block_read(1115) = struct('def_name', 'HTPA32X32_AMBIENT_TEMP', 'fcn', @(data)OmniTrakFileRead_ReadBlock_HTPA32X32_AMBIENT_TEMP(fid,data));
+
+% The current HTPA32x32 pixel readings represented as 12-bit signed integers (2 pixels for every 3 bytes) in units of deciCelsius (dC, or Celsius * 10), with values under-range set to the minimum  (2048 dC) and values over-range set to the maximum (2047 dC).
+block_read(1116) = struct('def_name', 'HTPA32X32_PIXELS_INT12_C', 'fcn', @(data)OmniTrakFileRead_ReadBlock_HTPA32X32_PIXELS_INT12_C(fid,data));
+
+% The location and temperature of the hottest pixel in the HTPA32x32 image. This may not be the raw hottest pixel. It may have gone through some processing and filtering to determine the true hottest pixel. The temperature will be in FP62 formatted Celsius.
+block_read(1117) = struct('def_name', 'HTPA32X32_HOTTEST_PIXEL_FP62', 'fcn', @(data)OmniTrakFileRead_ReadBlock_HTPA32X32_HOTTEST_PIXEL_FP62(fid,data));
+
+
+% The current red, green, blue, IR, and green2 sensor readings from the BH1749 sensor
+block_read(1120) = struct('def_name', 'BH1749_RGB', 'fcn', @(data)OmniTrakFileRead_ReadBlock_BH1749_RGB(fid,data));
+
+% A special block acting as a sanity check, only used in cases of debugging
+block_read(1121) = struct('def_name', 'DEBUG_SANITY_CHECK', 'fcn', @(data)OmniTrakFileRead_ReadBlock_DEBUG_SANITY_CHECK(fid,data));
+
+
+% The current BME280 temperature reading as a converted float32 value, in Celsius.
+block_read(1200) = struct('def_name', 'BME280_TEMP_FL', 'fcn', @(data)OmniTrakFileRead_ReadBlock_BME280_TEMP_FL(fid,data));
+
+% The current BMP280 temperature reading as a converted float32 value, in Celsius.
+block_read(1201) = struct('def_name', 'BMP280_TEMP_FL', 'fcn', @(data)OmniTrakFileRead_ReadBlock_BMP280_TEMP_FL(fid,data));
+
+% The current BME680 temperature reading as a converted float32 value, in Celsius.
+block_read(1202) = struct('def_name', 'BME680_TEMP_FL', 'fcn', @(data)OmniTrakFileRead_ReadBlock_BME680_TEMP_FL(fid,data));
+
+
+% The current BME280 pressure reading as a converted float32 value, in Pascals (Pa).
+block_read(1210) = struct('def_name', 'BME280_PRES_FL', 'fcn', @(data)OmniTrakFileRead_ReadBlock_BME280_PRES_FL(fid,data));
+
+% The current BMP280 pressure reading as a converted float32 value, in Pascals (Pa).
+block_read(1211) = struct('def_name', 'BMP280_PRES_FL', 'fcn', @(data)OmniTrakFileRead_ReadBlock_BMP280_PRES_FL(fid,data));
+
+% The current BME680 pressure reading as a converted float32 value, in Pascals (Pa).
+block_read(1212) = struct('def_name', 'BME680_PRES_FL', 'fcn', @(data)OmniTrakFileRead_ReadBlock_BME680_PRES_FL(fid,data));
+
+
+% The current BM280 humidity reading as a converted float32 value, in percent (%).
+block_read(1220) = struct('def_name', 'BME280_HUM_FL', 'fcn', @(data)OmniTrakFileRead_ReadBlock_BME280_HUM_FL(fid,data));
+
+% The current BME680 humidity reading as a converted float32 value, in percent (%).
+block_read(1221) = struct('def_name', 'BME680_HUM_FL', 'fcn', @(data)OmniTrakFileRead_ReadBlock_BME680_HUM_FL(fid,data));
+
+
+% The current BME680 gas resistance reading as a converted float32 value, in units of kOhms
+block_read(1230) = struct('def_name', 'BME680_GAS_FL', 'fcn', @(data)OmniTrakFileRead_ReadBlock_BME680_GAS_FL(fid,data));
+
+
+% The current VL53L0X distance reading as a 16-bit integer, in millimeters (-1 indicates out-of-range).
+block_read(1300) = struct('def_name', 'VL53L0X_DIST', 'fcn', @(data)OmniTrakFileRead_ReadBlock_VL53L0X_DIST(fid,data));
+
+% Indicates the VL53L0X sensor experienced a range failure.
+block_read(1301) = struct('def_name', 'VL53L0X_FAIL', 'fcn', @(data)OmniTrakFileRead_ReadBlock_VL53L0X_FAIL(fid,data));
+
+
+% The serial number of the SGP30.
+block_read(1400) = struct('def_name', 'SGP30_SN', 'fcn', @(data)OmniTrakFileRead_ReadBlock_SGP30_SN(fid,data));
+
+
+% The current SGp30 eCO2 reading distance reading as a 16-bit integer, in parts per million (ppm).
+block_read(1410) = struct('def_name', 'SGP30_EC02', 'fcn', @(data)OmniTrakFileRead_ReadBlock_SGP30_EC02(fid,data));
+
+
+% The current SGp30 TVOC reading distance reading as a 16-bit integer, in parts per million (ppm).
+block_read(1420) = struct('def_name', 'SGP30_TVOC', 'fcn', @(data)OmniTrakFileRead_ReadBlock_SGP30_TVOC(fid,data));
+
+
+% The MLX90640 unique device ID saved in the device's EEPROM.
+block_read(1500) = struct('def_name', 'MLX90640_DEVICE_ID', 'fcn', @(data)OmniTrakFileRead_ReadBlock_MLX90640_DEVICE_ID(fid,data));
+
+% Raw download of the entire MLX90640 EEPROM, as unsigned 16-bit integers.
+block_read(1501) = struct('def_name', 'MLX90640_EEPROM_DUMP', 'fcn', @(data)OmniTrakFileRead_ReadBlock_MLX90640_EEPROM_DUMP(fid,data));
+
+% ADC resolution setting on the MLX90640 (16-, 17-, 18-, or 19-bit).
+block_read(1502) = struct('def_name', 'MLX90640_ADC_RES', 'fcn', @(data)OmniTrakFileRead_ReadBlock_MLX90640_ADC_RES(fid,data));
+
+% Current refresh rate on the MLX90640 (0.25, 0.5, 1, 2, 4, 8, 16, or 32 Hz).
+block_read(1503) = struct('def_name', 'MLX90640_REFRESH_RATE', 'fcn', @(data)OmniTrakFileRead_ReadBlock_MLX90640_REFRESH_RATE(fid,data));
+
+% Current I2C clock freqency used with the MLX90640 (100, 400, or 1000 kHz).
+block_read(1504) = struct('def_name', 'MLX90640_I2C_CLOCKRATE', 'fcn', @(data)OmniTrakFileRead_ReadBlock_MLX90640_I2C_CLOCKRATE(fid,data));
+
+
+% The current MLX90640 pixel readings as converted float32 values, in Celsius.
+block_read(1510) = struct('def_name', 'MLX90640_PIXELS_TO', 'fcn', @(data)OmniTrakFileRead_ReadBlock_MLX90640_PIXELS_TO(fid,data));
+
+% The current MLX90640 pixel readings as converted, but uncalibrationed, float32 values.
+block_read(1511) = struct('def_name', 'MLX90640_PIXELS_IM', 'fcn', @(data)OmniTrakFileRead_ReadBlock_MLX90640_PIXELS_IM(fid,data));
+
+% The current MLX90640 pixel readings as a raw, unsigned 16-bit integers.
+block_read(1512) = struct('def_name', 'MLX90640_PIXELS_INT', 'fcn', @(data)OmniTrakFileRead_ReadBlock_MLX90640_PIXELS_INT(fid,data));
+
+
+% The I2C transfer time of the frame data from the MLX90640 to the microcontroller, in milliseconds.
+block_read(1520) = struct('def_name', 'MLX90640_I2C_TIME', 'fcn', @(data)OmniTrakFileRead_ReadBlock_MLX90640_I2C_TIME(fid,data));
+
+% The calculation time for the uncalibrated or calibrated image captured by the MLX90640.
+block_read(1521) = struct('def_name', 'MLX90640_CALC_TIME', 'fcn', @(data)OmniTrakFileRead_ReadBlock_MLX90640_CALC_TIME(fid,data));
+
+% The SD card write time for the MLX90640 float32 image data.
+block_read(1522) = struct('def_name', 'MLX90640_IM_WRITE_TIME', 'fcn', @(data)OmniTrakFileRead_ReadBlock_MLX90640_IM_WRITE_TIME(fid,data));
+
+% The SD card write time for the MLX90640 raw uint16 data.
+block_read(1523) = struct('def_name', 'MLX90640_INT_WRITE_TIME', 'fcn', @(data)OmniTrakFileRead_ReadBlock_MLX90640_INT_WRITE_TIME(fid,data));
+
+
+% The current analog value of the ALS-PT19 ambient light sensor, as an unsigned integer ADC value.
+block_read(1600) = struct('def_name', 'ALSPT19_LIGHT', 'fcn', @(data)OmniTrakFileRead_ReadBlock_ALSPT19_LIGHT(fid,data));
+
+
+% The current lower and upper bounds for the ZMOD4410 ADC reading used in calculations.
+block_read(1700) = struct('def_name', 'ZMOD4410_MOX_BOUND', 'fcn', @(data)OmniTrakFileRead_ReadBlock_ZMOD4410_MOX_BOUND(fid,data));
+
+% Current configuration values for the ZMOD4410.
+block_read(1701) = struct('def_name', 'ZMOD4410_CONFIG_PARAMS', 'fcn', @(data)OmniTrakFileRead_ReadBlock_ZMOD4410_CONFIG_PARAMS(fid,data));
+
+% Timestamped ZMOD4410 error event.
+block_read(1702) = struct('def_name', 'ZMOD4410_ERROR', 'fcn', @(data)OmniTrakFileRead_ReadBlock_ZMOD4410_ERROR(fid,data));
+
+% Timestamped ZMOD4410 reading calibrated and converted to float32.
+block_read(1703) = struct('def_name', 'ZMOD4410_READING_FL', 'fcn', @(data)OmniTrakFileRead_ReadBlock_ZMOD4410_READING_FL(fid,data));
+
+% Timestamped ZMOD4410 reading saved as the raw uint16 ADC value.
+block_read(1704) = struct('def_name', 'ZMOD4410_READING_INT', 'fcn', @(data)OmniTrakFileRead_ReadBlock_ZMOD4410_READING_INT(fid,data));
+
+
+% Timestamped ZMOD4410 eCO2 reading.
+block_read(1710) = struct('def_name', 'ZMOD4410_ECO2', 'fcn', @(data)OmniTrakFileRead_ReadBlock_ZMOD4410_ECO2(fid,data));
+
+% Timestamped ZMOD4410 indoor air quality reading.
+block_read(1711) = struct('def_name', 'ZMOD4410_IAQ', 'fcn', @(data)OmniTrakFileRead_ReadBlock_ZMOD4410_IAQ(fid,data));
+
+% Timestamped ZMOD4410 total volatile organic compound reading.
+block_read(1712) = struct('def_name', 'ZMOD4410_TVOC', 'fcn', @(data)OmniTrakFileRead_ReadBlock_ZMOD4410_TVOC(fid,data));
+
+% Timestamped ZMOD4410 total volatile organic compound reading.
+block_read(1713) = struct('def_name', 'ZMOD4410_R_CDA', 'fcn', @(data)OmniTrakFileRead_ReadBlock_ZMOD4410_R_CDA(fid,data));
+
+
+% Current accelerometer reading settings on any enabled LSM303.
+block_read(1800) = struct('def_name', 'LSM303_ACC_SETTINGS', 'fcn', @(data)OmniTrakFileRead_ReadBlock_LSM303_ACC_SETTINGS(fid,data));
+
+% Current magnetometer reading settings on any enabled LSM303.
+block_read(1801) = struct('def_name', 'LSM303_MAG_SETTINGS', 'fcn', @(data)OmniTrakFileRead_ReadBlock_LSM303_MAG_SETTINGS(fid,data));
+
+% Current readings from the LSM303 accelerometer, as float values in m/s^2.
+block_read(1802) = struct('def_name', 'LSM303_ACC_FL', 'fcn', @(data)OmniTrakFileRead_ReadBlock_LSM303_ACC_FL(fid,data));
+
+% Current readings from the LSM303 magnetometer, as float values in uT.
+block_read(1803) = struct('def_name', 'LSM303_MAG_FL', 'fcn', @(data)OmniTrakFileRead_ReadBlock_LSM303_MAG_FL(fid,data));
+
+% Current readings from the LSM303 temperature sensor, as float value in degrees Celcius
+block_read(1804) = struct('def_name', 'LSM303_TEMP_FL', 'fcn', @(data)OmniTrakFileRead_ReadBlock_LSM303_TEMP_FL(fid,data));
+
+
+% Spectrometer wavelengths, in nanometers.
+block_read(1900) = struct('def_name', 'SPECTRO_WAVELEN', 'fcn', @(data)OmniTrakFileRead_ReadBlock_SPECTRO_WAVELEN(fid,data));
+
+% Spectrometer measurement trace.
+block_read(1901) = struct('def_name', 'SPECTRO_TRACE', 'fcn', @(data)OmniTrakFileRead_ReadBlock_SPECTRO_TRACE(fid,data));
+
+
+% Timestamped event for feeding/pellet dispensing.
+block_read(2000) = struct('def_name', 'PELLET_DISPENSE', 'fcn', @(data)OmniTrakFileRead_ReadBlock_PELLET_DISPENSE(fid,data));
+
+% Timestamped event for feeding/pellet dispensing in which no pellet was detected.
+block_read(2001) = struct('def_name', 'PELLET_FAILURE', 'fcn', @(data)OmniTrakFileRead_ReadBlock_PELLET_FAILURE(fid,data));
+
+
+% Timestamped event marker for the start of a session pause, with no events recorded during the pause.
+block_read(2010) = struct('def_name', 'HARD_PAUSE_START', 'fcn', @(data)OmniTrakFileRead_ReadBlock_HARD_PAUSE_START(fid,data));
+
+% Timestamped event marker for the stop of a session pause, with no events recorded during the pause.
+block_read(2011) = struct('def_name', 'HARD_PAUSE_STOP', 'fcn', @(data)OmniTrakFileRead_ReadBlock_HARD_PAUSE_STOP(fid,data));
+
+% Timestamped event marker for the start of a session pause, with non-operant events recorded during the pause.
+block_read(2012) = struct('def_name', 'SOFT_PAUSE_START', 'fcn', @(data)OmniTrakFileRead_ReadBlock_SOFT_PAUSE_START(fid,data));
+
+% Timestamped event marker for the stop of a session pause, with non-operant events recorded during the pause.
+block_read(2013) = struct('def_name', 'SOFT_PAUSE_STOP', 'fcn', @(data)OmniTrakFileRead_ReadBlock_SOFT_PAUSE_STOP(fid,data));
+
+% Timestamped event marker for the start of a trial, with accompanying microsecond clock reading
+block_read(2014) = struct('def_name', 'TRIAL_START_SERIAL_DATE', 'fcn', @(data)OmniTrakFileRead_ReadBlock_TRIAL_START_SERIAL_DATE(fid,data));
+
+
+% Starting position of an autopositioner in just the x-direction, with distance in millimeters.
+block_read(2020) = struct('def_name', 'POSITION_START_X', 'fcn', @(data)OmniTrakFileRead_ReadBlock_POSITION_START_X(fid,data));
+
+% Timestamped movement of an autopositioner in just the x-direction, with distance in millimeters.
+block_read(2021) = struct('def_name', 'POSITION_MOVE_X', 'fcn', @(data)OmniTrakFileRead_ReadBlock_POSITION_MOVE_X(fid,data));
+
+% Starting position of an autopositioner in just the x- and y-directions, with distance in millimeters.
+block_read(2022) = struct('def_name', 'POSITION_START_XY', 'fcn', @(data)OmniTrakFileRead_ReadBlock_POSITION_START_XY(fid,data));
+
+% Timestamped movement of an autopositioner in just the x- and y-directions, with distance in millimeters.
+block_read(2023) = struct('def_name', 'POSITION_MOVE_XY', 'fcn', @(data)OmniTrakFileRead_ReadBlock_POSITION_MOVE_XY(fid,data));
+
+% Starting position of an autopositioner in the x-, y-, and z- directions, with distance in millimeters.
+block_read(2024) = struct('def_name', 'POSITION_START_XYZ', 'fcn', @(data)OmniTrakFileRead_ReadBlock_POSITION_START_XYZ(fid,data));
+
+% Timestamped movement of an autopositioner in the x-, y-, and z- directions, with distance in millimeters.
+block_read(2025) = struct('def_name', 'POSITION_MOVE_XYZ', 'fcn', @(data)OmniTrakFileRead_ReadBlock_POSITION_MOVE_XYZ(fid,data));
+
+
+% Timestamped event for a TTL pulse output, with channel number, voltage, and duration.
+block_read(2048) = struct('def_name', 'TTL_PULSE', 'fcn', @(data)OmniTrakFileRead_ReadBlock_TTL_PULSE(fid,data));
+
+
+% Stream input name for the specified input index.
+block_read(2100) = struct('def_name', 'STREAM_INPUT_NAME', 'fcn', @(data)OmniTrakFileRead_ReadBlock_STREAM_INPUT_NAME(fid,data));
+
+
+% Starting calibration baseline coefficient, for the specified module index.
+block_read(2200) = struct('def_name', 'CALIBRATION_BASELINE', 'fcn', @(data)OmniTrakFileRead_ReadBlock_CALIBRATION_BASELINE(fid,data));
+
+% Starting calibration slope coefficient, for the specified module index.
+block_read(2201) = struct('def_name', 'CALIBRATION_SLOPE', 'fcn', @(data)OmniTrakFileRead_ReadBlock_CALIBRATION_SLOPE(fid,data));
+
+% Timestamped in-session calibration baseline coefficient adjustment, for the specified module index.
+block_read(2202) = struct('def_name', 'CALIBRATION_BASELINE_ADJUST', 'fcn', @(data)OmniTrakFileRead_ReadBlock_CALIBRATION_BASELINE_ADJUST(fid,data));
+
+% Timestamped in-session calibration slope coefficient adjustment, for the specified module index.
+block_read(2203) = struct('def_name', 'CALIBRATION_SLOPE_ADJUST', 'fcn', @(data)OmniTrakFileRead_ReadBlock_CALIBRATION_SLOPE_ADJUST(fid,data));
+
+% Most recent calibration date/time, for the specified module index.
+block_read(2204) = struct('def_name', 'CALIBRATION_DATE', 'fcn', @(data)OmniTrakFileRead_ReadBlock_CALIBRATION_DATE(fid,data));
+
+
+% Type of hit threshold (i.e. peak force), for the specified input.
+block_read(2300) = struct('def_name', 'HIT_THRESH_TYPE', 'fcn', @(data)OmniTrakFileRead_ReadBlock_HIT_THRESH_TYPE(fid,data));
+
+
+% A name/description of secondary thresholds used in the behavior.
+block_read(2310) = struct('def_name', 'SECONDARY_THRESH_NAME', 'fcn', @(data)OmniTrakFileRead_ReadBlock_SECONDARY_THRESH_NAME(fid,data));
+
+
+% Type of initation threshold (i.e. force or touch), for the specified input.
+block_read(2320) = struct('def_name', 'INIT_THRESH_TYPE', 'fcn', @(data)OmniTrakFileRead_ReadBlock_INIT_THRESH_TYPE(fid,data));
+
+
+% A timestamped manual feed event, triggered remotely.
+block_read(2400) = struct('def_name', 'REMOTE_MANUAL_FEED', 'fcn', @(data)OmniTrakFileRead_ReadBlock_REMOTE_MANUAL_FEED(fid,data));
+
+% A timestamped manual feed event, triggered from the hardware user interface.
+block_read(2401) = struct('def_name', 'HWUI_MANUAL_FEED', 'fcn', @(data)OmniTrakFileRead_ReadBlock_HWUI_MANUAL_FEED(fid,data));
+
+% A timestamped manual feed event, triggered randomly by the firmware.
+block_read(2402) = struct('def_name', 'FW_RANDOM_FEED', 'fcn', @(data)OmniTrakFileRead_ReadBlock_FW_RANDOM_FEED(fid,data));
+
+% A timestamped manual feed event, triggered from a computer software user interface.
+block_read(2403) = struct('def_name', 'SWUI_MANUAL_FEED_DEPRECATED', 'fcn', @(data)OmniTrakFileRead_ReadBlock_SWUI_MANUAL_FEED_DEPRECATED(fid,data));
+
+% A timestamped operant-rewarded feed event, trigged by the OmniHome firmware, with the possibility of multiple feedings.
+block_read(2404) = struct('def_name', 'FW_OPERANT_FEED', 'fcn', @(data)OmniTrakFileRead_ReadBlock_FW_OPERANT_FEED(fid,data));
+
+% A timestamped manual feed event, triggered from a computer software user interface.
+block_read(2405) = struct('def_name', 'SWUI_MANUAL_FEED', 'fcn', @(data)OmniTrakFileRead_ReadBlock_SWUI_MANUAL_FEED(fid,data));
+
+% A timestamped manual feed event, triggered randomly by computer software.
+block_read(2406) = struct('def_name', 'SW_RANDOM_FEED', 'fcn', @(data)OmniTrakFileRead_ReadBlock_SW_RANDOM_FEED(fid,data));
+
+% A timestamped operant-rewarded feed event, trigged by the PC-based behavioral software, with the possibility of multiple feedings.
+block_read(2407) = struct('def_name', 'SW_OPERANT_FEED', 'fcn', @(data)OmniTrakFileRead_ReadBlock_SW_OPERANT_FEED(fid,data));
+
+
+% MotoTrak version 3.0 trial outcome data.
+block_read(2500) = struct('def_name', 'MOTOTRAK_V3P0_OUTCOME', 'fcn', @(data)OmniTrakFileRead_ReadBlock_MOTOTRAK_V3P0_OUTCOME(fid,data));
+
+% MotoTrak version 3.0 trial stream signal.
+block_read(2501) = struct('def_name', 'MOTOTRAK_V3P0_SIGNAL', 'fcn', @(data)OmniTrakFileRead_ReadBlock_MOTOTRAK_V3P0_SIGNAL(fid,data));
+
+
+% Nosepoke status bitmask, typically written only when it changes.
+block_read(2560) = struct('def_name', 'POKE_BITMASK', 'fcn', @(data)OmniTrakFileRead_ReadBlock_POKE_BITMASK(fid,data));
+
+
+% Capacitive sensor status bitmask, typically written only when it changes.
+block_read(2576) = struct('def_name', 'CAPSENSE_BITMASK', 'fcn', @(data)OmniTrakFileRead_ReadBlock_CAPSENSE_BITMASK(fid,data));
+
+% Capacitive sensor reading for one sensor, in ADC ticks or clock cycles.
+block_read(2577) = struct('def_name', 'CAPSENSE_VALUE', 'fcn', @(data)OmniTrakFileRead_ReadBlock_CAPSENSE_VALUE(fid,data));
+
+
+% Name/description of the output trigger type for the given index.
+block_read(2600) = struct('def_name', 'OUTPUT_TRIGGER_NAME', 'fcn', @(data)OmniTrakFileRead_ReadBlock_OUTPUT_TRIGGER_NAME(fid,data));
+
+
+% Vibration task trial outcome data.
+block_read(2700) = struct('def_name', 'VIBRATION_TASK_TRIAL_OUTCOME', 'fcn', @(data)OmniTrakFileRead_ReadBlock_VIBRATION_TASK_TRIAL_OUTCOME(fid,data));
+
+% Vibrotactile detection task trial data.
+block_read(2701) = struct('def_name', 'VIBROTACTILE_DETECTION_TASK_TRIAL', 'fcn', @(data)OmniTrakFileRead_ReadBlock_VIBROTACTILE_DETECTION_TASK_TRIAL(fid,data));
+
+
+% LED detection task trial outcome data.
+block_read(2710) = struct('def_name', 'LED_DETECTION_TASK_TRIAL_OUTCOME', 'fcn', @(data)OmniTrakFileRead_ReadBlock_LED_DETECTION_TASK_TRIAL_OUTCOME(fid,data));
+
+% Light source model name.
+block_read(2711) = struct('def_name', 'LIGHT_SRC_MODEL', 'fcn', @(data)OmniTrakFileRead_ReadBlock_LIGHT_SRC_MODEL(fid,data));
+
+% Light source type (i.e. LED, LASER, etc).
+block_read(2712) = struct('def_name', 'LIGHT_SRC_TYPE', 'fcn', @(data)OmniTrakFileRead_ReadBlock_LIGHT_SRC_TYPE(fid,data));
+
+
+% SensiTrak tactile discrimination task trial outcome data.
+block_read(2720) = struct('def_name', 'STTC_2AFC_TRIAL_OUTCOME', 'fcn', @(data)OmniTrakFileRead_ReadBlock_STTC_2AFC_TRIAL_OUTCOME(fid,data));
+
+% Number of pads on the SensiTrak Tactile Carousel module.
+block_read(2721) = struct('def_name', 'STTC_NUM_PADS', 'fcn', @(data)OmniTrakFileRead_ReadBlock_STTC_NUM_PADS(fid,data));
+
+% Microstep setting on the specified OTMP module.
+block_read(2722) = struct('def_name', 'MODULE_MICROSTEP', 'fcn', @(data)OmniTrakFileRead_ReadBlock_MODULE_MICROSTEP(fid,data));
+
+% Steps per rotation on the specified OTMP module.
+block_read(2723) = struct('def_name', 'MODULE_STEPS_PER_ROT', 'fcn', @(data)OmniTrakFileRead_ReadBlock_MODULE_STEPS_PER_ROT(fid,data));
+
+
+% Pitch circumference, in millimeters, of the driving gear on the specified OTMP module.
+block_read(2730) = struct('def_name', 'MODULE_PITCH_CIRC', 'fcn', @(data)OmniTrakFileRead_ReadBlock_MODULE_PITCH_CIRC(fid,data));
+
+% Center offset, in millimeters, for the specified OTMP module.
+block_read(2731) = struct('def_name', 'MODULE_CENTER_OFFSET', 'fcn', @(data)OmniTrakFileRead_ReadBlock_MODULE_CENTER_OFFSET(fid,data));
+
+
+% SensiTrak proprioception discrimination task trial outcome data.
+block_read(2740) = struct('def_name', 'STAP_2AFC_TRIAL_OUTCOME', 'fcn', @(data)OmniTrakFileRead_ReadBlock_STAP_2AFC_TRIAL_OUTCOME(fid,data));
+
+
+% Fixed reinforcement task trial data.
+block_read(2800) = struct('def_name', 'FR_TASK_TRIAL', 'fcn', @(data)OmniTrakFileRead_ReadBlock_FR_TASK_TRIAL(fid,data));
+
+
+% An oscilloscope recording, in units of volts, from one or multiple channels, with time units, in seconds, along with a variable number of parameters describing the recording conditions.
+block_read(3072) = struct('def_name', 'SCOPE_TRACE', 'fcn', @(data)OmniTrakFileRead_ReadBlock_SCOPE_TRACE(fid,data));
 
 
 function data = OmniTrakFileRead_ReadBlock_ESP8266_CHIP_ID(fid,data)
@@ -1831,7 +1919,7 @@ function data = OmniTrakFileRead_ReadBlock_EXP_NAME(fid,data)
 %		EXP_NAME
 
 N = fread(fid,1,'uint16');                                                  %Read in the number of characters.
-data.exp_name = fread(fid,N,'*char')';                                      %Read in the characters of the user's experiment name.
+data.experiment.name = fread(fid,N,'*char')';                               %Read in the characters of the user's experiment name.
 
 
 function data = OmniTrakFileRead_ReadBlock_FEED_SERVO_MAX_RPM(fid,data)
@@ -1867,11 +1955,26 @@ fprintf(1,'Need to finish coding for Block 1: FILE_VERSION');
 
 function data = OmniTrakFileRead_ReadBlock_FR_TASK_TRIAL(fid,data)
 
+%
+% OmniTrakFileRead_ReadBlock_FR_TASK_TRIAL.m
+%   
+%   copyright 2025, Vulintus, Inc.
+%
+%   OMNITRAKFILEREAD_READBLOCK_FR_TASK_TRIAL reads in the "FR_TASK_TRIAL" 
+%   data block from an *.OmniTrak format file. This block is intended to 
+%   contain the parameters and outcomes for one Fixed Reinforcment behavior
+%   trial.
+%
 %	OmniTrak File Block Code (OFBC):
-%		BLOCK VALUE:	2800
+%		BLOCK VALUE:	0x0AF0
 %		DEFINITION:		FR_TASK_TRIAL
 %		DESCRIPTION:	Fixed reinforcement task trial data.
-
+%
+%   UPDATE LOG:
+%   ????-??-?? - Drew Sloan - Function first created.
+%   2025-06-19 - Drew Sloan - Updated function description to match the
+%                             "ReadBlock" documentation style.
+%
 
 data = OmniTrakFileRead_Check_Field_Name(data,'trial');                     %Call the subfunction to check for existing fieldnames.
 
@@ -1945,6 +2048,16 @@ function data = OmniTrakFileRead_ReadBlock_HARD_PAUSE_START(fid,data)
 %		HARD_PAUSE_START
 
 fprintf(1,'Need to finish coding for Block 2010: HARD_PAUSE_START');
+
+
+function data =  OmniTrakFileRead_ReadBlock_HARD_PAUSE_STOP(fid,data)
+
+%	OmniTrak File Block Code (OFBC):
+%		BLOCK VALUE:	0x07DB
+%		DEFINITION:		HARD_PAUSE_STOP
+%		DESCRIPTION:	Timestamped event marker for the stop of a session pause, with no events recorded during the pause.
+
+error('Need to finish coding for OFBC block 0x07DB ("HARD_PAUSE_STOP")!');
 
 
 function data = OmniTrakFileRead_ReadBlock_HIT_THRESH_TYPE(fid,data)
@@ -2368,12 +2481,43 @@ fprintf(1,'Need to finish coding for Block 145: MODULE_FW_DATE\n');
 
 function data = OmniTrakFileRead_ReadBlock_MODULE_FW_FILENAME(fid,data)
 
+%
+% OmniTrakFileRead_ReadBlock_MODULE_FW_FILENAME.m
+%   
+%   copyright 2025, Vulintus, Inc.
+%
+%   OmniTrakFileRead_ReadBlock_MODULE_FW_FILENAME reads in the 
+%   "MODULE_FW_FILENAME" data block from an *.OmniTrak format file. This 
+%   block is intended to contain the firmware filename, written as 
+%   characters, of a connected module, as well as the module's port index.
+%
 %	OmniTrak File Block Code (OFBC):
-%		BLOCK VALUE:	144
+%		BLOCK VALUE:	0x0090
 %		DEFINITION:		MODULE_FW_FILENAME
-%		DESCRIPTION:	OTMP Module firmware filename, copied from the macro, written as characters.
+%		DESCRIPTION:	OTMP Module firmware filename, copied from the 
+%                       macro, written as characters.
+%
+%   UPDATE LOG:
+%   2025-06-19 - Drew Sloan - Function first created.
+%
 
-fprintf(1,'Need to finish coding for Block 144: MODULE_FW_FILENAME\n');
+data = OmniTrakFileRead_Check_Field_Name(data,'device',...
+    {'port','firmware'});                                                   %Call the subfunction to check for existing fieldnames.         
+
+port_i = fread(fid,1,'uint8');                                              %Read in the port index.
+existing_ports = vertcat(data.device.port);                                 %Fetch all the port indices already loaded in the structure...
+if isempty(existing_ports)                                                  %If this is the first device...
+    i = 1;                                                                  %Set the index to 1.
+else                                                                        %Otherwise...
+    i = (port_i == existing_ports);                                         %Check for a match to an already-loaded device.
+    if ~any(i)                                                              %If the port index doesn't match any existing devices...
+        i = length(data.device) + 1;                                        %Increment the index.
+    end
+end
+
+N = fread(fid,1,'uint8');                                                   %Read in the number of characters.
+data.device(i).firmware(1).filename = fread(fid,N,'*char')';                %Add the device firmware filename.
+data.device(i).port = port_i;                                               %Add the port index.
 
 
 function data = OmniTrakFileRead_ReadBlock_MODULE_FW_TIME(fid,data)
@@ -2403,6 +2547,45 @@ module_i = fread(fid,1,'uint8');                                            %Rea
 data.module(module_i).microstep = fread(fid,1,'uint8');                     %Read in the microstop setting.
 
 
+function data =  OmniTrakFileRead_ReadBlock_MODULE_NAME(fid,data)
+
+%
+% OmniTrakFileRead_ReadBlock_MODULE_NAME.m
+%   
+%   copyright 2025, Vulintus, Inc.
+%
+%   OMNITRAKFILEREAD_READBLOCK_MODULE_NAME reads in the "MODULE_NAME" data
+%   block from an *.OmniTrak format file. This block is intended to contain
+%   the name of a connected module, as well as the module's port index.
+%
+%	OmniTrak File Block Code (OFBC):
+%		BLOCK VALUE:	0x0093
+%		DEFINITION:		MODULE_NAME
+%		DESCRIPTION:	OTMP module name, written as characters.
+%
+%   UPDATE LOG:
+%   2025-06-19 - Drew Sloan - Function first created.
+%   2025-07-02 - Drew Sloan - Changed filed name from "module" to "device".
+%
+
+data = OmniTrakFileRead_Check_Field_Name(data,'device',{'port','name'});    %Call the subfunction to check for existing fieldnames.         
+
+port_i = fread(fid,1,'uint8');                                              %Read in the port index.
+existing_ports = vertcat(data.device.port);                                 %Fetch all the port indices already loaded in the structure...
+if isempty(existing_ports)                                                  %If this is the first module...
+    i = 1;                                                                  %Set the index to 1.
+else                                                                        %Otherwise...
+    i = (port_i == existing_ports);                                         %Check for a match to an already-loaded module.
+    if ~any(i)                                                              %If the port index doesn't match any existing modules...
+        i = length(data.device) + 1;                                        %Increment the index.
+    end
+end
+
+N = fread(fid,1,'uint8');                                                   %Read in the number of characters.
+data.device(i).name = fread(fid,N,'*char')';                                %Add the module name.
+data.device(i).port = port_i;                                               %Add the port index.
+
+
 function data = OmniTrakFileRead_ReadBlock_MODULE_PITCH_CIRC(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
@@ -2420,6 +2603,56 @@ data = OmniTrakFileRead_Check_Field_Name(data,'module',...
     'pitch_circumference');                                                 %Call the subfunction to check for existing fieldnames.
 module_i = fread(fid,1,'uint8');                                            %Read in the module index.
 data.module(module_i).pitch_circumference = fread(fid,1,'single');          %Read in the pitch circumference of the gear, in millimeters.
+
+
+function data =  OmniTrakFileRead_ReadBlock_MODULE_SKU(fid,data)
+
+%	OmniTrak File Block Code (OFBC):
+%		BLOCK VALUE:	0x0094
+%		DEFINITION:		MODULE_SKU
+%		DESCRIPTION:	OTMP Module SKU, typically written as 4 characters.
+
+error('Need to finish coding for OFBC block 0x0094 ("MODULE_SKU")!');
+
+
+function data =  OmniTrakFileRead_ReadBlock_MODULE_SN(fid,data)
+
+%
+% OmniTrakFileRead_ReadBlock_MODULE_SN.m
+%   
+%   copyright 2025, Vulintus, Inc.
+%
+%   OMNITRAKFILEREAD_READBLOCK_MODULE_SN reads in the "MODULE_SN" data
+%   block from an *.OmniTrak format file. This block is intended to contain
+%   the serial number, written as characters, of a connected module, as 
+%   well as the module's port index.
+%
+%	OmniTrak File Block Code (OFBC):
+%		BLOCK VALUE:	0x0099
+%		DEFINITION:		MODULE_SN
+%		DESCRIPTION:	OTMP Module serial number, written as characters.
+%
+%   UPDATE LOG:
+%   2025-06-19 - Drew Sloan - Function first created.
+%
+
+data = OmniTrakFileRead_Check_Field_Name(data,'device',...
+    {'port','serial_num'});                                                 %Call the subfunction to check for existing fieldnames.         
+
+port_i = fread(fid,1,'uint8');                                              %Read in the port index.
+existing_ports = vertcat(data.device.port);                                 %Fetch all the port indices already loaded in the structure...
+if isempty(existing_ports)                                                  %If this is the first device...
+    i = 1;                                                                  %Set the index to 1.
+else                                                                        %Otherwise...
+    i = (port_i == existing_ports);                                         %Check for a match to an already-loaded device.
+    if ~any(i)                                                              %If the port index doesn't match any existing devices...
+        i = length(data.device) + 1;                                        %Increment the index.
+    end
+end
+
+N = fread(fid,1,'uint8');                                                   %Read in the number of characters.
+data.device(i).serial_num = fread(fid,N,'*char')';                          %Add the device serial number.
+data.device(i).port = port_i;                                               %Add the port index.
 
 
 function data = OmniTrakFileRead_ReadBlock_MODULE_STEPS_PER_ROT(fid,data)
@@ -2509,8 +2742,9 @@ function data = OmniTrakFileRead_ReadBlock_MS_FILE_START(fid,data)
 %		2
 %		MS_FILE_START
 
-data = OmniTrakFileRead_Check_Field_Name(data,'file_start','ms');           %Call the subfunction to check for existing fieldnames.    
-data.file_start.ms = fread(fid,1,'uint32');                                 %Save the file start 32-bit millisecond clock timestamp.
+data = OmniTrakFileRead_Check_Field_Name(data,'file','start','millis');     %Call the subfunction to check for existing fieldnames.    
+
+data.file.start.millis = fread(fid,1,'uint32');                             %Save the file start 32-bit millisecond clock timestamp.
 
 
 function data = OmniTrakFileRead_ReadBlock_MS_FILE_STOP(fid,data)
@@ -2519,8 +2753,9 @@ function data = OmniTrakFileRead_ReadBlock_MS_FILE_STOP(fid,data)
 %		3
 %		MS_FILE_STOP
 
-data = OmniTrakFileRead_Check_Field_Name(data,'file_stop',[]);              %Call the subfunction to check for existing fieldnames.   
-data.file_stop.ms = fread(fid,1,'uint32');                                  %Save the file stop 32-bit millisecond clock timestamp.
+data = OmniTrakFileRead_Check_Field_Name(data,'file','stop','millis');      %Call the subfunction to check for existing fieldnames.   
+
+data.file.stop.millis = fread(fid,1,'uint32');                              %Save the file stop 32-bit millisecond clock timestamp.
 
 
 function data = OmniTrakFileRead_ReadBlock_MS_TIMER_ROLLOVER(fid,data)
@@ -2530,15 +2765,6 @@ function data = OmniTrakFileRead_ReadBlock_MS_TIMER_ROLLOVER(fid,data)
 %		MS_TIMER_ROLLOVER
 
 fprintf(1,'Need to finish coding for Block 23: MS_TIMER_ROLLOVER');
-
-
-function data = OmniTrakFileRead_ReadBlock_CLOCK_SYNC(fid,data)
-
-%	OmniTrak File Block Code (OFBC):
-%		22
-%		CLOCK_SYNC
-
-fprintf(1,'Need to finish coding for Block 22: CLOCK_SYNC');
 
 
 function data = OmniTrakFileRead_ReadBlock_NTP_SYNC(fid,data)
@@ -2604,34 +2830,53 @@ end
 
 function data = OmniTrakFileRead_ReadBlock_POKE_BITMASK(fid,data)
 
+%
+% OmniTrakFileRead_ReadBlock_POKE_BITMASK.m
+%   
+%   copyright 2025, Vulintus, Inc.
+%
+%   OMNITRAKFILEREAD_READBLOCK_POKE_BITMASK reads in the "POKE_BITMASK" 
+%   data block from an *.OmniTrak format file. This block is intended to 
+%   contain an 8-bit bitmask with bits indicating the poked/unpoked status
+%   of a bank of nosepokes, paired both a computer clock timestamp (serial
+%   date number) and a 32-bit microcontroller clock timestamp (typically
+%   millis() or micros()).
+%
 %	OmniTrak File Block Code (OFBC):
-%		BLOCK VALUE:	2560
+%		BLOCK VALUE:	0x0A00
 %		DEFINITION:		POKE_BITMASK
-%		DESCRIPTION:	Nosepoke status bitmask, typically written only when it changes.
+%		DESCRIPTION:	Nosepoke status bitmask, typically written only 
+%                       when it changes.
+%
+%   UPDATE LOG:
+%   ????-??-?? - Drew Sloan - Function first created.
+%   2025-06-19 - Drew Sloan - Updated function description to match the
+%                             "ReadBlock" documentation style.
+%
+
+
 
 ver = fread(fid,1,'uint8');                                                 %#ok<NASGU> %Data block version.
 
 data = OmniTrakFileRead_Check_Field_Name(data,'poke',...
     {'datenum','micros','status'});                                         %Call the subfunction to check for existing fieldnames.         
-j = size(data.poke.datenum,1) + 1;                                          %Find the next index for the pellet timestamp for this dispenser.
-if isempty(data.poke.datenum)                                               %If the serial date number timestamp field is empty...
-    data.poke.datenum = NaN;                                                %Initialize the field with a NaN.
-end
-data.poke.datenum(j,1) = fread(fid,1,'float64');                            %Save the serial date number timestamp.
-if isempty(data.poke.micros)                                                %If the microcontroller microsecond timestamp field is empty...
-    data.poke.micros = NaN;                                                 %Initialize the field with a NaN.
-end
-data.poke.micros(j,1) = fread(fid,1,'float32');                             %Save the microcontroller microsecond timestamp.
-num_pokes = fread(fid,1,'uint8');                                           %Read in the number of nosepokes.
-poke_mask = fread(fid,1,'uint8');                                           %Read in the nosepoke bitmask.
-poke_status = zeros(1,num_pokes);                                           %Create a matrix to hold the nosepoke status.
-for i = 1:num_pokes                                                         %Step through each nosepoke.
-    poke_status(i) = bitget(poke_mask,i);                                   %Grab the status for each nosepoke.
-end
-if j == 1                                                                   %If this is the first nosepoke event...
-    data.poke.status = poke_status;                                         %Create the status matrix.
+i = size(data.poke.datenum,1) + 1;                                          %Find the next index for the pellet timestamp for this dispenser.
+
+if i == 1                                                                   %If this is the first bitmask reading...
+    data.poke.datenum = fread(fid,1,'float64');                             %Save the serial date number timestamp.
+    data.poke.micros = fread(fid,1,'float32');                              %Save the microcontroller microsecond timestamp.
 else                                                                        %Otherwise...
-    data.poke.status(j,:) = poke_status;                                    %Add the new status to the matrix.
+    data.poke.datenum(i,1) = fread(fid,1,'float64');                        %Save the serial date number timestamp.
+    data.poke.micros(i,1) = fread(fid,1,'float32');                         %Save the microcontroller microsecond timestamp.
+end
+
+num_sensors = fread(fid,1,'uint8');                                         %Read in the number of sensors.
+capsense_mask = fread(fid,1,'uint8');                                       %Read in the sensor status bitmask.
+capsense_status = bitget(capsense_mask,1:num_sensors);                      %Grab the status for each nosepoke.
+if i == 1                                                                   %If this is the first nosepoke event...
+    data.poke.status = capsense_status;                                     %Create the status matrix.
+else                                                                        %Otherwise...
+    data.poke.status(i,:) = capsense_status;                                %Add the new status to the matrix.
 end
 
 
@@ -2809,6 +3054,62 @@ data = OmniTrakFileRead_Check_Field_Name(data,'device','samd_chip_id');     %Cal
 data.device.samd_chip_id = fread(fid,4,'uint32');                           %Save the 32-bit SAMD chip ID.
 
 
+function data =  OmniTrakFileRead_ReadBlock_SCOPE_TRACE(fid,data)
+
+%
+% OmniTrakFileRead_ReadBlock_SCOPE_TRACE.m
+%   
+%   copyright 2025, Vulintus, Inc.
+%
+%   OMNITRAKFILEREAD_READBLOCK_SCOPE_TRACE reads in the "SCOPE_TRACE" data 
+%   block from an *.OmniTrak format file. This block is intended to contain
+%   a single oscilloscope recording, in units of volts, from one or
+%   multiple channels, with time units in seconds, along with a variable 
+%   number of parameters describing the recording conditions.
+%
+%	OmniTrak File Block Code (OFBC):
+%		BLOCK VALUE:	0x000C
+%		DEFINITION:		SCOPE_TRACE
+%		DESCRIPTION:	An oscilloscope recording, in units of volts, from 
+%                       one or multiple channels, with time units, in 
+%                       seconds, along with a variable number of parameters
+%                       describing the recording conditions.
+%
+%   UPDATE LOG:
+%   2025-06-19 - Drew Sloan - Function first created.
+%
+
+data = OmniTrakFileRead_Check_Field_Name(data,'trace');                     %Call the subfunction to check for existing fieldnames.
+trace_i = length(data.trace) + 1;                                           %Increment the oscilloscope trace index.
+
+ver = fread(fid,1,'uint16');                                                %Read in the "SCOPE_TRACE" data block version
+
+switch ver                                                                  %Switch between the different data block versions.
+
+    case 1                                                                  %Version 1.
+        num_fields = fread(fid,1,'uint8');                                  %Read in the number of fields to follow.
+        for i = 1:num_fields                                                %Step through the fields.
+            N = fread(fid,1,'uint8');                                       %Read in the number of characters in the field name.
+            field = fread(fid,N,'*char')';                                  %Read in the field name.
+            data.trace(trace_i).(field) = fread(fid,1,'float64');           %Read in the value for each field.
+        end
+        num_samples = fread(fid,1,'uint64');                                %Read in the number of samples.
+        num_signals = fread(fid,1,'uint8');                                 %Read in the number of signals.
+        data.trace(trace_i).sample_times = ...
+            fread(fid,num_samples,'float32')';                              %Read in the sampling times.
+        data.trace(trace_i).signal = nan(num_signals, num_samples);         %Pre-allocate an array to hold the signals.
+        for i = 1:num_signals                                               %Step through each signal.
+            data.trace(trace_i).signal(i,:) = ...
+                fread(fid,num_samples,'float32');                           %Read in each signal.
+        end
+
+    otherwise                                                               %Unrecognized data block version.
+        error(['ERROR IN %s: Data block version #%1.0f is not '...
+            'recognized!'], upper(mfilename), ver);                         %Show an error.
+        
+end
+
+
 function data = OmniTrakFileRead_ReadBlock_SECONDARY_THRESH_NAME(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
@@ -2877,6 +3178,16 @@ function data = OmniTrakFileRead_ReadBlock_SOFT_PAUSE_START(fid,data)
 fprintf(1,'Need to finish coding for Block 2012: SOFT_PAUSE_START');
 
 
+function data =  OmniTrakFileRead_ReadBlock_SOFT_PAUSE_STOP(fid,data)
+
+%	OmniTrak File Block Code (OFBC):
+%		BLOCK VALUE:	0x07DD
+%		DEFINITION:		SOFT_PAUSE_STOP
+%		DESCRIPTION:	Timestamped event marker for the stop of a session pause, with non-operant events recorded during the pause.
+
+error('Need to finish coding for OFBC block 0x07DD ("SOFT_PAUSE_STOP")!');
+
+
 function data = OmniTrakFileRead_ReadBlock_SPECTRO_TRACE(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
@@ -2920,7 +3231,7 @@ function data = OmniTrakFileRead_ReadBlock_STAGE_DESCRIPTION(fid,data)
 %		STAGE_DESCRIPTION
 
 N = fread(fid,1,'uint16');                                                  %Read in the number of characters.
-data.stage_description = fread(fid,N,'*char')';                             %Read in the characters of the behavioral session stage description.
+data.stage.description = fread(fid,N,'*char')';                             %Read in the characters of the behavioral session stage description.
 
 
 function data = OmniTrakFileRead_ReadBlock_STAGE_NAME(fid,data)
@@ -2930,7 +3241,7 @@ function data = OmniTrakFileRead_ReadBlock_STAGE_NAME(fid,data)
 %		STAGE_NAME
 
 N = fread(fid,1,'uint16');                                                  %Read in the number of characters.
-data.stage_name = fread(fid,N,'*char')';                                    %Read in the characters of the behavioral session stage name.
+data.stage.name = fread(fid,N,'*char')';                                    %Read in the characters of the behavioral session stage name.
 
 
 function data = OmniTrakFileRead_ReadBlock_STAP_2AFC_TRIAL_OUTCOME(fid,data)
@@ -2981,16 +3292,6 @@ end
 catch
     disp(spot);
 end
-
-
-function data = OmniTrakFileRead_ReadBlock_STOP_TASK_TRIAL(fid,data)
-
-%	OmniTrak File Block Code (OFBC):
-%		BLOCK VALUE:	2801
-%		DEFINITION:		STOP_TASK_TRIAL
-%		DESCRIPTION:	Stop task trial data.
-
-fprintf(1,'Need to finish coding for Block 2801: STOP_TASK_TRIAL\n');
 
 
 function data = OmniTrakFileRead_ReadBlock_STREAM_INPUT_NAME(fid,data)
@@ -3082,7 +3383,7 @@ function data = OmniTrakFileRead_ReadBlock_SUBJECT_NAME(fid,data)
 %		SUBJECT_NAME
 
 N = fread(fid,1,'uint16');                                                  %Read in the number of characters.
-data.subject = fread(fid,N,'*char')';                                       %Read in the characters of the subject's name.
+data.subject.name = fread(fid,N,'*char')';                                  %Read in the characters of the subject's name.
 
 
 function data = OmniTrakFileRead_ReadBlock_SWUI_MANUAL_FEED(fid,data)
@@ -3158,15 +3459,31 @@ data.pellet(i).source{j,1} = 'random_software';                             %Sav
 
 function data = OmniTrakFileRead_ReadBlock_SYSTEM_FW_VER(fid,data)
 
+%
+% OmniTrakFileRead_ReadBlock_SYSTEM_SN.m
+%   
+%   copyright 2025, Vulintus, Inc.
+%
+%   OMNITRAKFILEREAD_READBLOCK_SYSTEM_SN reads in the "SYSTEM_FW_VER" data 
+%   block from an *.OmniTrak format file. This block is intended to contain
+%   the firmware version for the primary device for the system collecting 
+%   data, written as characters.
+%
 %	OmniTrak File Block Code (OFBC):
-%		103
-%		SYSTEM_FW_VER
+%		BLOCK VALUE:	0x0067
+%		DEFINITION:		SYSTEM_SN
+%		DESCRIPTION:	System firmware version, written as characters.
+%
+%   UPDATE LOG:
+%   ????-??-?? - Drew Sloan - Function first created.
+%   2025-07-02 - Drew Sloan - Updated function description to match the
+%                             "ReadBlock" documentation style.
+%
 
-if ~isfield(data,'device')                                                  %If the structure doesn't yet have an "device" field..
-    data.device = [];                                                       %Create the field.
-end
+
+data = OmniTrakFileRead_Check_Field_Name(data,'system');                    %Call the subfunction to check for existing fieldnames.
 N = fread(fid,1,'uint8');                                                   %Read in the number of characters.
-data.device.fw_version = char(fread(fid,N,'uchar')');                       %Read in the firmware version.
+data.system.fw_version = char(fread(fid,N,'uchar')');                       %Read in the firmware version.
 
 
 function data = OmniTrakFileRead_ReadBlock_SYSTEM_HW_VER(fid,data)
@@ -3194,28 +3511,60 @@ data.device.manufacturer = char(fread(fid,N,'uchar')');                     %Rea
 
 function data = OmniTrakFileRead_ReadBlock_SYSTEM_NAME(fid,data)
 
+%
+% OmniTrakFileRead_ReadBlock_SYSTEM_NAME.m
+%   
+%   copyright 2025, Vulintus, Inc.
+%
+%   OMNITRAKFILEREAD_READBLOCK_SYSTEM_NAME reads in the "SYSTEM_NAME" 
+%   data block from an *.OmniTrak format file. This block is intended to 
+%   contain the overall system name, not just the name of the primary
+%   device or controller, written as characters.
+%
 %	OmniTrak File Block Code (OFBC):
-%		101
-%		SYSTEM_NAME
+%		BLOCK VALUE:	0x0065
+%		DEFINITION:		SYSTEM_NAME
+%		DESCRIPTION:	Vulintus system name.
+%
+%   UPDATE LOG:
+%   ????-??-?? - Drew Sloan - Function first created.
+%   2025-06-19 - Drew Sloan - Updated function description to match the
+%                             "ReadBlock" documentation style.
+%
 
-if ~isfield(data,'device')                                                  %If the structure doesn't yet have an "device" field.
-    data.device = [];                                                       %Create the field.
-end
+data = OmniTrakFileRead_Check_Field_Name(data,'system','name');             %Call the subfunction to check for existing fieldnames.         
+
 N = fread(fid,1,'uint8');                                                   %Read in the number of characters.
-data.device.system_name = fread(fid,N,'*char')';                            %Read in the characters of the system name.
+data.system.name = fread(fid,N,'*char')';                                   %Read in the characters of the system name.
 
 
 function data = OmniTrakFileRead_ReadBlock_SYSTEM_SN(fid,data)
 
+%
+% OmniTrakFileRead_ReadBlock_SYSTEM_SN.m
+%   
+%   copyright 2025, Vulintus, Inc.
+%
+%   OMNITRAKFILEREAD_READBLOCK_SYSTEM_SN reads in the "SYSTEM_SN" data 
+%   block from an *.OmniTrak format file. This block is intended to contain
+%   the serial number of the primary device for the system collecting data,
+%   written as characters.
+%
 %	OmniTrak File Block Code (OFBC):
-%		104
-%		SYSTEM_SN
+%		BLOCK VALUE:	0x0068
+%		DEFINITION:		SYSTEM_SN
+%		DESCRIPTION:	System serial number, written as characters.
+%
+%   UPDATE LOG:
+%   ????-??-?? - Drew Sloan - Function first created.
+%   2025-07-02 - Drew Sloan - Updated function description to match the
+%                             "ReadBlock" documentation style.
+%
 
-if ~isfield(data,'device')                                                  %If the structure doesn't yet have an "device" field.
-    data.device = [];                                                       %Create the field.
-end
+
+data = OmniTrakFileRead_Check_Field_Name(data,'system');                    %Call the subfunction to check for existing fieldnames.
 N = fread(fid,1,'uint8');                                                   %Read in the number of characters.
-data.device.serial_num = char(fread(fid,N,'uchar')');                       %Read in the serial number.
+data.system.serial_num = char(fread(fid,N,'uchar')');                       %Read in the serial number.
 
 
 function data = OmniTrakFileRead_ReadBlock_SYSTEM_TYPE(fid,data)
@@ -3404,12 +3753,62 @@ end
 
 function data = OmniTrakFileRead_ReadBlock_VIBROTACTILE_DETECTION_TASK_TRIAL(fid,data)
 
+%
+% OmniTrakFileWrite_WriteBlock_VIBROTACTILE_DETECTION_TASK_TRIAL
+%   
+%   copyright 2024, Vulintus, Inc.
+%
+%   OMNITRAKFILEWRITE_WRITEBLOCK_VIBROTACTILE_DETECTION_TASK_TRIAL writes
+%   data from individual trials of the Fixed Reinforcement task.
+%
+%   OFBC block code: 0x0A8D
+%
+%   UPDATE LOG:
+%   2025-05-27 - Drew Sloan - Function completed.
+%
+
 %	OmniTrak File Block Code (OFBC):
 %		BLOCK VALUE:	2701
 %		DEFINITION:		VIBROTACTILE_DETECTION_TASK_TRIAL
 %		DESCRIPTION:	Vibrotactile detection task trial data.
 
-fprintf(1,'Need to finish coding for Block 2701: VIBROTACTILE_DETECTION_TASK_TRIAL\n');
+data = OmniTrakFileRead_Check_Field_Name(data,'trial');                     %Call the subfunction to check for existing fieldnames.
+
+ver = fread(fid,1,'uint16');                                                %Read in the FR_TASK_TRIAL data block version
+
+switch ver                                                                  %Switch between the different data block versions.
+
+    case 1                                                                  %Version 1.        
+        t = fread(fid,1,'uint16');                                          %Read in the trial number/index.
+        data.trial(t).start_time = fread(fid,1,'float64');                  %Read in the trial start time (serial date number).
+        data.trial(t).outcome = fread(fid,1,'*char');                       %Read in the trial outcome.
+        N = fread(fid,1,'uint8');                                           %Read in the number of feedings.
+        data.trial(t).feed_time = fread(fid,N,'float64');                   %Read in the feeding times.
+        data.trial(t).hit_win = fread(fid,1,'float32');                     %Read in the hit window.
+        data.trial(t).vib_dur = fread(fid,1,'float32');                     %Read in the vibration pulse duration.
+        data.trial(t).vib_rate = fread(fid,1,'float32');                    %Read in the vibration pulse rate.
+        data.trial(t).actual_vib_rate = fread(fid,1,'float32');             %Read in the actual vibration pulse rate.
+        data.trial(t).gap_length = fread(fid,1,'float32');                  %Read in the gap length.
+        data.trial(t).actual_gap_length = fread(fid,1,'float32');           %Read in the actual gap length.
+        data.trial(t).hold_time = fread(fid,1,'float32');                   %Read in the hold time.
+        data.trial(t).time_held = fread(fid,1,'float32');                   %Read in the time held.
+        data.trial(t).vib_n = fread(fid,1,'uint16');                        %Read in the number of vibration pulses.
+        data.trial(t).gap_start = fread(fid,1,'uint16');                    %Read in the number of vibration gap start index.
+        data.trial(t).gap_stop = fread(fid,1,'uint16');                     %Read in the number of vibration gap stop index.
+        data.trial(t).pre_samples = fread(fid,1,'uint32');                  %Read in the number of pre-trial samples.
+        num_signals = fread(fid,1,'uint8');                                 %Read in the number of signal streams.
+        N = fread(fid,1,'uint32');                                          %Read in the number of samples.
+        data.trial(t).times = fread(fid,N,'uint32');                        %Read in the millisecond clock timestampes.
+        data.trial(t).signal = nan(N,num_signals);                          %Create a matrix to hold the sensor signals.
+        for i = 1:num_signals                                               %Step through the signals.
+            data.trial(t).signal(:,i) = fread(fid,N,'float32');             %Read in each signal.
+        end
+
+    otherwise                                                               %Unrecognized data block version.
+        error(['ERROR IN %s: Data block version #%1.0f is not '...
+            'recognized!'], upper(mfilename), ver);                         %Show an error.
+        
+end
 
 
 function data = OmniTrakFileRead_ReadBlock_VL53L0X_DIST(fid,data)
@@ -3565,14 +3964,6 @@ function data = OmniTrakFileRead_ReadBlock_ZMOD4410_TVOC(fid,data)
 %		ZMOD4410_TVOC
 
 fprintf(1,'Need to finish coding for Block 1712: ZMOD4410_TVOC');
-
-
-function data = OmniTrakFileRead_Unrecognized_Block(fid, data)
-
-fseek(fid,-2,'cof');                                                        %Rewind 2 bytes.
-data.unrecognized_block = [];                                               %Create an unrecognized block field.
-data.unrecognized_block.pos = ftell(fid);                                   %Save the file position.
-data.unrecognized_block.code = fread(fid,1,'uint16');                       %Read in the data block code.
 
 
 function waitbar = big_waitbar(varargin)
@@ -4281,5 +4672,50 @@ function showDemo(majorVersion,minorVersion)
 % - Fix: Non-\n-terminated segments are displayed as black
 % - Fix: Check whether the hyperlink fix for 7.1 is also needed on 7.2 etc.
 % - Enh: Add font support
+
+
+function not_empty = isnt_empty_field(obj, fieldname, varargin)
+
+%
+% isnt_empty_field.m
+%   
+%   copyright 2024, Vulintus, Inc.
+%
+%   ISNT_EMPTY_FIELD is a recursive function that checks if the all of 
+%   specified fields/subfields exist in the in the specified structure 
+%   ("structure"), and then checks if the last subfield is empty.
+%
+%   UPDATE LOG:
+%   2024-08-27 - Drew Sloan - Function first created.
+%   2024-11-11 - Drew Sloan - Created complementary function
+%                             "is_empty_field" to check for the reverse
+%                             case.
+%   2025-02-17 - Drew Sloan - Added an "isprop" check to be able to check
+%                             class properties like structure fields.
+%
+
+
+switch class(obj)                                                           %Switch between the different recognized classes.
+    case 'struct'                                                           %Structure.
+        not_empty = isfield(obj, fieldname);                                %Check to see if the fieldname exists.
+    case {'Vulintus_Behavior_Class','Vulintus_OTSC_Handler','datetime'}     %Vulintus classes.
+        not_empty = isprop(obj, fieldname);                                 %Check to see if the property exists.     
+    otherwise                                                               %For all other cases...
+        not_empty = ~isempty(obj);                                          %Check to see if the object is empty.                   
+end
+if ~not_empty                                                               %If the field doesn't exist...
+    return                                                                  %Skip the rest of the function.
+end
+
+if nargin == 2 || isempty(varargin)                                         %If only one field name was passed...    
+    if (not_empty)                                                          %If the field exists...
+        not_empty = ~isempty(obj.(fieldname));                              %Check to see if the field isn't empty.
+    end
+elseif nargin == 3                                                          %If a field name and one subfield name was passed...
+    not_empty = isnt_empty_field(obj.(fieldname),varargin{1});              %Recursively call this function to check the subfield.
+else                                                                        %Otherwise...
+    not_empty = isnt_empty_field(obj.(fieldname),varargin{1},...
+        varargin{2:end});                                                   %Recursively call this function to handle all subfields.
+end
 
 
