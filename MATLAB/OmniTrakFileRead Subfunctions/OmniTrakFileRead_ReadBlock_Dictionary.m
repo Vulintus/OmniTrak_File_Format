@@ -10,7 +10,7 @@ function block_read = OmniTrakFileRead_ReadBlock_Dictionary(fid)
 %	Library documentation:
 %	https://github.com/Vulintus/OmniTrak_File_Format
 %
-%	This function was programmatically generated: 2025-08-26, 05:00:05 (UTC)
+%	This function was programmatically generated: 2025-08-26, 07:46:19 (UTC)
 %
 
 block_read = dictionary;
@@ -515,8 +515,11 @@ block_read(2024) = struct('def_name', 'POSITION_START_XYZ', 'fcn', @(data)OmniTr
 block_read(2025) = struct('def_name', 'POSITION_MOVE_XYZ', 'fcn', @(data)OmniTrakFileRead_ReadBlock_POSITION_MOVE_XYZ(fid,data));
 
 
-% Timestamped event for a single TTL pulse output, with channel number, voltage, and duration.
+% Timestamped event for a single TTL pulse output, with channel number, voltage, pulse duration, inter-pulse period, and number of pulses.
 block_read(2048) = struct('def_name', 'TTL_PULSETRAIN', 'fcn', @(data)OmniTrakFileRead_ReadBlock_TTL_PULSETRAIN(fid,data));
+
+% Timestamped event for when a TTL pulsetrain is canceled before completion.
+block_read(2049) = struct('def_name', 'TTL_PULSETRAIN_ABORT', 'fcn', @(data)OmniTrakFileRead_ReadBlock_TTL_PULSETRAIN_ABORT(fid,data));
 
 
 % Stream input name for the specified input index.

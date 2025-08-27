@@ -8,7 +8,7 @@
 	Library documentation:
 	https://github.com/Vulintus/OmniTrak_File_Format
 
-	This file was programmatically generated: 2025-08-26, 05:00:04 (UTC)
+	This file was programmatically generated: 2025-08-26, 07:46:18 (UTC)
 */
 
 #ifndef _VULINTUS_OFBC_BLOCK_CODES_H_
@@ -218,7 +218,8 @@ const uint16_t OFBC_POSITION_MOVE_XY = 0x07E7;                     // Timestampe
 const uint16_t OFBC_POSITION_START_XYZ = 0x07E8;                   // Starting position of an autopositioner in the x-, y-, and z- directions, with distance in millimeters.
 const uint16_t OFBC_POSITION_MOVE_XYZ = 0x07E9;                    // Timestamped movement of an autopositioner in the x-, y-, and z- directions, with distance in millimeters.
 
-const uint16_t OFBC_TTL_PULSETRAIN = 0x0800;                       // Timestamped event for a single TTL pulse output, with channel number, voltage, and duration.
+const uint16_t OFBC_TTL_PULSETRAIN = 0x0800;                       // Timestamped event for a single TTL pulse output, with channel number, voltage, pulse duration, inter-pulse period, and number of pulses.
+const uint16_t OFBC_TTL_PULSETRAIN_ABORT = 0x0801;                 // Timestamped event for when a TTL pulsetrain is canceled before completion.
 
 const uint16_t OFBC_STREAM_INPUT_NAME = 0x0834;                    // Stream input name for the specified input index.
 

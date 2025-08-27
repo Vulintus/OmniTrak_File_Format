@@ -1,6 +1,6 @@
 function data = OmniTrakFileRead(file,varargin)
 
-%Collated: 08/14/2025, 22:39:50
+%Collated: 08/26/2025, 21:49:44
 
 
 %
@@ -1238,7 +1238,7 @@ function block_read = OmniTrakFileRead_ReadBlock_Dictionary(fid)
 %	Library documentation:
 %	https://github.com/Vulintus/OmniTrak_File_Format
 %
-%	This function was programmatically generated: 2025-06-18, 08:38:19 (UTC)
+%	This function was programmatically generated: 2025-08-26, 07:46:19 (UTC)
 %
 
 block_read = dictionary;
@@ -1470,6 +1470,13 @@ block_read(400) = struct('def_name', 'STAGE_NAME', 'fcn', @(data)OmniTrakFileRea
 
 % The stage description for a behavioral session.
 block_read(401) = struct('def_name', 'STAGE_DESCRIPTION', 'fcn', @(data)OmniTrakFileRead_ReadBlock_STAGE_DESCRIPTION(fid,data));
+
+
+% Behavioral session parameters structure encoded in JSON format text.
+block_read(512) = struct('def_name', 'SESSION_PARAMS_JSON', 'fcn', @(data)OmniTrakFileRead_ReadBlock_SESSION_PARAMS_JSON(fid,data));
+
+% Behavioral trial parameters structure encoded in JSON format text.
+block_read(513) = struct('def_name', 'TRIAL_PARAMS_JSON', 'fcn', @(data)OmniTrakFileRead_ReadBlock_TRIAL_PARAMS_JSON(fid,data));
 
 
 % Indicates that an AMG8833 thermopile array sensor is present in the system.
@@ -1736,8 +1743,11 @@ block_read(2024) = struct('def_name', 'POSITION_START_XYZ', 'fcn', @(data)OmniTr
 block_read(2025) = struct('def_name', 'POSITION_MOVE_XYZ', 'fcn', @(data)OmniTrakFileRead_ReadBlock_POSITION_MOVE_XYZ(fid,data));
 
 
-% Timestamped event for a TTL pulse output, with channel number, voltage, and duration.
-block_read(2048) = struct('def_name', 'TTL_PULSE', 'fcn', @(data)OmniTrakFileRead_ReadBlock_TTL_PULSE(fid,data));
+% Timestamped event for a single TTL pulse output, with channel number, voltage, pulse duration, inter-pulse period, and number of pulses.
+block_read(2048) = struct('def_name', 'TTL_PULSETRAIN', 'fcn', @(data)OmniTrakFileRead_ReadBlock_TTL_PULSETRAIN(fid,data));
+
+% Timestamped event for when a TTL pulsetrain is canceled before completion.
+block_read(2049) = struct('def_name', 'TTL_PULSETRAIN_ABORT', 'fcn', @(data)OmniTrakFileRead_ReadBlock_TTL_PULSETRAIN_ABORT(fid,data));
 
 
 % Stream input name for the specified input index.
@@ -3076,7 +3086,7 @@ function data =  OmniTrakFileRead_ReadBlock_SCOPE_TRACE(fid,data)
 %                       describing the recording conditions.
 %
 %   UPDATE LOG:
-%   2025-06-19 - Drew Sloan - Function first created.
+%       2025-06-19 - Drew Sloan - Function first created.
 %
 
 data = OmniTrakFileRead_Check_Field_Name(data,'trace');                     %Call the subfunction to check for existing fieldnames.
@@ -3117,6 +3127,52 @@ function data = OmniTrakFileRead_ReadBlock_SECONDARY_THRESH_NAME(fid,data)
 %		SECONDARY_THRESH_NAME
 
 fprintf(1,'Need to finish coding for Block 2310: SECONDARY_THRESH_NAME');
+
+
+function data =  OmniTrakFileRead_ReadBlock_SESSION_PARAMS_JSON(fid,data)
+
+%
+% OmniTrakFileRead_ReadBlock_SESSION_PARAMS_JSON.m
+%   
+%   copyright 2025, Vulintus, Inc.
+%
+%   OMNITRAKFILEREAD_READBLOCK_SESSION_PARAMS_JSON reads in the 
+%   "SESSION_PARAMS_JSON" data block from an *.OmniTrak format file. This 
+%   block is intended to contain the fields and values of the "params"
+%   field from the Vulintus_Behavior_Session_Class of a behavioral program
+%   instance. This block is intended to be a failsafe cpaturing all session
+%   parameters in case pertinent parameters are omitted from other data
+%   blocks.
+%
+%	OmniTrak File Block Code (OFBC):
+%		BLOCK VALUE:	0x0200
+%		DEFINITION:		SESSION_PARAMS_JSON
+%		DESCRIPTION:	Behavioral session parameters structure encoded in 
+%                       JSON format text.
+%
+%   UPDATE LOG:
+%       2025-08-26 - Drew Sloan - Function first created.
+%
+
+data = OmniTrakFileRead_Check_Field_Name(data,'json','session_params');     %Call the subfunction to check for existing fieldnames.
+
+ver = fread(fid,1,'uint8');                                                 %Read in the TTL_PULSETRAIN data block version.
+
+switch ver                                                                  %Switch between the different data block versions.
+
+    case 1                                                                  %Version 1 (implemented 2025-02-10).        
+        N = fread(fid,1,'uint32');                                          %Read in the number of characters.
+        txt = char(fread(fid,N,'uchar')');                                  %Read in the JSON-encoded text.
+        txt = strrep(txt,'\','\\');                                         %Replace all single forward slashes with two slashes.
+        txt = strrep(txt,'\\\','\\');                                       %Replace all triple forward slashes with two slashes.
+        txt = strrep(txt,'\\"','\"');                                       %Replace all double forward slashes preceding double quotes with one slash.
+        data.json.session_params = jsondecode(txt);                         %Convert the text to data.
+
+    otherwise                                                               %Unrecognized data block version.
+        error(['ERROR IN %s: Data block version #%1.0f is not '...
+            'recognized!'], upper(mfilename), ver);                         %Show an error.
+        
+end
 
 
 function data = OmniTrakFileRead_ReadBlock_SGP30_EC02(fid,data)
@@ -3625,6 +3681,16 @@ else                                                                        %Oth
 end
 
 
+function data =  OmniTrakFileRead_ReadBlock_TRIAL_PARAMS_JSON(fid,data)
+
+%	OmniTrak File Block Code (OFBC):
+%		BLOCK VALUE:	0x0201
+%		DEFINITION:		TRIAL_PARAMS_JSON
+%		DESCRIPTION:	Behavioral trial parameters structure encoded in JSON format text.
+
+error('Need to finish coding for OFBC block 0x0201 ("TRIAL_PARAMS_JSON")!');
+
+
 function data = OmniTrakFileRead_ReadBlock_TRIAL_START_SERIAL_DATE(fid,data)
 
 %	OmniTrak File Block Code (OFBC):
@@ -3639,25 +3705,155 @@ t = fread(fid,1,'uint16');                                                  %Rea
 data.trial(t).start.datenum = timestamp;                                    %Save the serial date number timestamp for the trial.
 
 
-function data = OmniTrakFileRead_ReadBlock_TTL_PULSE(fid,data)
+function data = OmniTrakFileRead_ReadBlock_TTL_PULSETRAIN(fid,data)
 
+%
+% OmniTrakFileRead_ReadBlock_TTL_PULSETRAIN.m
+%   
+%   copyright 2025, Vulintus, Inc.
+%
+%   OMNITRAKFILEREAD_READBLOCK_TTL_PULSETRAIN reads in the 
+%   "SESSION_PARAMS_JSON" data block from an *.OmniTrak format file. This 
+%   block is intended to contain the fields and values of the "params"
+%   field from the Vulintus_Behavior_Session_Class of a behavioral program
+%   instance. This block is intended to be a failsafe cpaturing all session
+%   parameters in case pertinent parameters are omitted from other data
+%   blocks.
+%
 %	OmniTrak File Block Code (OFBC):
-%		BLOCK VALUE:	2048
-%		DEFINITION:		TTL_PULSE
-%		DESCRIPTION:	Timestamped event for a TTL pulse output, with channel number, voltage, and duration.
+%		BLOCK VALUE:	0x0800
+%		DEFINITION:		TTL_PULSETRAIN
+%		DESCRIPTION:	Timestamped event for a single TTL pulse output, 
+%                       with channel number, voltage, pulse duration, 
+%                       inter-pulse period, and number of pulses.
+%
+%   UPDATE LOG:
+%       2025-02-10 - Drew Sloan - Function first created.
+%       2025-08-26 - Drew Sloan - Added handing for the a Version 2 block
+%                                 format that includes multi-pulse
+%                                 pulsetrain parameters.
+%
+
 
 data = OmniTrakFileRead_Check_Field_Name(data,'ttl');                       %Call the subfunction to check for existing fieldnames.
 
-ver = fread(fid,1,'uint8');                                                 %Read in the AMBULATION_XY_THETA data block version.
+ver = fread(fid,1,'uint8');                                                 %Read in the TTL_PULSETRAIN data block version.
+
+i = length(data.ttl) + 1;                                                   %Increment the TTL pulse index.
 
 switch ver                                                                  %Switch between the different data block versions.
 
-    case 1                                                                  %Version 1.
-        i = length(data.ttl) + 1;                                           %Increment the TTL pulse index.
-        data.ttl(i).datenum = fread(fid,1,'float64');                       %Serial date number.
+    case 1                                                                  %Version 1 (implemented 2025-02-10).        
+        data.ttl(i).start.datenum = fread(fid,1,'float64');                 %Serial date number.
+        data.ttl(i).src = 0;                                                %Device "port" number is always zero for block version 1.
         data.ttl(i).chan = fread(fid,1,'uint8')';                           %Output channel.
         data.ttl(i).volts = fread(fid,1,'float32')';                        %Output voltage.
-        data.ttl(i).dur = fread(fid,1,'uint32');                            %Pulse duration, in milliseconds.
+        data.ttl(i).pulse_dur = double(fread(fid,1,'uint32'))/1000;         %Pulse duration, in milliseconds.
+
+    case 2                                                                  %Version 2 (implemented 2025-08-25).
+        data.ttl(i).src = fread(fid,1,'uint8')';                            %Device "port" number.
+        data.ttl(i).chan = fread(fid,1,'uint8')';                           %Output channel.        
+        datatype_mask = fread(fid,1,'uint8')';                              %Bitmask indicating included data types.
+        if bitget(datatype_mask,1)                                          %Bitmask bit 1.
+            data.ttl(i).start.datenum = fread(fid,1,'float64');             %Serial date number.
+        end
+        if bitget(datatype_mask,2)                                          %Bitmask bit 2.
+            data.ttl(i).start.millis = fread(fid,1,'uint32');               %Serial date number.
+        end
+        data.ttl(i).volts = nan(1,2);                                       %Pre-allocate an array for voltage levels.
+        if bitget(datatype_mask,3)                                          %Bitmask bit 3.
+            data.ttl(i).volts(1) = fread(fid,1,'float32')';                 %Low voltage level.
+        end
+        if bitget(datatype_mask,4)                                          %Bitmask bit 4.
+            data.ttl(i).volts(1) = fread(fid,1,'float32')';                 %High voltage level.
+        end
+        if bitget(datatype_mask,5)                                          %Bitmask bit 5.
+            data.ttl(i).pulse_dur = fread(fid,1,'float32');                 %Pulse duration, in seconds.
+        end
+        if bitget(datatype_mask,6)                                          %Bitmask bit 6.
+            data.ttl(i).pulse_ipi = fread(fid,1,'float32');                 %Offset-to-onset inter-pulse interval, in seconds.
+        end
+        if bitget(datatype_mask,7)                                          %Bitmask bit 7.
+            data.ttl(i).pulse_n = fread(fid,1,'uint16');                    %Number of pulses in the pulsetrain.
+        end      
+
+    otherwise                                                               %Unrecognized data block version.
+        error(['ERROR IN %s: Data block version #%1.0f is not '...
+            'recognized!'], upper(mfilename), ver);                         %Show an error.
+        
+end
+
+
+function data =  OmniTrakFileRead_ReadBlock_TTL_PULSETRAIN_ABORT(fid,data)
+
+%
+% OmniTrakFileRead_ReadBlock_TTL_PULSETRAIN_ABORT.m
+%   
+%   copyright 2025, Vulintus, Inc.
+%
+%   OMNITRAKFILEREAD_READBLOCK_TTL_PULSETRAIN_ABORT reads in the 
+%   "SESSION_PARAMS_JSON" data block from an *.OmniTrak format file. This 
+%   block is intended to contain the fields and values of the "params"
+%   field from the Vulintus_Behavior_Session_Class of a behavioral program
+%   instance. This block is intended to be a failsafe cpaturing all session
+%   parameters in case pertinent parameters are omitted from other data
+%   blocks.
+%
+%	OmniTrak File Block Code (OFBC):
+%		BLOCK VALUE:	0x0801
+%		DEFINITION:		TTL_PULSETRAIN_ABORT
+%		DESCRIPTION:	Timestamped event for when a TTL pulsetrain is 
+%                       canceled before completion.
+%
+%   UPDATE LOG:
+%       2025-08-26 - Drew Sloan - Function first created.
+%
+
+
+data = OmniTrakFileRead_Check_Field_Name(data,'ttl');                       %Call the subfunction to check for existing fieldnames.
+
+ver = fread(fid,1,'uint8');                                                 %Read in the TTL_PULSETRAIN data block version.
+
+switch ver                                                                  %Switch between the different data block versions.
+
+    case 1                                                                  %Version 1 (implemented 2025-08-25).        
+        src = fread(fid,1,'uint8')';                                        %Device "port" number.
+        chan = fread(fid,1,'uint8')';                                       %Output channel.
+        i = find(vertcat(data.ttl.src) == src & ...
+            vertcat(data.ttl.chan) == chan,1,'last');                       %Find the last TTL event index for this device and channel.
+        if isempty(i)                                                       %If no match was found...
+            i = length(data.ttl) + 1;                                       %Increment the TTL pulse index.
+            data.ttl(i).src = src;                                          %Save the device "port" number.
+            data.ttl(i).chan = chan;                                        %Save the channel number.
+        end
+        datatype_mask = fread(fid,1,'uint8')';                              %Bitmask indicating included data types.
+        if bitget(datatype_mask,1)                                          %Bitmask bit 1.
+            data.ttl(i).stop.datenum = fread(fid,1,'float64');              %Serial date number.
+        end
+        if bitget(datatype_mask,2)                                          %Bitmask bit 2.
+            data.ttl(i).stop.millis = fread(fid,1,'uint32');                %Serial date number.
+        end
+        train_dur = [];                                                     %Create a variable to hold the train duration.
+        if isnt_empty_field(data.ttl(i),'start','millis') && ...
+                isnt_empty_field(data.ttl(i),'stop','millis')             %If microcontroller millisecond clock readings are available for the TTL start and stop.
+            train_dur = data.ttl(i).stop.millis - data.ttl(i).start.millis; %Calculate the pulsetrain duration in milliseconds.
+            train_dur = double(train_dur)/1000;                             %Convert the train duration to seconds.
+        elseif isnt_empty_field(data.ttl(i),'start','datenum') && ...
+                isnt_empty_field(data.ttl(i),'stop','datenum')              %If serial date numbers are available for the TTL start and stop.
+            train_dur = 86400*(data.ttl(i).stop.datenum - ...
+                data.ttl(i).start.datenum);                                 %Calculate the pulsetrain duration in milliseconds.
+        end
+        if ~isempty(train_dur)                                              %If a train duration could be calculated.
+            if isnt_empty_field(data.ttl(i),'pulse_dur')                    %If a pulse duration was saved...
+                if train_dur < data.ttl(i).pulse_dur                        %If the TTL pulsetrain was aborted before a single pulse completed...
+                    data.ttl(i).pulse_dur = train_dur;                      %Set the pulse duration to the train duration.
+                    data.ttl(i).pulse_n = 1;                                %Set the pulse duration to the train duration.
+                elseif isnt_empty_field(data.ttl(i),'pulse_ipi')            %If an inter-pulse interval was saved...
+                    ipp = data.ttl(i).pulse_dur + data.ttl(i).pulse_ipi;    %Find the full pulse period.
+                    data.ttl(i).pulse_n = ceil(train_dur/ipp);              %Update the pulse count.
+                end
+            end
+        end
 
     otherwise                                                               %Unrecognized data block version.
         error(['ERROR IN %s: Data block version #%1.0f is not '...

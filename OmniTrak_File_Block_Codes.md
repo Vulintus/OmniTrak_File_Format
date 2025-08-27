@@ -252,7 +252,8 @@ This is the principal list for *.OmniTrak File Block Codes (OFBC) data block cod
 | 0x07E9 | 2025 | [POSITION_MOVE_XYZ](/Data%20Block%20Descriptions/0x0700-0x07FF.md#block-code-0x07E9) | Timestamped movement of an autopositioner in the x-, y-, and z- directions, with distance in millimeters. |
 ||
 ||
-| 0x0800 | 2048 | [TTL_PULSETRAIN](/Data%20Block%20Descriptions/0x0800-0x08FF.md#block-code-0x0800) | Timestamped event for a single TTL pulse output, with channel number, voltage, and duration. |
+| 0x0800 | 2048 | [TTL_PULSETRAIN](/Data%20Block%20Descriptions/0x0800-0x08FF.md#block-code-0x0800) | Timestamped event for a single TTL pulse output, with channel number, voltage, pulse duration, inter-pulse period, and number of pulses. |
+| 0x0801 | 2049 | [TTL_PULSETRAIN_ABORT](/Data%20Block%20Descriptions/0x0800-0x08FF.md#block-code-0x0801) | Timestamped event for when a TTL pulsetrain is canceled before completion. |
 ||
 ||
 | 0x0834 | 2100 | [STREAM_INPUT_NAME](/Data%20Block%20Descriptions/0x0800-0x08FF.md#block-code-0x0834) | Stream input name for the specified input index. |

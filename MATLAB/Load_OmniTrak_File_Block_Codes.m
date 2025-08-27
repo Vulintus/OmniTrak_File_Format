@@ -10,7 +10,7 @@ function ofbc = Load_OmniTrak_File_Block_Codes
 %	Library documentation:
 %	https://github.com/Vulintus/OmniTrak_File_Format
 %
-%	This function was programmatically generated: 2025-08-26, 05:00:04 (UTC)
+%	This function was programmatically generated: 2025-08-26, 07:46:18 (UTC)
 %
 
 ofbc = dictionary;
@@ -212,7 +212,8 @@ ofbc('POSITION_MOVE_XY') = 2023;                      %Timestamped movement of a
 ofbc('POSITION_START_XYZ') = 2024;                    %Starting position of an autopositioner in the x-, y-, and z- directions, with distance in millimeters.
 ofbc('POSITION_MOVE_XYZ') = 2025;                     %Timestamped movement of an autopositioner in the x-, y-, and z- directions, with distance in millimeters.
 
-ofbc('TTL_PULSETRAIN') = 2048;                        %Timestamped event for a single TTL pulse output, with channel number, voltage, and duration.
+ofbc('TTL_PULSETRAIN') = 2048;                        %Timestamped event for a single TTL pulse output, with channel number, voltage, pulse duration, inter-pulse period, and number of pulses.
+ofbc('TTL_PULSETRAIN_ABORT') = 2049;                  %Timestamped event for when a TTL pulsetrain is canceled before completion.
 
 ofbc('STREAM_INPUT_NAME') = 2100;                     %Stream input name for the specified input index.
 

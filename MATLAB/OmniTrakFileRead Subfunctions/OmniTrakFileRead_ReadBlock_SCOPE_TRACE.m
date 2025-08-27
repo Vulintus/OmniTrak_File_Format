@@ -20,7 +20,7 @@ function data =  OmniTrakFileRead_ReadBlock_SCOPE_TRACE(fid,data)
 %                       describing the recording conditions.
 %
 %   UPDATE LOG:
-%   2025-06-19 - Drew Sloan - Function first created.
+%       2025-06-19 - Drew Sloan - Function first created.
 %
 
 data = OmniTrakFileRead_Check_Field_Name(data,'trace');                     %Call the subfunction to check for existing fieldnames.
